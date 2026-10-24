@@ -3,7 +3,7 @@ rules_version = '2';
 // ADMIN_UID 자리에 숨님 구글 계정의 User UID를 넣어야 숨님이 다른 사람 지구를 지울 수 있어요.
 service cloud.firestore {
   match /databases/{database}/documents {
-    function adminUid() { return 'ADMIN_UID'; }
+    function adminUid() { return 'aDWLQWGEbwRvawIjWWFFjBy7u6e2'; }
     function signedIn() { return request.auth != null; }
     function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
 

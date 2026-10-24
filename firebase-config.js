@@ -12,5 +12,5 @@ window.SUMIN_FIREBASE = {
     appId: '1:1027210258546:web:20facfd52a7214a58f7aeb',
   },
   // 숨님 구글 계정의 User UID (Firebase 콘솔 > Authentication > 사용자). firestore.rules의 값과 같아야 합니다.
-  adminUid: '',
+  adminUid: 'aDWLQWGEbwRvawIjWWFFjBy7u6e2',
 };
