@@ -60,7 +60,8 @@
   db.updatePlanet = async function (data) {
     const fb = await whenReady; need(); rulesCheck(data);
     const ref = col(fb).doc(auth.user.uid);
-    await ref.update({ ...pickFields(data), googleName: auth.user.name, updatedAt: stamp(fb) }); // 없으면 not-found
+    const gone = fb.firestore.FieldValue.delete(); // 예전 사람 캐릭터 칸(hair, hat, clothes)은 지움
+    await ref.update({ ...pickFields(data), hair: gone, hat: gone, clothes: gone, googleName: auth.user.name, updatedAt: stamp(fb) }); // 없으면 not-found
     return toDoc(await ref.get());
   };
   db.deletePlanet = async function (id) {

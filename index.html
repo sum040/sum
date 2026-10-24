@@ -216,12 +216,17 @@ body[data-route="home"] #sound { display: none; }
 /* 픽셀 지구: 작은 캔버스에 공 모양으로 그린 뒤 픽셀 그대로 키움 */
 .pl-ball { position: absolute; left: 21%; top: 38.5%; width: 58%; height: 58%; image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
 /* 캐릭터: 머리·모자·옷 150가지 조합을 미리 만든 그림에서 한 줄을 골라 4장씩 넘김 */
-.ch { position: absolute; left: 23%; top: -11%; width: 54%; aspect-ratio: 1; pointer-events: none; animation: chfloat 3.4s ease-in-out infinite; animation-delay: calc(var(--delay, 0s) * .6); } /* 행성과 박자가 다르게 살짝 떠오름 */
-.ch-body { position: absolute; inset: 0; background-size: 400% 3000%; background-repeat: no-repeat; image-rendering: pixelated; animation: walk .8s steps(4) infinite; }
-@keyframes walk { from { background-position-x: 0; } to { background-position-x: 133.333%; } }
+.ch { position: absolute; left: 25%; top: 3%; width: 50%; aspect-ratio: 18 / 14; pointer-events: none; animation: chfloat 3.4s ease-in-out infinite; animation-delay: calc(var(--delay, 0s) * .6); } /* 행성과 박자가 다르게 살짝 떠오름 */
+/* 동물: 18x14 픽셀 캔버스를 그대로 키움. 숨쉬기, 눈 깜빡임, 동물별 동작은 animalPX가 그림 */
+.ch-px { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
 .opt canvas { width: 80%; height: 80%; image-rendering: pixelated; }
 .opt { overflow: hidden; }
-.opt .cl { width: 118%; flex: none; aspect-ratio: 1; background-size: 400% 3000%; background-position-x: 0; image-rendering: pixelated; }
+.opt .ani-thumb { width: 100%; height: auto; aspect-ratio: 18 / 14; image-rendering: pixelated; image-rendering: crisp-edges; }
+.opts.seven { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.opts.seven .opt { padding: 2px; border-radius: 8px; }
+.swatches.fur { gap: 10px; flex-wrap: wrap; }
+.swatches.fur .sw { width: 34px; height: 34px; }
+.swatches.fur .sw.nat { outline: 1.5px dashed var(--color-text-muted); outline-offset: 3px; } /* 기본색은 점선 테두리로 구분 */
 @keyframes bob { 0%,100% { translate: 0 -14px; rotate: -2deg } 50% { translate: 0 14px; rotate: 2deg } }
 @keyframes chfloat { 0%,100% { translate: 0 0 } 50% { translate: 0 -6% } }
 .mine-tag { position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%); font-size: 11px; letter-spacing: .14em; font-family: var(--font-display); text-transform: lowercase; padding: 1px 10px; border-radius: 999px; background: var(--color-primary); color: var(--color-on-primary); pointer-events: none; }
@@ -264,7 +269,7 @@ body[data-route="home"] #sound { display: none; }
 .opt:hover { border-color: var(--color-text-muted); }
 .opt[aria-pressed="true"] { background: #1d1a21; }
 .opt svg { width: 100%; height: 100%; }
-.charrow { display: grid; grid-template-columns: 58px minmax(0, 1fr); align-items: center; gap: 8px; }
+.charrow { display: grid; grid-template-columns: 52px minmax(0, 1fr); align-items: center; gap: 8px; }
 .charrow span { color: var(--color-text-muted); font-size: 13px; font-family: var(--font-display); }
 .note-msg { margin: 0; font-size: 13px; color: var(--color-error); min-height: 0; }
 .field { display: grid; gap: 8px; }
@@ -327,7 +332,7 @@ body[data-route="home"] #sound { display: none; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 @media (prefers-reduced-motion: reduce) {
-  .sp .bob, .front .bob, .breath-dot, .scroll-cue::after, #sound.on path, .ch-body, .ch { animation: none !important; }
+  .sp .bob, .front .bob, .breath-dot, .scroll-cue::after, #sound.on path, .ch { animation: none !important; }
   * { transition-duration: .01s !important; }
 }
 </style>
@@ -374,7 +379,7 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, v); } catch (e) { mem[k] = v; } },
   del(k) { try { localStorage.removeItem(k); } catch (e) { delete mem[k]; } },
 };
-const KEYS = { planets: 'sumin.v3.planets', auth: 'sumin.v1.auth', sound: 'sumin.v2.soundEnabled' };
+const KEYS = { planets: 'sumin.v4.planets', auth: 'sumin.v1.auth', sound: 'sumin.v2.soundEnabled' };
 const ADMIN_UID = 'uid_admin_sumin';
 
 // 프로토타입용 가짜 구글 계정 (실제 서비스에서는 구글 로그인 창이 대신함)
@@ -386,13 +391,13 @@ const FAKE_ACCOUNTS = [
 
 // 예시 지구 (지어낸 이름과 메시지)
 const SEED = [
-  { id: 'uid_demo_7Fq2aLx9', nickname: '별똥별', message: '첫 화면에서 숨 쉬는 빛이 너무 좋았어요.\n다음 작업도 기대할게요!', googleName: '김하늘', planetColor: 'color_2', cover: 'flower_4', hair: 'hair_3', hat: 'hat_1', clothes: 'clothes_2', createdAt: '2026-10-19T14:03:11Z', updatedAt: '2026-10-19T14:03:11Z' },
-  { id: 'uid_demo_Kp83mQwz', nickname: 'moonwalk', message: 'Loved the guestbook idea. My planet is full of roses.', googleName: 'Alex Park', planetColor: 'color_5', cover: 'flower_5', hair: 'hair_1', hat: 'none', clothes: 'clothes_4', createdAt: '2026-10-20T09:41:52Z', updatedAt: '2026-10-21T21:15:03Z' },
-  { id: 'uid_demo_Zr51cNbe', nickname: '귤 🍊', message: '라벤더 심고 갑니다 💜', googleName: '이지은', planetColor: 'color_1', cover: 'flower_3', hair: 'hair_5', hat: 'hat_4', clothes: 'clothes_1', createdAt: '2026-10-21T02:20:47Z', updatedAt: '2026-10-21T02:20:47Z' },
-  { id: 'uid_demo_Qa19vT0p', nickname: '새벽 산책', message: '꽃이 숨 쉬는 것 같아서 한참 보고 있었어요.', googleName: '박서윤', planetColor: 'color_3', cover: 'none', hair: 'hair_2', hat: 'hat_2', clothes: 'clothes_3', createdAt: '2026-10-21T22:10:00Z', updatedAt: '2026-10-21T22:10:00Z' },
-  { id: 'uid_demo_Lm42wQe1', nickname: 'lighthouse', message: 'Leaving a small light here. 🌙', googleName: 'Jordan Lee', planetColor: 'color_4', cover: 'flower_2', hair: 'hair_4', hat: 'none', clothes: 'clothes_5', createdAt: '2026-10-22T11:30:00Z', updatedAt: '2026-10-22T11:30:00Z' },
-  { id: 'uid_demo_Hp07kS3a', nickname: '복숭아', message: '방명록이 제일 귀여워요\n지구 이름도 지어 주고 싶다', googleName: '최유나', planetColor: 'color_2', cover: 'flower_1', hair: 'hair_3', hat: 'hat_5', clothes: 'clothes_4', createdAt: '2026-10-23T08:05:00Z', updatedAt: '2026-10-23T08:05:00Z' },
-  { id: 'uid_demo_Xc88nB2r', nickname: 'tiny star', message: 'hi from Busan', googleName: '정민호', planetColor: 'color_5', cover: 'flower_1', hair: 'hair_1', hat: 'hat_3', clothes: 'clothes_1', createdAt: '2026-10-23T19:44:00Z', updatedAt: '2026-10-23T19:44:00Z' },
+  { id: 'uid_demo_7Fq2aLx9', nickname: '별똥별', message: '첫 화면에서 숨 쉬는 빛이 너무 좋았어요.\n다음 작업도 기대할게요!', googleName: '김하늘', planetColor: 'color_2', cover: 'flower_4', animal: 'cat', animalColor: 'peach', createdAt: '2026-10-19T14:03:11Z', updatedAt: '2026-10-19T14:03:11Z' },
+  { id: 'uid_demo_Kp83mQwz', nickname: 'moonwalk', message: 'Loved the guestbook idea. My planet is full of roses.', googleName: 'Alex Park', planetColor: 'color_5', cover: 'flower_5', animal: 'duck', animalColor: 'natural', createdAt: '2026-10-20T09:41:52Z', updatedAt: '2026-10-21T21:15:03Z' },
+  { id: 'uid_demo_Zr51cNbe', nickname: '귤 🍊', message: '라벤더 심고 갑니다 💜', googleName: '이지은', planetColor: 'color_1', cover: 'flower_3', animal: 'rabbit', animalColor: 'lilac', createdAt: '2026-10-21T02:20:47Z', updatedAt: '2026-10-21T02:20:47Z' },
+  { id: 'uid_demo_Qa19vT0p', nickname: '새벽 산책', message: '꽃이 숨 쉬는 것 같아서 한참 보고 있었어요.', googleName: '박서윤', planetColor: 'color_3', cover: 'none', animal: 'puppy', animalColor: 'natural', createdAt: '2026-10-21T22:10:00Z', updatedAt: '2026-10-21T22:10:00Z' },
+  { id: 'uid_demo_Lm42wQe1', nickname: 'lighthouse', message: 'Leaving a small light here. 🌙', googleName: 'Jordan Lee', planetColor: 'color_4', cover: 'flower_2', animal: 'monkey', animalColor: 'sky', createdAt: '2026-10-22T11:30:00Z', updatedAt: '2026-10-22T11:30:00Z' },
+  { id: 'uid_demo_Hp07kS3a', nickname: '복숭아', message: '방명록이 제일 귀여워요\n지구 이름도 지어 주고 싶다', googleName: '최유나', planetColor: 'color_2', cover: 'flower_1', animal: 'squirrel', animalColor: 'butter', createdAt: '2026-10-23T08:05:00Z', updatedAt: '2026-10-23T08:05:00Z' },
+  { id: 'uid_demo_Xc88nB2r', nickname: 'tiny star', message: 'hi from Busan', googleName: '정민호', planetColor: 'color_5', cover: 'flower_1', animal: 'bear', animalColor: 'pink', createdAt: '2026-10-23T19:44:00Z', updatedAt: '2026-10-23T19:44:00Z' },
 ];
 
 const sim = { failSave: false, failList: false, emptyUniverse: false }; // 오류 상태를 눌러 보기 위한 스위치
@@ -461,14 +466,14 @@ const db = {
   },
 };
 function pickFields(d) {
-  return { nickname: d.nickname, message: d.message, planetColor: d.planetColor, cover: d.cover, hair: d.hair, hat: d.hat, clothes: d.clothes };
+  return { nickname: d.nickname, message: d.message, planetColor: d.planetColor, cover: d.cover, animal: animalOf(d), animalColor: animalColorOf(d) };
 }
 // 서버(보안 규칙)에서 다시 하는 검사를 흉내 냄
 function rulesCheck(d) {
   const v = validate(d);
   if (v.nickname || v.message) throw fail('invalid-argument');
   if (!/^color_[1-5]$/.test(d.planetColor) || !/^(none|flower_[1-5])$/.test(d.cover)) throw fail('invalid-argument'); // 덮는 꽃은 하나만
-  if (!/^hair_[1-5]$/.test(d.hair) || !/^(none|hat_[1-5])$/.test(d.hat) || !/^clothes_[1-5]$/.test(d.clothes)) throw fail('invalid-argument');
+  if (!ANIMALS[d.animal] || !ANIMAL_COLORS[d.animalColor]) throw fail('invalid-argument');
 }
 
 /* =====================================================================
@@ -514,17 +519,82 @@ function validate(d) {
    ===================================================================== */
 const PLANET_COLORS = { color_1: '#F4B39C', color_2: '#B9A3F0', color_3: '#9EC3F2', color_4: '#F2D99A', color_5: '#A6DCC4' };
 const COLOR_NAMES = { color_1: '복숭아', color_2: '라일락', color_3: '하늘', color_4: '버터', color_5: '민트' };
-// 그림 파일은 Codex로 만든 것 (assets/tex: 지구 겉면, assets/char: 캐릭터)
+// 지구 겉면 그림은 assets/tex, 동물은 아래 픽셀 표를 코드로 그림
 const ASSET = 'assets/';
 const ITEMS = {
   flower_1: '데이지', flower_2: '튤립', flower_3: '라벤더', flower_4: '해바라기', flower_5: '장미',
 };
-const HAIRS = { hair_1: '짧은 머리', hair_2: '곱슬머리', hair_3: '단발', hair_4: '똥머리', hair_5: '포니테일' };
-const HATS = { none: '없음', hat_1: '비니', hat_2: '밀짚모자', hat_3: '야구모자', hat_4: '고깔모자', hat_5: '꽃 화관' };
-const CLOTHES = { clothes_1: '복숭아 티셔츠', clothes_2: '멜빵바지', clothes_3: '줄무늬 티', clothes_4: '원피스', clothes_5: '후드' };
-const charRow = p => (Math.max(0, Object.keys(HAIRS).indexOf(p.hair)) * 6) + Math.max(0, Object.keys(HATS).indexOf(p.hat || 'none'));
-const charStyle = p => `background-image:url(${ASSET}char/${p.clothes || 'clothes_1'}.png);background-position-y:${(charRow(p) * 100 / 29).toFixed(4)}%`;
-function charHTML(p) { return `<div class="ch"><div class="ch-body" style="${charStyle(p)}"></div></div>`; }
+const ANIMALS = { monkey: '원숭이', cat: '고양이', puppy: '강아지', bear: '곰', rabbit: '토끼', squirrel: '다람쥐', duck: '오리' };
+const ANIMAL_COLORS = { natural: '기본', peach: '복숭아', pink: '분홍', lilac: '연보라', sky: '하늘', butter: '버터' };
+const animalOf = d => ANIMALS[d && d.animal] ? d.animal : 'cat';              // 예전 데이터(사람 캐릭터)는 기본 동물로
+const animalColorOf = d => ANIMAL_COLORS[d && d.animalColor] ? d.animalColor : 'natural';
+/* 동물 픽셀 표 (designs/animals-simple-v1). F 털, D 어두운 털, M 밝은 털, C 얼굴/배, E 눈, N 코·부리.
+   split: 이 줄 위가 머리(숨 들이쉴 때 1칸 올라감). act: 동물별 동작 그림 2장("x,y,글자" 바꿀 칸, '.'은 지우기). play: 동작 순서(한 칸 100ms, -1은 기본) */
+const ANIMAL_ART = {
+  monkey: { split: 8, nat: ["#823D18", "#61200E", "#884A1B", "#D8A065"], nose: null, act: ["2,8,.;2,9,.;1,8,F;1,9,F", "2,8,.;3,8,F"], play: [0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1],
+    rows: ["..................", "..................", ".........FFFFF....", "........FFCCCCF...", ".......CFFCCCCCC..", ".......CFCCECCCC..", "........FFCCCCCN..", "........FFFCCCC...", "..F....FFMMDDD....", "..F....FFMMMDDD...", "..F...FFFMMMMDD...", "..FFFFFFFMMMMDD...", ".......FFDMMMDD...", ".......FFDD.DD...."] },
+  cat: { split: 7, nat: ["#E59A55", "#B86E33", "#F6D3A6", "#FBE6C8"], nose: "#E58A9A", act: ["13,2,.;1,9,.;2,9,F", "1,9,.;0,9,F"], play: [0,0,0,0,-1,-1,1,1,-1,-1,1,1],
+    rows: ["..................", "..................", "..........F..F....", "..........FFFFF...", ".........FFFFFFF..", ".........FFFEFFF..", ".........FFFFFCN..", "..........FFFCC...", ".........FFFFF....", ".F......FFFFFM....", ".F.....FFFFFMM....", ".FF....FFFFFMM....", "..FFFFFFFFDFMD....", "......FFFFD.DD...."] },
+  puppy: { split: 8, nat: ["#E6C79A", "#A9784E", "#F4E2C4", "#F8EDDC"], nose: "#2A1E2E", act: ["2,9,.;1,9,F", "2,9,.;2,10,.;3,10,F;3,9,F"], play: [0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+    rows: ["..................", "..................", ".........FFFF.....", "........FFFFFFF...", ".......DDFFFFFFF..", ".......DDFFFEFFF..", ".......DDFFFFCCCN.", "........DFFFFCCC..", ".........FFFFF....", "..F.....FFFFFM....", "..F....FFFFFMM....", "...F..FFFFFFMM....", "....FFFFFFFDFMD...", "......FFFFFDD.DD.."] },
+  bear: { split: 8, nat: ["#8A5A3C", "#653E27", "#B3825E", "#C99B76"], nose: "#2A1E2E", act: ["15,10,M;16,9,M;16,8,D", "15,10,M;15,9,M;15,8,D"], play: [0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1],
+    rows: ["..................", "..................", "........FF...FF...", "........FFFFFFF...", ".......FFFFFFFFF..", ".......FFFFFEFFF..", ".......FFFFFFCCCN.", "........FFFFFCCC..", "........FFFFFFF...", "......FFFFFFFMM...", ".....FFFFFFFMMM...", "....FFFFFFFFMMM...", ".....FFFFFFDMMD...", ".....FFFFFDD.DD..."] },
+  rabbit: { split: 9, nat: ["#EDE6E1", "#C4B5B0", "#FFFFFF", "#FFFFFF"], nose: "#E58A9A", act: ["9,1,.;10,1,.;9,2,.;10,2,.;11,2,.;9,4,F;8,4,F;8,5,F;7,5,F", "15,7,.;15,6,N"], play: [0,0,0,0,0,0,0,0,1,-1,1,-1,1,-1],
+    rows: ["..................", ".........FF.......", ".........FNF......", "..........FNF.....", "..........FFF.....", ".........FFFFFF...", "........FFFFEFFF..", "........FFFFFFFN..", ".........FFFFCC...", "........FFFFFF....", "......FFFFFFFMM...", ".....FFFFFFFMMM...", "....MFFFFFFFMMD...", ".....FFFFFDDDDD..."] },
+  squirrel: { split: 8, nat: ["#B0703F", "#7A4826", "#E8B98A", "#F1D2AE"], nose: "#E58A9A", act: ["3,2,.;4,2,.;5,2,.;2,2,F;3,2,F;4,2,F;2,3,.;3,3,.;4,3,.;5,3,.;6,3,.;1,3,F;2,3,F;3,3,F;4,3,F;5,3,F;1,4,.;2,4,.;3,4,.;4,4,.;5,4,.;6,4,.;7,4,.;0,4,F;1,4,F;2,4,M;3,4,M;4,4,F;5,4,F;6,4,F", "13,9,.;14,8,M;13,8,M"], play: [0,0,-1,-1,0,0,-1,-1,1,-1,1,-1,1,-1],
+    rows: ["..................", "..................", "...FFF............", "..FFFFF...........", ".FFMMFFF..F.......", ".FF..FFF.FFFFF....", ".....FFF.FFEFFF...", ".....FFF.FFFFFCN..", ".....FFF..FFFC....", "....FFF..FFFFMM...", "....FFFFFFFFFMM...", "....FFFFFFFFMMD...", ".....FFFFFFDMMD...", "......FFFFFDD.DD.."] },
+  duck: { split: 8, nat: ["#F2CF5B", "#D3A93A", "#F8E39A", "#F8E39A"], nose: "#F08A3C", act: ["14,4,.;15,4,.;14,3,N;15,3,N;1,8,.;0,8,F", "1,8,.;2,8,F"], play: [0,0,0,-1,-1,1,-1,1,-1,0,0,0],
+    rows: ["..................", "..................", ".........FFFF.....", "........FFFFFF....", "........FFFFEFNN..", "........FFFFFFNNN.", ".........FFFF.....", ".........FFF......", ".F.....FFFFFF.....", ".FF..FFFFFFFFF....", "..FFFFFDDDFFFF....", "...FFFFFFDDFFF....", ".....FFFFFFFF.....", ".......N...N......"] },
+};
+const ANIMAL_PAL = {peach: ["#F5B7A3", "#D98C7A", "#FBD9CC", "#FFE9DF"], pink: ["#EFA7C0", "#C97895", "#F8CFDD", "#FDE6EE"], lilac: ["#B9A7E8", "#8D7AC4", "#D9CEF6", "#EEE8FC"], sky: ["#9CC8EE", "#6E9BC9", "#C9E2F7", "#E6F2FC"], butter: ["#F3D98B", "#CDAE5E", "#F9EBBE", "#FDF6DF"]};
+const ANIMAL_EYE = '#2A1E2E';
+function charHTML(p) { return `<div class="ch"><canvas class="ch-px" data-animal="${animalOf(p)}" data-col="${animalColorOf(p)}" data-off="${hashStr(p.id || 'draft') % 70}"></canvas></div>`; }
+/* 동물 그리기: 숨 두 번 → 눈 깜빡 → 동물별 동작, 70칸(7초) 반복. 동물마다 시작이 어긋나게 data-off */
+const animalPX = (() => {
+  const W = 18, H = 14, N = 70;
+  const acts = {};
+  const actOf = (k, i) => (acts[k] = acts[k] || ANIMAL_ART[k].act.map(a => a.split(';').map(c => { const [x, y, ch] = c.split(','); return [+x, +y, ch]; })))[i];
+  const timeline = {};
+  function tl(k) {
+    if (timeline[k]) return timeline[k];
+    const t = [];
+    for (let r = 0; r < 2; r++) for (let i = 0; i < 16; i++) t.push([i >= 5 && i < 11 ? 1 : 0, 0, -1]);
+    t[22] = [0, 1, -1];
+    ANIMAL_ART[k].play.forEach(a => t.push([0, 0, a]));
+    while (t.length < N) t.push([0, 0, -1]);
+    return timeline[k] = t.slice(0, N);
+  }
+  function draw(cv, k, colKey, breath, blink, act) {
+    const art = ANIMAL_ART[k]; let rows = art.rows.slice();
+    if (breath) rows = rows.slice(1, art.split).concat([rows[art.split - 1]], rows.slice(art.split));
+    rows = rows.map(r => r.split(''));
+    if (act >= 0) for (const [x, y, ch] of actOf(k, act)) if (x >= 0 && x < W) rows[y][x] = ch;
+    const [F, D, M, C] = colKey === 'natural' ? art.nat : ANIMAL_PAL[colKey];
+    const col = { F, D, M, C, E: ANIMAL_EYE, N: art.nose || C };
+    if (cv.width !== W) { cv.width = W; cv.height = H; }
+    const x = cv.getContext('2d'); x.clearRect(0, 0, W, H);
+    rows.forEach((r, yy) => r.forEach((ch, xx) => {
+      if (blink && ch === 'E') ch = 'D';
+      if (col[ch]) { x.fillStyle = col[ch]; x.fillRect(xx, yy, 1, 1); }
+    }));
+  }
+  function paint(cv, tick) {
+    const k = ANIMALS[cv.dataset.animal] ? cv.dataset.animal : 'cat', c = ANIMAL_COLORS[cv.dataset.col] ? cv.dataset.col : 'natural';
+    const [b, bl, a] = tick < 0 ? [0, 0, -1] : tl(k)[(tick + +(cv.dataset.off || 0)) % N];
+    const key = `${k}|${c}|${b}|${bl}|${a}`;
+    if (cv._key === key) return; cv._key = key;
+    draw(cv, k, c, b, bl, a);
+  }
+  let last = 0;
+  function frame(now) {
+    requestAnimationFrame(frame);
+    if (now - last < 100 || document.hidden) return; last = now;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, tick = Math.floor(now / 100);
+    document.querySelectorAll('canvas.ch-px').forEach(cv => paint(cv, reduce ? -1 : tick));
+  }
+  requestAnimationFrame(frame);
+  return { still: (cv, k, c) => draw(cv, k, c, 0, 0, -1) };
+})();
 function planetHTML(p, opts = {}) {
   const c = PLANET_COLORS[p.planetColor] || PLANET_COLORS.color_1;
   const tex = ITEMS[p.cover] ? p.cover : (p.planetColor || 'color_1'); // 꽃이 아닌 예전 값은 지구 색으로
@@ -982,7 +1052,7 @@ function Lost() {
    9. 방명록 (S4, S4-1 ~ S4-6)
    ===================================================================== */
 const SLOTS = [[44, 24], [62, 19], [80, 24], [93, 42], [10, 44], [28, 36], [76, 50], [91, 68], [9, 70], [26, 60], [52, 44], [71, 76], [88, 84], [12, 86], [31, 82]];
-const defaultDraft = () => ({ nickname: '', message: '', planetColor: 'color_1', cover: 'none', hair: 'hair_1', hat: 'none', clothes: 'clothes_1' });
+const defaultDraft = () => ({ nickname: '', message: '', planetColor: 'color_1', cover: 'none', animal: 'cat', animalColor: 'natural' });
 const hashStr = s => { let h = 2166136261; for (const c of s) { h ^= c.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
 const FLOWER_KEYS = Object.keys(ITEMS);
 
@@ -1122,10 +1192,9 @@ function renderPanel() {
       <p class="note-msg ko" id="itemMsg" aria-live="polite" style="color:var(--color-text-muted)"></p>
       <button class="link ko" type="button" id="coverNone" style="justify-self:start">덮지 않고 지구 색만 쓰기</button>
     </fieldset>
-    <fieldset class="group"><legend>your character</legend>
-      <div class="charrow"><span>hair</span><div class="opts" id="hair"></div></div>
-      <div class="charrow"><span>hat</span><div class="opts six" id="hat"></div></div>
-      <div class="charrow"><span>clothes</span><div class="opts" id="clothes"></div></div>
+    <fieldset class="group"><legend>your animal</legend>
+      <div class="opts seven" id="animals"></div>
+      <div class="charrow"><span>color</span><div class="swatches fur" id="fur"></div></div>
     </fieldset>
     <div class="field">
       <label class="lab" for="nick">name <small class="count" id="nickCount"></small></label>
@@ -1152,15 +1221,17 @@ function renderPanel() {
   buildItems();
   $('#coverNone', panel).onclick = () => { gb.draft.cover = 'none'; changed(); };
   $('#pClose', panel).onclick = () => { gb.collapsed = true; renderPanel(); renderFront(); renderSpace(); };
-  // 캐릭터
-  const charOpts = (id, map, field) => Object.keys(map).forEach(k => {
-    const b = el(`<button class="opt" type="button" aria-label="${field} ${map[k]}"></button>`);
-    b.innerHTML = field === 'hat' && k === 'none' ? NONE_ICON : '<span class="cl"></span>';
-    b.dataset.val = k; b.dataset.field = field;
-    b.onclick = () => { gb.draft[field] = k; changed(); };
-    $('#' + id, panel).appendChild(b);
+  // 동물과 털 색
+  Object.keys(ANIMALS).forEach(k => {
+    const b = el(`<button class="opt" type="button" aria-label="동물 ${ANIMALS[k]}" title="${ANIMALS[k]}"><canvas class="ani-thumb"></canvas></button>`);
+    b.dataset.val = k; b.onclick = () => { gb.draft.animal = k; changed(); };
+    $('#animals', panel).appendChild(b);
   });
-  charOpts('hair', HAIRS, 'hair'); charOpts('hat', HATS, 'hat'); charOpts('clothes', CLOTHES, 'clothes');
+  Object.keys(ANIMAL_COLORS).forEach(c => {
+    const b = el(`<button class="sw${c === 'natural' ? ' nat' : ''}" type="button" aria-label="털 색 ${ANIMAL_COLORS[c]}" title="${ANIMAL_COLORS[c]}"></button>`);
+    b.dataset.val = c; b.onclick = () => { gb.draft.animalColor = c; changed(); };
+    $('#fur', panel).appendChild(b);
+  });
   // 글자 입력
   const nick = $('#nick', panel), note = $('#note', panel);
   nick.value = gb.draft.nickname; note.value = gb.draft.message;
@@ -1206,9 +1277,14 @@ function refreshPanel() {
   $$('#items .opt', p).forEach(b => b.setAttribute('aria-pressed', String(d.cover === b.dataset.item)));
   $('#itemMsg', p).textContent = !ITEMS[d.cover] ? '지금은 지구 색만 보여요.' : `지구 전체가 ${ITEMS[d.cover]}(으)로 덮여 있어요.`;
   $('#coverNone', p).hidden = !ITEMS[d.cover];
-  $$('.charrow .opt', p).forEach(b => {
-    b.setAttribute('aria-pressed', String(d[b.dataset.field] === b.dataset.val));
-    const cl = $('.cl', b); if (cl) cl.style.cssText = charStyle({ ...d, [b.dataset.field]: b.dataset.val }); // 지금 고른 것과 합친 모습으로 미리보기
+  const an = animalOf(d), ac = animalColorOf(d);
+  $$('#animals .opt', p).forEach(b => {
+    b.setAttribute('aria-pressed', String(an === b.dataset.val));
+    animalPX.still($('canvas', b), b.dataset.val, ac); // 지금 고른 털 색으로 미리보기
+  });
+  $$('#fur .sw', p).forEach(b => {
+    b.setAttribute('aria-pressed', String(ac === b.dataset.val));
+    b.style.setProperty('--c', (b.dataset.val === 'natural' ? ANIMAL_ART[an].nat : ANIMAL_PAL[b.dataset.val])[0]); // 고른 동물의 그 색 털
   });
   const nl = glen(d.nickname), ml = glen(d.message);
   $('#nickCount', p).textContent = `${nl} / 12`; $('#nickCount', p).classList.toggle('max', nl >= 12);
@@ -1472,8 +1548,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(1600)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1792863621"></script>
-<script src="firebase-live.js?v=1792863621"></script>
+<script src="firebase-config.js?v=1792864500"></script>
+<script src="firebase-live.js?v=1792864500"></script>
 
 </body>
 </html>

@@ -9,14 +9,13 @@ service cloud.firestore {
 
     // 글자 수는 화면에서 정확히 막고(닉네임 12자, 메시지 100자), 여기서는 이모지를 생각해 넉넉하게 막음
     function validPlanet(d) {
-      return d.keys().hasOnly(['nickname', 'message', 'planetColor', 'cover', 'hair', 'hat', 'clothes', 'googleName', 'createdAt', 'updatedAt'])
+      return d.keys().hasOnly(['nickname', 'message', 'planetColor', 'cover', 'animal', 'animalColor', 'googleName', 'createdAt', 'updatedAt'])
         && d.nickname is string && d.nickname.size() > 0 && d.nickname.size() <= 60
         && d.message is string && d.message.size() <= 400
         && d.planetColor is string && d.planetColor.matches('color_[1-5]')
         && d.cover is string && d.cover.matches('none|flower_[1-5]')
-        && d.hair is string && d.hair.matches('hair_[1-5]')
-        && d.hat is string && d.hat.matches('none|hat_[1-5]')
-        && d.clothes is string && d.clothes.matches('clothes_[1-5]')
+        && d.animal is string && d.animal.matches('monkey|cat|puppy|bear|rabbit|squirrel|duck')
+        && d.animalColor is string && d.animalColor.matches('natural|peach|pink|lilac|sky|butter')
         && d.googleName is string && d.googleName.size() <= 100
         && d.updatedAt == request.time;
     }
