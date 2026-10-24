@@ -1,3 +1,10 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
 <title>SUMin inhale</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
@@ -827,7 +834,7 @@ function render(r, anim) {
   document.body.dataset.route = r.name;
   closeModal();
   bg.set(SCENES[r.name] || SCENES.lost);
-  document.getElementById('proto').hidden = r.name !== 'guestbook';
+  document.getElementById('proto').hidden = auth.live || r.name !== 'guestbook';
   const old = Array.from(app.children);
   const screen = { home: Home, works: Works, detail: Detail, guestbook: Guestbook, lost: Lost }[r.name](r);
   app.appendChild(screen);
@@ -1179,7 +1186,6 @@ function renderPanel() {
     nick.value = gb.draft.nickname; note.value = gb.draft.message; changed(true);
   };
   if (edit) $('#del', panel).onclick = () => askDelete(auth.user.uid, true);
-  panel.addEventListener('pointerover', e => { if (e.target.closest('.opt,.sw')) sound.play('spark'); });
   renderBanner(); refreshPanel();
 }
 function buildItems() {
@@ -1365,7 +1371,7 @@ function openLogin(pending, message) {
   </div>`);
   if (message) { $('#lErr', n).hidden = false; $('#lErr', n).textContent = message; }
   $('#gNo', n).onclick = closeModal;
-  $('#gGo', n).onclick = () => openChooser(pending);
+  $('#gGo', n).onclick = () => auth.live ? auth.signInWithGoogle().then(u => afterSignIn(u, pending), () => openLogin(pending, '로그인이 끝나지 않았어요. 다시 시도해 주세요.')) : openChooser(pending);
   openModal(n);
 }
 function openChooser(pending) {
@@ -1380,20 +1386,23 @@ function openChooser(pending) {
     $('.av', b).textContent = a.name[0]; $('.nm', b).textContent = a.name; $('small', b).textContent = a.note;
     b.onclick = async () => {
       $$('.acct', n).forEach(x => x.disabled = true); b.querySelector('small').textContent = '로그인하는 중...';
-      await auth.signInWithGoogle(a);
-      closeModal(); renderAuthbox(); toast(`${a.name} 계정으로 로그인했어요`);
-      const mine = await db.getPlanet(a.uid);
-      if (pending === 'create') {
-        if (mine) openAlready(mine); else { renderPanel(); doCreate(); }
-      } else {
-        if (mine) { gb.mode = 'edit'; gb.saved = clone(mine); gb.draft = clone(mine); }
-        renderPanel(); renderFront(); renderSpace();
-      }
+      afterSignIn(await auth.signInWithGoogle(a), pending);
     };
     $('#accts', n).appendChild(b);
   });
   $('#gClose', n).onclick = () => openLogin(pending, '로그인이 끝나지 않았어요. 다시 시도해 주세요.');
   openModal(n, { dismiss: false });
+}
+
+async function afterSignIn(user, pending) {
+  closeModal(); renderAuthbox(); toast(`${user.name} 계정으로 로그인했어요`);
+  const mine = await db.getPlanet(user.uid);
+  if (pending === 'create') {
+    if (mine) openAlready(mine); else { renderPanel(); doCreate(); }
+  } else {
+    if (mine) { gb.mode = 'edit'; gb.saved = clone(mine); gb.draft = clone(mine); }
+    renderPanel(); renderFront(); renderSpace();
+  }
 }
 
 /* ---- S4-6 이미 지구가 있어요 ---- */
@@ -1463,3 +1472,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(1600)]).then(enter);
 })();
 </script>
+<script src="firebase-config.js"></script>
+<script src="firebase-live.js"></script>
+
+</body>
+</html>
