@@ -125,8 +125,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 #sound path { fill: none; stroke: var(--color-text); stroke-width: 1.5; stroke-linecap: round; }
 #sound.on path { stroke: var(--color-primary); animation: wave 1.6s linear infinite; }
 @keyframes wave { from { transform: translateX(0) } to { transform: translateX(-11px) } }
-@media (min-width: 981px) { body[data-route="guestbook"] #sound { right: calc(392px + 24px); } }
-body[data-route="home"] #sound { display: none; }
+body[data-route="home"] #sound, body[data-route="guestbook"] #sound { display: none; } /* 홈과 방명록에는 소리 버튼 없음 */
 
 /* ---------- works list ---------- */
 .page { min-height: 100%; display: flex; flex-direction: column; }
@@ -551,7 +550,10 @@ const ANIMAL_EYE = '#2A1E2E';
 function charHTML(p) { return `<div class="ch"><canvas class="ch-px" data-animal="${animalOf(p)}" data-col="${animalColorOf(p)}" data-off="${hashStr(p.id || 'draft') % 70}"></canvas></div>`; }
 /* 동물 그리기: 숨 두 번 → 눈 깜빡 → 동물별 동작, 70칸(7초) 반복. 동물마다 시작이 어긋나게 data-off */
 const animalPX = (() => {
-  const W = 18, H = 14, N = 70;
+  const W = 18, H = 14, N = 70, S = 2;
+  const frames = new Map();
+  const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(v => v / 16 - .5);
+  const L = [-.55, .6, .58], ln = Math.hypot(...L); L.forEach((v, i) => L[i] = v / ln);
   const acts = {};
   const actOf = (k, i) => (acts[k] = acts[k] || ANIMAL_ART[k].act.map(a => a.split(';').map(c => { const [x, y, ch] = c.split(','); return [+x, +y, ch]; })))[i];
   const timeline = {};
@@ -564,26 +566,67 @@ const animalPX = (() => {
     while (t.length < N) t.push([0, 0, -1]);
     return timeline[k] = t.slice(0, N);
   }
-  function draw(cv, k, colKey, breath, blink, act) {
-    const art = ANIMAL_ART[k]; let rows = art.rows.slice();
-    if (breath) rows = rows.slice(1, art.split).concat([rows[art.split - 1]], rows.slice(art.split));
-    rows = rows.map(r => r.split(''));
-    if (act >= 0) for (const [x, y, ch] of actOf(k, act)) if (x >= 0 && x < W) rows[y][x] = ch;
-    const [F, D, M, C] = colKey === 'natural' ? art.nat : ANIMAL_PAL[colKey];
-    const col = { F, D, M, C, E: ANIMAL_EYE, N: art.nose || C };
-    if (cv.width !== W) { cv.width = W; cv.height = H; }
-    const x = cv.getContext('2d'); x.clearRect(0, 0, W, H);
-    rows.forEach((r, yy) => r.forEach((ch, xx) => {
-      if (blink && ch === 'E') ch = 'D';
-      if (col[ch]) { x.fillStyle = col[ch]; x.fillRect(xx, yy, 1, 1); }
-    }));
+  function draw(cv, k, colKey, breath, blink, act, spark = 0) {
+    const key = `${k}|${colKey}|${breath}|${blink}|${act}|${spark}`;
+    let frame = frames.get(key);
+    if (!frame) {
+      const art = ANIMAL_ART[k]; let rows = art.rows.slice();
+      if (breath) rows = rows.slice(1, art.split).concat([rows[art.split - 1]], rows.slice(art.split));
+      rows = rows.map(r => r.split(''));
+      if (act >= 0) for (const [x, y, ch] of actOf(k, act)) if (x >= 0 && x < W) rows[y][x] = ch;
+      const [F, D, M, C] = colKey === 'natural' ? art.nat : ANIMAL_PAL[colKey];
+      const rgb = hex => hex.match(/[a-f\d]{2}/gi).map(v => parseInt(v, 16));
+      const ramp = [D, F, M, C].map(rgb), eye = rgb(ANIMAL_EYE), nose = rgb(art.nose || C);
+      frame = document.createElement('canvas'); frame.width = W * S; frame.height = H * S;
+      const ctx = frame.getContext('2d'), img = ctx.createImageData(frame.width, frame.height);
+      const solid = (x, y) => x >= 0 && x < W && y >= 0 && y < H && rows[y][x] !== '.';
+      // 머리와 몸통을 둥글게, 외곽선은 원본 그대로
+      const tops = [0, art.split].map((start, part) => {
+        let top = H, bottom = start;
+        for (let y = start; y < (part ? H : art.split); y++) if (rows[y].some(ch => ch !== '.')) { top = Math.min(top, y); bottom = y + 1; }
+        return [top, bottom];
+      });
+      let glinted = false;
+      for (let y = 0; y < H * S; y++) for (let x = 0; x < W * S; x++) {
+        const ax = Math.floor(x / S), ay = Math.floor(y / S), ch = rows[ay][ax];
+        if (ch === '.') continue;
+        let color;
+        if (ch === 'E' || ch === 'N') {
+          color = ch === 'N' ? nose : blink ? ramp[0] : eye;
+          if (ch === 'E' && !blink && x % S === 0 && y % S === 0) color = [255, 255, 255];
+        } else {
+          let left = ax, right = ax + 1;
+          while (solid(left - 1, ay)) left--;
+          while (solid(right, ay)) right++;
+          const [top, bottom] = tops[ay < art.split ? 0 : 1];
+          let nx = (x / S + .25 - (left + right) / 2) / Math.max(2, (right - left) / 2);
+          let ny = ((top + bottom) / 2 - y / S - .25) / Math.max(2, (bottom - top) / 2);
+          const r = Math.hypot(nx, ny); if (r > .98) { nx *= .98 / r; ny *= .98 / r; }
+          const nz = Math.sqrt(1 - nx * nx - ny * ny), light = Math.max(0, nx * L[0] + ny * L[1] + nz * L[2]);
+          // 같은 빛과 4×4 점무늬, 털색으로 만든 네 단계
+          const bias = { F: 0, D: -1, M: .65, C: 1.25 }[ch] || 0;
+          const tone = Math.max(0, Math.min(3, Math.round((light - .22) * 3 + bias + BAYER[(y % 4) * 4 + x % 4] * .54)));
+          color = ramp[tone];
+          const rim = (!solid(ax - 1, ay) && x % S === 0) || (!solid(ax, ay - 1) && y % S === 0);
+          if (rim && light > .55) color = color.map(v => v + (255 - v) * .16);
+          // 얼굴을 피해 가끔 한 점만 반짝임
+          if (spark && !glinted && ch === 'F' && light > .65 && (x * 73 + y * 151) % 41 === 0) { color = [255, 255, 255]; glinted = true; }
+        }
+        const i = (y * frame.width + x) * 4;
+        img.data[i] = color[0]; img.data[i + 1] = color[1]; img.data[i + 2] = color[2]; img.data[i + 3] = 255;
+      }
+      ctx.putImageData(img, 0, 0); frames.set(key, frame);
+    }
+    if (cv.width !== W * S) { cv.width = W * S; cv.height = H * S; }
+    const ctx = cv.getContext('2d'); ctx.clearRect(0, 0, cv.width, cv.height); ctx.drawImage(frame, 0, 0);
   }
   function paint(cv, tick) {
     const k = ANIMALS[cv.dataset.animal] ? cv.dataset.animal : 'cat', c = ANIMAL_COLORS[cv.dataset.col] ? cv.dataset.col : 'natural';
     const [b, bl, a] = tick < 0 ? [0, 0, -1] : tl(k)[(tick + +(cv.dataset.off || 0)) % N];
-    const key = `${k}|${c}|${b}|${bl}|${a}`;
+    const spark = tick >= 0 && (tick + +(cv.dataset.off || 0)) % N >= 64 && (tick + +(cv.dataset.off || 0)) % N < 67 ? 1 : 0;
+    const key = `${k}|${c}|${b}|${bl}|${a}|${spark}`;
     if (cv._key === key) return; cv._key = key;
-    draw(cv, k, c, b, bl, a);
+    draw(cv, k, c, b, bl, a, spark);
   }
   let last = 0;
   function frame(now) {
@@ -1548,8 +1591,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(1600)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1792864609"></script>
-<script src="firebase-live.js?v=1792864609"></script>
+<script src="firebase-config.js?v=1792865649"></script>
+<script src="firebase-live.js?v=1792865649"></script>
 
 </body>
 </html>
