@@ -1,7 +1,7 @@
 /* =====================================================================
    진짜 구글 로그인 + Firestore 저장.
    firebase-config.js에 config가 있을 때만 켜지고, index.html의 auth / db 안쪽을 바꿔 끼웁니다.
-   Firestore 'planets' 컬렉션, 문서 아이디 = uid (계정당 지구 1개).
+   Firestore 'planets' 컬렉션, 문서 아이디 = uid (계정당 행성 1개).
    ===================================================================== */
 (function () {
   const cfg = window.SUMIN_FIREBASE;

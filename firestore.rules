@@ -1,6 +1,6 @@
 rules_version = '2';
 // Sumin 방명록 보안 규칙. Firebase 콘솔 > Firestore Database > 규칙 탭에 통째로 붙여 넣고 "게시"를 누르세요.
-// ADMIN_UID 자리에 숨님 구글 계정의 User UID를 넣어야 숨님이 다른 사람 지구를 지울 수 있어요.
+// ADMIN_UID 자리에 숨님 구글 계정의 User UID를 넣어야 숨님이 다른 사람 행성을 지울 수 있어요.
 service cloud.firestore {
   match /databases/{database}/documents {
     function adminUid() { return 'aDWLQWGEbwRvawIjWWFFjBy7u6e2'; }
