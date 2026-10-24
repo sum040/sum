@@ -206,8 +206,8 @@ body[data-route="home"] #sound, body[data-route="guestbook"] #sound { display: n
 .space-intro p { margin: 6px 0 0; color: var(--color-text-muted); font-family: var(--font-display); font-weight: 300; letter-spacing: .06em; }
 .space-msg { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); text-align: center; color: var(--color-text-muted); display: grid; gap: 12px; justify-items: center; z-index: 2; max-width: 80%; }
 .sp { position: absolute; width: var(--size); height: var(--size); transform: translate(-50%, -50%); border: 0; padding: 0; background: none; cursor: pointer; border-radius: 50%; }
-.sp .bob { width: 100%; height: 100%; animation: bob 7s ease-in-out infinite; animation-delay: var(--delay); transition: transform .4s cubic-bezier(.2,.7,.2,1), filter .4s; }
-.sp:hover .bob, .sp:focus-visible .bob { transform: scale(1.08); filter: brightness(1.12); }
+.sp .bob { width: 100%; height: 100%; animation: bob 7s ease-in-out infinite; animation-delay: var(--delay); transition: transform .7s cubic-bezier(.22,1,.36,1), filter .7s ease; }
+.sp:hover .bob, .sp:focus-visible .bob { transform: scale(1.16); filter: brightness(1.12); }
 .sp svg, .front svg, .mini svg { width: 100%; height: 100%; display: block; overflow: visible; }
 /* 지구: 겉면 그림이 옆으로 흘러 도는 것처럼 보임 + 빛, 그림자, 반짝이 */
 .pl { position: relative; width: 100%; height: 100%; }
@@ -217,7 +217,8 @@ body[data-route="home"] #sound, body[data-route="guestbook"] #sound { display: n
 /* 캐릭터: 머리·모자·옷 150가지 조합을 미리 만든 그림에서 한 줄을 골라 4장씩 넘김 */
 .ch { position: absolute; left: 25%; top: 3%; width: 50%; aspect-ratio: 18 / 14; pointer-events: none; animation: chfloat 3.4s ease-in-out infinite; animation-delay: calc(var(--delay, 0s) * .6); } /* 행성과 박자가 다르게 살짝 떠오름 */
 /* 동물: 18x14 픽셀 캔버스를 그대로 키움. 숨쉬기, 눈 깜빡임, 동물별 동작은 animalPX가 그림 */
-.ch-px { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+.ch-px { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; display: block; transform-origin: 50% 100%; animation: breathe 3.2s ease-in-out infinite; animation-delay: calc(var(--delay, 0s) * -.4); }
+@keyframes breathe { 0%,100% { transform: scale(1, 1) } 45% { transform: scale(1.025, 1.06) } } /* 발은 붙인 채 몸이 부풀었다 가라앉음 */
 .opt canvas { width: 80%; height: 80%; image-rendering: pixelated; }
 .opt { overflow: hidden; }
 .opt .ani-thumb { width: 100%; height: auto; aspect-ratio: 18 / 14; image-rendering: pixelated; image-rendering: crisp-edges; }
@@ -331,8 +332,7 @@ body[data-route="home"] #sound, body[data-route="guestbook"] #sound { display: n
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 @media (prefers-reduced-motion: reduce) {
-  .sp .bob, .front .bob, .breath-dot, .scroll-cue::after, #sound.on path, .ch { animation: none !important; }
-  * { transition-duration: .01s !important; }
+  .scroll-cue::after, #sound.on path { animation: none !important; } /* 지구·동물의 잔잔한 움직임과 호버는 남김(숨님 요청) */
 }
 </style>
 
@@ -622,7 +622,7 @@ const animalPX = (() => {
   }
   function paint(cv, tick) {
     const k = ANIMALS[cv.dataset.animal] ? cv.dataset.animal : 'cat', c = ANIMAL_COLORS[cv.dataset.col] ? cv.dataset.col : 'natural';
-    const [b, bl, a] = tick < 0 ? [0, 0, -1] : tl(k)[(tick + +(cv.dataset.off || 0)) % N];
+    const [, bl, a] = tick < 0 ? [0, 0, -1] : tl(k)[(tick + +(cv.dataset.off || 0)) % N], b = 0; // 숨쉬기는 CSS(breathe)로 부드럽게
     const spark = tick >= 0 && (tick + +(cv.dataset.off || 0)) % N >= 64 && (tick + +(cv.dataset.off || 0)) % N < 67 ? 1 : 0;
     const key = `${k}|${c}|${b}|${bl}|${a}|${spark}`;
     if (cv._key === key) return; cv._key = key;
@@ -632,8 +632,8 @@ const animalPX = (() => {
   function frame(now) {
     requestAnimationFrame(frame);
     if (now - last < 100 || document.hidden) return; last = now;
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, tick = Math.floor(now / 100);
-    document.querySelectorAll('canvas.ch-px').forEach(cv => paint(cv, reduce ? -1 : tick));
+    const tick = Math.floor(now / 100);
+    document.querySelectorAll('canvas.ch-px').forEach(cv => paint(cv, tick));
   }
   requestAnimationFrame(frame);
   return { still: (cv, k, c) => draw(cv, k, c, 0, 0, -1) };
@@ -690,7 +690,7 @@ const planetGL = (() => {
     document.querySelectorAll('canvas.pl-ball').forEach(cv => {
       const D = +cv.dataset.d, t = tex(cv.dataset.tex); if (!t.ready) return;
       if (cv.width !== D) { cv.width = cv.height = D; cv._img = cv.getContext('2d').createImageData(D, D); }
-      const rot = (reduce ? 0 : now / 1000 / +cv.dataset.spd) + +cv.dataset.off;
+      const rot = now / 1000 / +cv.dataset.spd + +cv.dataset.off;
       const out = cv._img.data, src = t.data, tick = Math.floor(now / 140);
       for (const p of map(D)) {
         let u = (p.lon + rot) % 1; if (u < 0) u += 1;
@@ -1591,8 +1591,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(1600)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1792865649"></script>
-<script src="firebase-live.js?v=1792865649"></script>
+<script src="firebase-config.js?v=1792866330"></script>
+<script src="firebase-live.js?v=1792866330"></script>
 
 </body>
 </html>
