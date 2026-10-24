@@ -69,7 +69,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 #loader.gone { opacity: 0; pointer-events: none; }
 .loader-inner { display: grid; justify-items: center; gap: 22px; }
 .breath-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 30px 10px rgba(245,183,163,.45); animation: breathe 3.2s ease-in-out infinite; }
-#loader.expand .breath-dot { animation: none; transform: scale(60); opacity: 0; transition: transform 1s ease-in, opacity 1s ease-in; }
+#loader.expand .breath-dot { animation: none; transform: scale(2.4); opacity: 0; transition: transform .7s cubic-bezier(.22,1,.36,1), opacity .5s ease-out; } /* 크게 번지지 않고 살짝 커지며 사라짐 */
 @keyframes breathe { 0%,100% { transform: scale(.7); opacity: .6 } 50% { transform: scale(1.5); opacity: 1 } }
 .loader-word { font-family: var(--font-display); font-weight: 200; letter-spacing: .35em; font-size: 18px; color: var(--color-text-muted); padding-left: .35em; }
 .loader-actions { display: grid; justify-items: center; gap: 12px; min-height: 84px; opacity: 0; transform: translateY(6px); transition: opacity .6s, transform .6s; }
@@ -217,8 +217,8 @@ body[data-route="home"] #sound, body[data-route="guestbook"] #sound { display: n
 /* 캐릭터: 머리·모자·옷 150가지 조합을 미리 만든 그림에서 한 줄을 골라 4장씩 넘김 */
 .ch { position: absolute; left: 25%; top: 3%; width: 50%; aspect-ratio: 18 / 14; pointer-events: none; animation: chfloat 3.4s ease-in-out infinite; animation-delay: calc(var(--delay, 0s) * .6); } /* 행성과 박자가 다르게 살짝 떠오름 */
 /* 동물: 18x14 픽셀 캔버스를 그대로 키움. 숨쉬기, 눈 깜빡임, 동물별 동작은 animalPX가 그림 */
-.ch-px { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; display: block; transform-origin: 50% 100%; animation: breathe 3.2s ease-in-out infinite; animation-delay: calc(var(--delay, 0s) * -.4); }
-@keyframes breathe { 0%,100% { transform: scale(1, 1) } 45% { transform: scale(1.025, 1.06) } } /* 발은 붙인 채 몸이 부풀었다 가라앉음 */
+.ch-px { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; display: block; transform-origin: 50% 100%; animation: animalBreathe 3.2s ease-in-out infinite; animation-delay: calc(var(--delay, 0s) * -.4); }
+@keyframes animalBreathe { 0%,100% { transform: scale(1, 1) } 45% { transform: scale(1.025, 1.06) } } /* 발은 붙인 채 몸이 부풀었다 가라앉음 */
 .opt canvas { width: 80%; height: 80%; image-rendering: pixelated; }
 .opt { overflow: hidden; }
 .opt .ani-thumb { width: 100%; height: auto; aspect-ratio: 18 / 14; image-rendering: pixelated; image-rendering: crisp-edges; }
@@ -1591,8 +1591,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(1600)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1792866330"></script>
-<script src="firebase-live.js?v=1792866330"></script>
+<script src="firebase-config.js?v=1792866464"></script>
+<script src="firebase-live.js?v=1792866464"></script>
 
 </body>
 </html>
