@@ -27,7 +27,7 @@
   auth.isAdmin = function () { return !!this.user && !!cfg.adminUid && this.user.uid === cfg.adminUid; };
   auth.signInWithGoogle = async function () {
     const fb = await whenReady;
-    const res = await fb.auth().signInWithPopup(new fb.auth.GoogleAuthProvider());
+    const res = await fb.auth().signInWithPopup(new fb.auth.GoogleAuthProvider()).catch(e => { console.warn('구글 로그인 실패:', e.code, e.message); throw e; });
     this.user = toUser(res.user);
     return this.user;
   };
