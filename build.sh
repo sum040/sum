@@ -10,4 +10,5 @@ cp "$SRC/firebase-config.js" "$SRC/firebase-live.js" "$SRC/firestore.rules" "$DE
   printf '<!doctype html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n</head>\n<body>\n'
   cat "$SRC/index.html"
   printf '\n</body>\n</html>\n'
-} > "$DEST/index.html"
+} | sed "s/src=\"\(firebase-[a-z]*\.js\)\"/src=\"\1?v=$(date +%s)\"/" > "$DEST/index.html"
+# 주소 뒤 ?v=시간 : 브라우저가 예전 설정 파일을 기억해 두고 쓰지 않게 함
