@@ -209,6 +209,17 @@ body[data-route="home"] #sound, body[data-route="guestbook"] #sound { display: n
 /* 카메라: 편집할 때 우주 전체가 내 행성 쪽으로 다가가며 확대됨 */
 .cam { position: absolute; inset: 0; transform-origin: 0 0; transition: transform .95s cubic-bezier(.45,0,.2,1); will-change: transform; }
 .space-intro { transition: opacity .6s; }
+.gb-body.viewing .space-intro, .gb-body.viewing .open-panel { opacity: 0; pointer-events: none; }
+.open-panel { transition: opacity .5s; }
+.view-info { position: absolute; left: 50%; bottom: max(6%, 28px); transform: translate(-50%, 12px); width: min(520px, calc(100% - 32px)); text-align: center; display: grid; justify-items: center; gap: 8px; z-index: 5; opacity: 0; pointer-events: none; transition: opacity .5s .25s, transform .5s .25s; }
+.view-info.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.vi-nick { font-family: var(--font-display); font-size: clamp(22px, 2.4vw, 30px); line-height: 1.25; word-break: break-all; }
+.vi-nick small { font-size: .5em; color: var(--color-text-muted); }
+.vi-msg { margin: 0; white-space: pre-wrap; word-break: break-word; line-height: 1.6; }
+.vi-date { color: var(--color-text-muted); font-size: 13px; }
+.vi-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
+.danger-ghost { border-color: var(--color-error); color: var(--color-error); }
+.gb-body.viewing .sp .bubble, .gb-body.viewing .sp .name-tag, .gb-body.viewing .sp .mine-tag { display: none; } /* 보는 중에는 말풍선 대신 아래 정보 */
 .gb-body:not(.collapsed) .space-intro { opacity: 0; }
 .space { position: relative; min-width: 0; height: 100%; overflow: hidden; }
 .space-intro { position: absolute; left: max(var(--side), env(safe-area-inset-left, 0px)); top: 8px; z-index: 2; pointer-events: none; }
@@ -1168,10 +1179,13 @@ function Guestbook() {
         <div class="space-intro"><h1>a little space for you</h1><p>leave a note, grow a planet.</p></div>
         <div class="cam" id="cam"><div id="planets"></div>
         <div class="front" id="front"><div class="bob"></div><span class="front-tag">my planet</span></div></div>
+        <div class="view-info ko" id="viewInfo" aria-live="polite"></div>
       </div>
       <aside class="panel" id="panel" aria-label="내 행성 꾸미기"></aside>
     </div></section>`);
-  gb.root = s;
+  gb.root = s; gb.viewId = null;
+  $('#space', s).addEventListener('click', e => { if (gb.viewId && !e.target.closest('.sp, .view-info, button')) closeView(); });
+  addEventListener('keydown', e => { if (e.key === 'Escape' && gb.viewId && document.getElementById('modal').hidden) closeView(); });
   if (spaceRO) spaceRO.observe($('#space', s));
   gb.saveError = null; gb.busy = false; gb.collapsed = true; // 처음엔 둘러보기만, 버튼을 눌러야 만들기 창이 열림
   renderAuthbox();
@@ -1278,13 +1292,19 @@ function renderSpace() {
   });
   // 빠진 행성은 살짝 흐려지며 사라짐
   old.forEach(n => { n.classList.add('leaving'); setTimeout(() => n.remove(), 450); });
+  if (gb.viewId && !shown.some(p => p.id === gb.viewId)) { gb.viewId = null; renderView(); } // 보던 행성이 사라지면 보기 끝
   moveCam();
 }
 // 카메라 이동: 편집 창이 열리면 내 행성(만들 때는 앞의 미리보기)을 보이는 칸 가운데로 당겨 확대
 function moveCam() {
   const cam = gb.root && $('#cam', gb.root), space = gb.root && $('#space', gb.root); if (!cam || !space) return;
-  if (gb.collapsed) { cam.style.transform = ''; return; }
   const W = space.offsetWidth, H = space.offsetHeight, narrow = matchMedia('(max-width: 980px)').matches;
+  const vn = gb.viewId && $(`.sp[data-id="${CSS.escape(gb.viewId)}"]`, cam);
+  if (vn) { // 행성 보기: 위쪽 칸 가운데로, 아래는 정보 자리
+    const vh = H * (narrow ? .5 : .58), z = Math.max(1, Math.min(2.2, (Math.min(W, vh) * .62) / vn.offsetWidth));
+    cam.style.transform = `translate(${W / 2 - vn.offsetLeft * z}px, ${vh / 2 + 30 - vn.offsetTop * z}px) scale(${z})`; return;
+  }
+  if (gb.collapsed) { cam.style.transform = ''; return; }
   const vw = narrow ? W : W - 392, vh = narrow ? H * .38 : H; // 꾸미기 창에 가리지 않는 칸
   let tx, ty, size;
   const mine = auth.user && $(`.sp[data-id="${CSS.escape(auth.user.uid)}"]`, cam), f = $('#front', cam);
@@ -1332,6 +1352,7 @@ function renderPanel() {
     b.onclick = () => {
       sound.play('spark');
       if (!auth.user) return openLogin('open'); // 로그인 먼저, 그다음 꾸미기
+      if (gb.viewId) { gb.viewId = null; renderView(); }
       gb.collapsed = false; renderPanel(); renderFront(); renderSpace();
     };
     b.addEventListener('pointerenter', () => sound.play('spark'));
@@ -1558,20 +1579,28 @@ function confirmBox({ title, body, ok, cancel, onOk, danger }) {
 }
 
 /* ---- S4-1 행성 카드 ---- */
+// 행성 보기: 팝업 대신 카메라가 그 행성으로 다가가고, 아래에 정보와 버튼이 나옴
 async function openCard(id) {
-  const p = await db.getPlanet(id);
+  const p = gb.planets.find(q => q.id === id) || await db.getPlanet(id);
   if (!p) { toast('이 행성은 이제 볼 수 없어요'); loadPlanets(); return; }
+  if (!gb.collapsed) { gb.collapsed = true; renderPanel(); renderFront(); } // 편집 창이 열려 있으면 닫고 봄
+  gb.viewId = id; renderView(); renderSpace();
+}
+function closeView() { if (!gb.viewId) return; gb.viewId = null; renderView(); renderSpace(); }
+function renderView() {
+  const box = gb.root && $('#viewInfo', gb.root); if (!box) return;
+  const p = gb.viewId && gb.planets.find(q => q.id === gb.viewId);
+  gb.root.querySelector('#gbBody').classList.toggle('viewing', !!p);
+  if (!p) { box.classList.remove('show'); return; }
   const uid = auth.user && auth.user.uid, mine = p.id === uid, admin = auth.isAdmin() && !mine;
-  const n = el(`<div class="dialog wide ko" role="dialog" aria-modal="true" aria-label="행성 카드">
-    <button class="x" type="button" aria-label="닫기">×</button>
-    <div class="card"><div class="mini">${planetHTML(p, { d: 60 })}</div>
-      <div><div class="nick"></div><div class="gname"></div><p class="msg"></p><div class="date"></div>
-      <div class="row" style="margin-top:18px">${mine ? '<button class="btn" type="button" id="cEdit">편집하기</button>' : ''}${admin ? '<button class="btn-ghost" type="button" id="cDel" style="border-color:var(--color-error);color:var(--color-error)">지우기</button>' : ''}</div></div></div></div>`);
-  $('.nick', n).textContent = p.nickname; $('.gname', n).textContent = p.googleName; $('.msg', n).textContent = p.message;
-  $('.date', n).textContent = '남긴 날 ' + fmtDate(p.createdAt); // 처음 남긴 날만 보여 줌
-  if (mine) $('#cEdit', n).onclick = () => { closeModal(); enterEdit(); };
-  if (admin) $('#cDel', n).onclick = () => askDelete(p.id, false);
-  openModal(n);
+  box.innerHTML = `<div class="vi-nick"><span class="n"></span> <small>· <span class="g"></span></small></div><p class="vi-msg"></p><div class="vi-date"></div>
+    <div class="vi-row">${mine ? '<button class="btn" type="button" id="vEdit">편집하기</button>' : ''}${admin ? '<button class="btn-ghost danger-ghost" type="button" id="vDel">지우기</button>' : ''}<button class="btn-ghost" type="button" id="vBack">둘러보기</button></div>`;
+  $('.n', box).textContent = p.nickname; $('.g', box).textContent = p.googleName; $('.vi-msg', box).textContent = p.message;
+  $('.vi-date', box).textContent = '남긴 날 ' + fmtDate(p.createdAt); // 처음 남긴 날만 보여 줌
+  if (mine) $('#vEdit', box).onclick = () => { gb.viewId = null; renderView(); enterEdit(); };
+  if (admin) $('#vDel', box).onclick = () => askDelete(p.id, false);
+  $('#vBack', box).onclick = closeView;
+  box.classList.remove('show'); void box.offsetWidth; box.classList.add('show');
 }
 
 /* ---- S4-4 지우기 확인 ---- */
@@ -1585,6 +1614,7 @@ function askDelete(id, own) {
         closeModal(); sound.play('scatter');
         const node = own ? $('#front', gb.root) : $(`.sp[data-id="${CSS.escape(id)}"]`, gb.root);
         if (node) node.classList.add('scatter');
+        if (gb.viewId === id) { gb.viewId = null; renderView(); }
         setTimeout(() => {
           toast('지웠어요');
           if (own) { gb.mode = 'create'; gb.saved = null; gb.draft = defaultDraft(); renderPanel(); renderFront(); }
@@ -1718,8 +1748,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(1600)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1792945669"></script>
-<script src="firebase-live.js?v=1792945669"></script>
+<script src="firebase-config.js?v=1792945946"></script>
+<script src="firebase-live.js?v=1792945946"></script>
 
 </body>
 </html>
