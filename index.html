@@ -1379,7 +1379,6 @@ function renderPanel() {
     <fieldset class="group"><legend>your planet <small class="ko">색 행성과 꽃 행성 중 하나만 고를 수 있어요</small></legend>
       <div class="charrow"><span>color</span><div class="opts" id="pcolors"></div></div>
       <div class="charrow"><span>flower</span><div class="opts" id="items"></div></div>
-      <p class="note-msg ko" id="itemMsg" aria-live="polite" style="color:var(--color-text-muted)"></p>
     </fieldset>
     <fieldset class="group"><legend>your animal</legend>
       <div class="opts seven" id="animals"></div>
@@ -1464,7 +1463,6 @@ function refreshPanel() {
   const d = gb.draft;
   $$('#pcolors .opt', p).forEach(b => b.setAttribute('aria-pressed', String(!ITEMS[d.cover] && b.dataset.color === (d.planetColor || 'color_1'))));
   $$('#items .opt', p).forEach(b => b.setAttribute('aria-pressed', String(d.cover === b.dataset.item)));
-  $('#itemMsg', p).textContent = ITEMS[d.cover] ? `${ITEMS[d.cover]} 꽃 행성을 골랐어요.` : `${COLOR_NAMES[d.planetColor] || COLOR_NAMES.color_1} 색 행성을 골랐어요.`;
   const an = animalOf(d), ac = animalColorOf(d);
   $$('#animals .opt', p).forEach(b => {
     b.setAttribute('aria-pressed', String(an === b.dataset.val));
@@ -1748,8 +1746,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(1600)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1792945946"></script>
-<script src="firebase-live.js?v=1792945946"></script>
+<script src="firebase-config.js?v=1792947216"></script>
+<script src="firebase-live.js?v=1792947216"></script>
 
 </body>
 </html>
