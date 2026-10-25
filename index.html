@@ -1136,7 +1136,7 @@ const hashStr = s => { let h = 2166136261; for (const c of s) { h ^= c.codePoint
 const FLOWER_KEYS = Object.keys(ITEMS);
 
 const gb = {
-  mode: 'create', draft: defaultDraft(), saved: null, planets: [], listError: false, collapsed: false, busy: false, saveError: null, arriveId: null, root: null,
+  mode: 'create', draft: defaultDraft(), saved: null, planets: [], listError: false, collapsed: false, busy: false, saveError: null, arriveId: null, arriveIds: new Set(), liveIds: null, root: null,
   isDirty() { return this.mode === 'edit' && this.saved && JSON.stringify(normDraft(this.draft)) !== JSON.stringify(normDraft(this.saved)); },
   discard() { if (this.saved) this.draft = clone(this.saved); },
 };
@@ -1165,6 +1165,7 @@ function Guestbook() {
     renderPanel(); renderFront(); loadPlanets();
   })();
   renderPanel(); renderFront();
+  if (db.watchPlanets && !gb.unwatch) gb.unwatch = db.watchPlanets(applyLive);
   return s;
 }
 function renderAuthbox() {
@@ -1180,6 +1181,19 @@ function renderAuthbox() {
     b.onclick = () => openLogin('login');
     box.append(b);
   }
+}
+// 실시간: 다른 사람이 행성을 남기면 내 행성이 생길 때와 같은 모션(arrive)으로 바로 떠오름
+function applyLive(list) {
+  const uid = auth.user && auth.user.uid, prev = gb.liveIds;
+  gb.liveIds = new Set(list.map(p => p.id));
+  if (!prev || !gb.root || !gb.root.isConnected || gb.listError) return; // 첫 목록은 기준만 잡음
+  // 내 행성은 저장 흐름(날아가는 모션)이 끝난 뒤 loadPlanets가 따로 그림
+  const known = new Set(gb.planets.map(p => p.id));
+  list = list.filter(p => p.id !== uid || known.has(uid));
+  list.forEach(p => { if (!prev.has(p.id) && p.id !== uid) gb.arriveIds.add(p.id); });
+  const sig = l => l.map(p => p.id + p.updatedAt).join();
+  if (sig(list) === sig(gb.planets)) return;
+  gb.planets = list; renderSpace();
 }
 async function loadPlanets() {
   const wrap = gb.root && $('#planets', gb.root); if (!wrap) return;
@@ -1223,6 +1237,7 @@ function renderSpace() {
     if (p.id === uid) b.appendChild(el('<span class="mine-tag">mine</span>'));
     else { const nt = el('<span class="name-tag"></span>'); nt.textContent = p.nickname; b.appendChild(nt); } // 다른 사람 행성은 닉네임을 흐리게
     if (p.id === gb.arriveId) { b.classList.add('arrive'); gb.arriveId = null; }
+    if (gb.arriveIds.has(p.id)) { b.classList.add('arrive'); gb.arriveIds.delete(p.id); }
     b.dataset.id = p.id;
     b.onclick = () => openCard(p.id);
     b.addEventListener('pointerenter', () => sound.play('spark'));
@@ -1640,8 +1655,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(1600)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1792888887"></script>
-<script src="firebase-live.js?v=1792888887"></script>
+<script src="firebase-config.js?v=1792942660"></script>
+<script src="firebase-live.js?v=1792942660"></script>
 
 </body>
 </html>

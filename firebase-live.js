@@ -43,6 +43,15 @@
     const q = await col(fb).orderBy('createdAt', 'desc').limit(30).get(); // 최근 30개
     return q.docs.map(toDoc);
   };
+  // 실시간 목록: 누가 행성을 남기거나 고치거나 지우면 바로 알려 줌
+  db.watchPlanets = function (cb) {
+    let stop = null, off = false;
+    whenReady.then(fb => {
+      if (off) return;
+      stop = col(fb).orderBy('createdAt', 'desc').limit(30).onSnapshot(q => cb(q.docs.map(toDoc)), e => console.warn('실시간 목록 실패:', e.code));
+    }).catch(() => {});
+    return () => { off = true; if (stop) stop(); };
+  };
   db.getPlanet = async function (id) {
     const fb = await whenReady;
     const s = await col(fb).doc(id).get();
@@ -72,6 +81,7 @@
 
   // 새로고침해도 로그인이 남아 있게: 첫 로그인 상태를 받으면 방명록을 다시 그림
   function refreshGuestbook() {
+    if (!gb.unwatch) gb.unwatch = db.watchPlanets(applyLive);
     if (!gb.root) return;
     renderAuthbox();
     (async () => {
