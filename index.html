@@ -198,12 +198,14 @@ body[data-route="home"] #sound, body[data-route="guestbook"] #sound { display: n
 
 /* ---------- guestbook ---------- */
 .gb { height: 100%; display: flex; flex-direction: column; }
-.gb-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 392px; gap: 0; }
-.gb-body.collapsed { grid-template-columns: minmax(0,1fr) 0; }
+.gb-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 392px; gap: 0; overflow: hidden; transition: grid-template-columns .8s cubic-bezier(.45,0,.2,1), grid-template-rows .8s cubic-bezier(.45,0,.2,1); }
+.gb-body.collapsed { grid-template-columns: minmax(0,1fr) 0px; }
+.gb-body .panel { width: 392px; } /* 칸이 줄어드는 동안 창은 같은 폭으로 밀려 나감 */
 @media (max-width: 980px) { /* 좁은 화면: 위는 우주, 아래는 꾸미기 창(창 안에서 스크롤) */
-  .gb-body, .gb-body.collapsed { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr); }
-  .gb-body:not(.collapsed) { grid-template-rows: minmax(190px, 38%) minmax(0, 1fr); }
-  .gb-body:not(.collapsed) .space { min-height: 0; }
+  .gb-body, .gb-body.collapsed { grid-template-columns: 1fr; grid-template-rows: 100% 0%; }
+  .gb-body:not(.collapsed) { grid-template-rows: 38% 62%; }
+  .gb-body .panel { width: auto; }
+  .gb-body .space { min-height: 0; }
   .gb-body:not(.collapsed) .front { top: 62%; }
   .panel { position: relative; z-index: 4; }
   .gb-body:not(.collapsed) .panel { border-left: 0; border-top: 1px solid rgba(111,103,112,.45); padding-top: 18px; }
@@ -214,6 +216,15 @@ body[data-route="home"] #sound, body[data-route="guestbook"] #sound { display: n
 .space-intro p { margin: 6px 0 0; color: var(--color-text-muted); font-family: var(--font-display); font-weight: 300; letter-spacing: .06em; }
 .space-msg { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); text-align: center; color: var(--color-text-muted); display: grid; gap: 12px; justify-items: center; z-index: 2; max-width: 80%; }
 .sp { position: absolute; left: clamp(calc(var(--size) / 2), var(--x), calc(100% - var(--size) / 2)); top: clamp(calc(var(--size) / 2 + var(--top-pad, 0px)), var(--y), calc(100% - var(--size) / 2)); width: var(--size); height: var(--size); transform: translate(-50%, -50%); border: 0; padding: 0; background: none; cursor: pointer; border-radius: 50%; }
+.sp { transition: left .8s cubic-bezier(.45,0,.2,1), top .8s cubic-bezier(.45,0,.2,1), width .8s cubic-bezier(.45,0,.2,1), height .8s cubic-bezier(.45,0,.2,1), opacity .45s; }
+.sp.enter { animation: spIn .6s ease-out; }
+.sp.leaving { opacity: 0; pointer-events: none; }
+.sp.pulse .pl { animation: spPulse .45s ease-out; }
+.sp.editing::after { content: ""; position: absolute; inset: 18% 8% -2%; border-radius: 50%; border: 1px dashed rgba(245,183,163,.55); pointer-events: none; } /* 고치는 중인 내 행성 표시 */
+@keyframes spIn { from { opacity: 0; } }
+@keyframes spPulse { 40% { transform: scale(1.08); } }
+.front.front-in { animation: frontIn .6s cubic-bezier(.22,1,.36,1); }
+@keyframes frontIn { from { opacity: 0; transform: translate(-50%, -40%) scale(.85); } }
 .sp .bob { width: 100%; height: 100%; animation: bob 7s ease-in-out infinite; animation-delay: var(--delay); transition: transform .7s cubic-bezier(.22,1,.36,1), filter .7s ease; }
 .sp:hover .bob, .sp:focus-visible .bob { transform: scale(1.16); filter: brightness(1.12); }
 .sp svg, .front svg, .mini svg { width: 100%; height: 100%; display: block; overflow: visible; }
@@ -262,7 +273,7 @@ body[data-route="home"] #sound, body[data-route="guestbook"] #sound { display: n
 
 /* panel */
 .panel { min-width: 0; overflow: auto; border-left: 1px solid rgba(111,103,112,.45); background: rgba(22,20,26,.86); padding: 26px 28px 40px; padding-right: max(28px, env(safe-area-inset-right, 0px)); display: grid; align-content: start; gap: 22px; }
-.gb-body.collapsed .panel { display: none; }
+.gb-body.collapsed .panel { visibility: hidden; transition: visibility 0s .8s; } /* 닫히는 움직임이 끝난 뒤 숨김 */
 .panel h2 { margin: 0; font-family: var(--font-display); font-weight: 300; font-size: 30px; letter-spacing: .02em; line-height: 1.1; }
 .panel-sub { margin: -14px 0 0; color: var(--color-text-muted); font-size: 13px; }
 .group { display: grid; gap: 10px; border: 0; margin: 0; padding: 0; min-width: 0; }
@@ -1163,6 +1174,7 @@ function Guestbook() {
       <aside class="panel" id="panel" aria-label="내 행성 꾸미기"></aside>
     </div></section>`);
   gb.root = s;
+  if (spaceRO) spaceRO.observe($('#space', s));
   gb.saveError = null; gb.busy = false; gb.collapsed = true; // 처음엔 둘러보기만, 버튼을 눌러야 만들기 창이 열림
   renderAuthbox();
   // 들어올 때 상태에 따라 패널 모드 결정
@@ -1222,41 +1234,65 @@ function slotFor(list) {
   });
   return pos;
 }
+// 관리자가 자기 행성을 고칠 때는 아래 미리보기 없이 가운데 자리에서 바로 바뀜
+const editInPlace = () => gb.mode === 'edit' && !gb.collapsed && !!auth.user && auth.user.uid === adminId();
 function renderSpace() {
   const wrap = gb.root && $('#planets', gb.root); if (!wrap) return;
-  wrap.innerHTML = '';
+  $$('.space-msg', wrap).forEach(n => n.remove());
   if (gb.listError) {
+    wrap.innerHTML = '';
     const m = el('<div class="space-msg ko"><p>다른 행성들을 불러오지 못했어요.</p><button class="btn-ghost" type="button">다시 불러오기</button></div>');
     $('button', m).onclick = loadPlanets; wrap.appendChild(m); return;
   }
-  const uid = auth.user && auth.user.uid;
-  const shown = gb.planets.filter(p => !(gb.mode === 'edit' && !gb.collapsed && p.id === uid));
+  const uid = auth.user && auth.user.uid, inPlace = editInPlace();
+  const shown = gb.planets.filter(p => !(gb.mode === 'edit' && !gb.collapsed && p.id === uid && !inPlace));
   const pos = slotFor(gb.planets), space = $('#space', gb.root);
   // 행성 크기는 우주 칸 크기에 맞춰 줄이고 키움 (1000x640 기준이 1배)
-  const sw = space.offsetWidth || 1000, sh = space.offsetHeight || 640, k = Math.max(.5, Math.min(1.35, sw / 1000, sh / 640));
+  // 창이 열리고 닫히는 중이어도 끝난 뒤 크기를 기준으로 계산 → 자리와 크기가 함께 부드럽게 바뀜
+  const body = $('#gbBody', gb.root), narrowGb = matchMedia('(max-width: 980px)').matches;
+  let sw = space.offsetWidth || 1000, sh = space.offsetHeight || 640;
+  if (body && body.clientWidth) {
+    if (narrowGb) sh = body.clientHeight * (gb.collapsed ? 1 : .38) || sh;
+    else sw = body.clientWidth - (gb.collapsed ? 0 : 392);
+  }
+  const k = Math.max(.5, Math.min(1.35, sw / 1000, sh / 640));
   if (!gb.planets.filter(p => p.id !== uid && p.id !== adminId()).length && !gb.planets.some(p => p.id === adminId()) && gb.mode === 'create') {
     wrap.appendChild(el('<div class="space-msg ko"><p>아직 조용한 우주예요. 첫 번째 행성을 띄워 주세요.</p></div>'));
   }
+  // 이미 있는 행성은 다시 만들지 않고 자리와 크기만 바꿔서 부드럽게 옮김
+  const old = new Map($$('.sp', wrap).filter(n => !n.classList.contains('leaving')).map(n => [n.dataset.id, n]));
   shown.forEach(p => {
     if (!(p.id in pos)) return;
+    const mine = p.id === uid, look = mine && inPlace ? { ...p, ...pickFields(gb.draft) } : p;
     const [x, y] = pos[p.id], h = hashStr(p.id), size = Math.round((p.id === adminId() ? 220 : 150 + (h % 44)) * k);
-    const b = el(`<button class="sp${x < 25 ? ' edge-l' : x > 75 ? ' edge-r' : ''}" type="button" style="--x:${x}%;--y:${y}%;--size:${size}px;--delay:${-(h % 70) / 10}s">
-      <div class="bob">${planetHTML(p)}</div><span class="bubble"><span class="nm"><span class="n"></span> <small>· <span class="g"></span></small></span><span class="ln ko"></span></span></button>`);
-    $('.n', b).textContent = p.nickname; $('.g', b).textContent = p.googleName; $('.ln', b).textContent = p.message.split('\n')[0];
-    b.setAttribute('aria-label', `${p.nickname} · ${p.googleName}의 행성 열기`);
-    if (p.id === uid) b.appendChild(el('<span class="mine-tag">mine</span>'));
-    else { const nt = el('<span class="name-tag"></span>'); nt.textContent = p.nickname; b.appendChild(nt); } // 다른 사람 행성은 닉네임을 흐리게
-    if (p.id === gb.arriveId) { b.classList.add('arrive'); gb.arriveId = null; }
-    if (gb.arriveIds.has(p.id)) { b.classList.add('arrive'); gb.arriveIds.delete(p.id); }
-    b.dataset.id = p.id;
-    b.onclick = () => openCard(p.id);
-    b.addEventListener('pointerenter', () => sound.play('spark'));
-    wrap.appendChild(b);
+    const sig = JSON.stringify([look.planetColor, look.cover, look.animal, look.animalColor, p.nickname, p.googleName, p.message, mine]);
+    let b = old.get(p.id); old.delete(p.id);
+    const fresh = !b || b.dataset.sig !== sig || p.id === gb.arriveId || gb.arriveIds.has(p.id);
+    if (fresh) {
+      const nb = el(`<button class="sp" type="button" style="--delay:${-(h % 70) / 10}s">
+      <div class="bob">${planetHTML(look)}</div><span class="bubble"><span class="nm"><span class="n"></span> <small>· <span class="g"></span></small></span><span class="ln ko"></span></span></button>`);
+      $('.n', nb).textContent = p.nickname; $('.g', nb).textContent = p.googleName; $('.ln', nb).textContent = p.message.split('\n')[0];
+      nb.setAttribute('aria-label', `${p.nickname} · ${p.googleName}의 행성 열기`);
+      if (mine) nb.appendChild(el('<span class="mine-tag">mine</span>'));
+      else { const nt = el('<span class="name-tag"></span>'); nt.textContent = p.nickname; nb.appendChild(nt); } // 다른 사람 행성은 닉네임을 흐리게
+      if (p.id === gb.arriveId) { nb.classList.add('arrive'); gb.arriveId = null; }
+      if (gb.arriveIds.has(p.id)) { nb.classList.add('arrive'); gb.arriveIds.delete(p.id); }
+      nb.dataset.id = p.id; nb.dataset.sig = sig;
+      nb.onclick = () => openCard(p.id);
+      nb.addEventListener('pointerenter', () => sound.play('spark'));
+      if (b) { nb.style.cssText = b.style.cssText; b.replaceWith(nb); } else { nb.classList.add('enter'); wrap.appendChild(nb); }
+      b = nb;
+    }
+    b.classList.toggle('edge-l', x < 25); b.classList.toggle('edge-r', x > 75); b.classList.toggle('editing', mine && inPlace);
+    b.style.setProperty('--x', x + '%'); b.style.setProperty('--y', y + '%'); b.style.setProperty('--size', size + 'px');
   });
+  // 빠지는 행성(편집하러 앞으로 나온 내 행성 등)은 살짝 흐려지며 사라짐
+  old.forEach(n => { n.classList.add('leaving'); setTimeout(() => n.remove(), 450); });
 }
 // 화면 크기가 바뀌면 행성 크기와 자리를 다시 계산
 let spaceResize = 0;
-addEventListener('resize', () => { clearTimeout(spaceResize); spaceResize = setTimeout(() => { if (gb.root && gb.root.isConnected) renderSpace(); }, 150); });
+const spaceRO = typeof ResizeObserver === 'function' ? new ResizeObserver(() => { clearTimeout(spaceResize); spaceResize = setTimeout(() => { if (gb.root && gb.root.isConnected) renderSpace(); }, 120); }) : null;
+if (!spaceRO) addEventListener('resize', () => { clearTimeout(spaceResize); spaceResize = setTimeout(() => { if (gb.root && gb.root.isConnected) renderSpace(); }, 150); });
 // 내용이 메뉴 밑으로 스크롤되면 메뉴에 어두운 바탕을 깔아 줌
 document.addEventListener('scroll', e => {
   const s = e.target; if (!(s instanceof Element)) return;
@@ -1264,11 +1300,18 @@ document.addEventListener('scroll', e => {
 }, true);
 function renderFront() {
   const f = gb.root && $('#front', gb.root); if (!f) return;
-  const show = !gb.collapsed && (gb.mode === 'create' || gb.mode === 'edit');
+  const show = !gb.collapsed && (gb.mode === 'create' || (gb.mode === 'edit' && !editInPlace()));
+  if (show && f.hidden) { f.classList.remove('front-in'); void f.offsetWidth; f.classList.add('front-in'); } // 부드럽게 나타남
   f.hidden = !show; f.classList.remove('fly', 'scatter');
   if (show) { $('.bob', f).innerHTML = planetHTML(gb.draft, { d: 64 }); $('.front-tag', f).textContent = gb.mode === 'edit' ? 'editing my planet' : 'my planet'; }
 }
 function pulseFront() {
+  if (editInPlace()) { // 가운데 내 행성을 바로 바꾸고 톡 튀게
+    renderSpace();
+    const n = $(`.sp[data-id="${CSS.escape(auth.user.uid)}"]`, gb.root);
+    if (n) { n.classList.remove('pulse'); void n.offsetWidth; n.classList.add('pulse'); }
+    return;
+  }
   const f = gb.root && $('#front', gb.root); if (!f) return;
   $('.bob', f).innerHTML = planetHTML(gb.draft, { d: 64 });
   f.classList.add('grow'); f.classList.remove('pulse'); void f.offsetWidth; f.classList.add('pulse');
@@ -1664,8 +1707,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(1600)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1792944416"></script>
-<script src="firebase-live.js?v=1792944416"></script>
+<script src="firebase-config.js?v=1792945005"></script>
+<script src="firebase-live.js?v=1792945005"></script>
 
 </body>
 </html>
