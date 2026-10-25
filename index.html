@@ -33,7 +33,7 @@
   --side: clamp(16px, 4vw, 64px);
   color-scheme: dark;
 }
-html, body { height: 100%; }
+html, body { height: 100%; margin: 0; }
 body {
   background: var(--color-bg);
   color: var(--color-text);
@@ -200,7 +200,14 @@ body[data-route="home"] #sound, body[data-route="guestbook"] #sound { display: n
 .gb { height: 100%; display: flex; flex-direction: column; }
 .gb-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 392px; gap: 0; }
 .gb-body.collapsed { grid-template-columns: minmax(0,1fr) 0; }
-@media (max-width: 980px) { .gb-body { grid-template-columns: 1fr; grid-template-rows: 70vh auto; overflow: auto; } }
+@media (max-width: 980px) { /* 좁은 화면: 위는 우주, 아래는 꾸미기 창(창 안에서 스크롤) */
+  .gb-body, .gb-body.collapsed { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr); }
+  .gb-body:not(.collapsed) { grid-template-rows: minmax(190px, 38%) minmax(0, 1fr); }
+  .gb-body:not(.collapsed) .space { min-height: 0; }
+  .gb-body:not(.collapsed) .front { top: 62%; }
+  .panel { position: relative; z-index: 4; }
+  .gb-body:not(.collapsed) .panel { border-left: 0; border-top: 1px solid rgba(111,103,112,.45); padding-top: 18px; }
+}
 .space { position: relative; min-width: 0; min-height: 520px; overflow: hidden; }
 .space-intro { position: absolute; left: max(var(--side), env(safe-area-inset-left, 0px)); top: 8px; z-index: 2; pointer-events: none; }
 .space-intro h1 { margin: 0; font-family: var(--font-display); font-weight: 300; font-size: 32px; letter-spacing: .02em; line-height: 1.2; }
@@ -1630,8 +1637,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(1600)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1792869207"></script>
-<script src="firebase-live.js?v=1792869207"></script>
+<script src="firebase-config.js?v=1792888356"></script>
+<script src="firebase-live.js?v=1792888356"></script>
 
 </body>
 </html>
