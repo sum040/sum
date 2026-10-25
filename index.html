@@ -237,6 +237,8 @@ body[data-route="home"] #sound, body[data-route="guestbook"] #sound { display: n
 .swatches.fur .sw.nat { outline: 1.5px dashed var(--color-text-muted); outline-offset: 3px; } /* 기본색은 점선 테두리로 구분 */
 @keyframes bob { 0%,100% { translate: 0 -14px; rotate: -2deg } 50% { translate: 0 14px; rotate: 2deg } }
 @keyframes chfloat { 0%,100% { translate: 0 0 } 50% { translate: 0 -6% } }
+.name-tag { position: absolute; left: 50%; bottom: -2px; transform: translateX(-50%); max-width: 140%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; letter-spacing: .04em; line-height: 1.5; padding: 0 8px; border-radius: 999px; background: rgba(11,10,13,.55); color: var(--color-text-muted); pointer-events: none; transition: opacity .25s; }
+.sp:hover .name-tag, .sp:focus-visible .name-tag { opacity: 0; } /* 말풍선이 뜨면 숨김 */
 .mine-tag { position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%); font-size: 11px; letter-spacing: .14em; font-family: var(--font-display); text-transform: lowercase; padding: 1px 10px; border-radius: 999px; background: var(--color-primary); color: var(--color-on-primary); pointer-events: none; }
 .bubble { position: absolute; left: 50%; bottom: calc(100% - 14px); transform: translate(-50%, 6px); width: max-content; max-width: 240px; padding: 10px 14px; border-radius: 14px; background: var(--color-surface); border: 1px solid var(--color-border); text-align: left; pointer-events: none; opacity: 0; transition: opacity .25s, transform .25s; z-index: 4; }
 .sp:hover .bubble, .sp:focus-visible .bubble { opacity: 1; transform: translate(-50%, 0); }
@@ -1219,6 +1221,7 @@ function renderSpace() {
     $('.n', b).textContent = p.nickname; $('.g', b).textContent = p.googleName; $('.ln', b).textContent = p.message.split('\n')[0];
     b.setAttribute('aria-label', `${p.nickname} · ${p.googleName}의 행성 열기`);
     if (p.id === uid) b.appendChild(el('<span class="mine-tag">mine</span>'));
+    else { const nt = el('<span class="name-tag"></span>'); nt.textContent = p.nickname; b.appendChild(nt); } // 다른 사람 행성은 닉네임을 흐리게
     if (p.id === gb.arriveId) { b.classList.add('arrive'); gb.arriveId = null; }
     b.dataset.id = p.id;
     b.onclick = () => openCard(p.id);
@@ -1637,8 +1640,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(1600)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1792888356"></script>
-<script src="firebase-live.js?v=1792888356"></script>
+<script src="firebase-config.js?v=1792888887"></script>
+<script src="firebase-live.js?v=1792888887"></script>
 
 </body>
 </html>
