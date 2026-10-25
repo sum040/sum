@@ -1194,7 +1194,7 @@ function renderAuthbox() {
   if (auth.user) {
     const w = el('<span class="who ko"></span>'); w.textContent = auth.user.name + (auth.isAdmin() ? ' (관리자)' : '');
     const b = el('<button class="link" type="button">로그아웃</button>');
-    b.onclick = async () => { await auth.signOut(); gb.mode = 'create'; gb.saved = null; gb.draft = defaultDraft(); renderAuthbox(); renderPanel(); renderFront(); loadPlanets(); toast('로그아웃했어요'); };
+    b.onclick = async () => { await auth.signOut(); gb.collapsed = true; gb.mode = 'create'; gb.saved = null; gb.draft = defaultDraft(); renderAuthbox(); renderPanel(); renderFront(); loadPlanets(); toast('로그아웃했어요'); };
     box.append(w, b);
   } else {
     const b = el('<button class="link" type="button">로그인</button>');
@@ -1329,7 +1329,11 @@ function renderPanel() {
   const old = $('.open-panel', gb.root); if (old) old.remove();
   if (gb.collapsed) {
     const b = el(`<button class="btn open-panel ko" type="button">${gb.mode === 'edit' ? '내 행성 편집하기' : '방명록 작성하기'}</button>`);
-    b.onclick = () => { sound.play('spark'); gb.collapsed = false; renderPanel(); renderFront(); renderSpace(); };
+    b.onclick = () => {
+      sound.play('spark');
+      if (!auth.user) return openLogin('open'); // 로그인 먼저, 그다음 꾸미기
+      gb.collapsed = false; renderPanel(); renderFront(); renderSpace();
+    };
     b.addEventListener('pointerenter', () => sound.play('spark'));
     $('#space', gb.root).appendChild(b);
   }
@@ -1349,7 +1353,7 @@ function renderPanel() {
   const edit = gb.mode === 'edit';
   panel.innerHTML = `
     <div class="panel-top"><h2>${edit ? 'edit your planet' : 'make your planet'}</h2><button class="link ko" type="button" id="pClose">닫기</button></div>
-    <p class="panel-sub ko">${edit ? '고치는 대로 앞의 행성이 바로 바뀌어요.' : '둘러보고 꾸미는 건 로그인 없이 할 수 있어요.'}</p>
+    <p class="panel-sub ko">${edit ? '고치는 대로 앞의 행성이 바로 바뀌어요.' : '다 꾸미면 맨 아래 버튼으로 남겨 주세요.'}</p>
     <div id="banner"></div>
     <fieldset class="group"><legend>your planet <small class="ko">색 행성과 꽃 행성 중 하나만 고를 수 있어요</small></legend>
       <div class="charrow"><span>color</span><div class="opts" id="pcolors"></div></div>
@@ -1564,7 +1568,7 @@ async function openCard(id) {
       <div><div class="nick"></div><div class="gname"></div><p class="msg"></p><div class="date"></div>
       <div class="row" style="margin-top:18px">${mine ? '<button class="btn" type="button" id="cEdit">편집하기</button>' : ''}${admin ? '<button class="btn-ghost" type="button" id="cDel" style="border-color:var(--color-error);color:var(--color-error)">지우기</button>' : ''}</div></div></div></div>`);
   $('.nick', n).textContent = p.nickname; $('.gname', n).textContent = p.googleName; $('.msg', n).textContent = p.message;
-  $('.date', n).textContent = '남긴 날 ' + fmtDate(p.createdAt) + (p.updatedAt !== p.createdAt ? ` · 고친 날 ${fmtDate(p.updatedAt)}` : '');
+  $('.date', n).textContent = '남긴 날 ' + fmtDate(p.createdAt); // 처음 남긴 날만 보여 줌
   if (mine) $('#cEdit', n).onclick = () => { closeModal(); enterEdit(); };
   if (admin) $('#cDel', n).onclick = () => askDelete(p.id, false);
   openModal(n);
@@ -1602,7 +1606,7 @@ const G_ICON = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107"
 function openLogin(pending, message) {
   const n = el(`<div class="dialog ko" role="dialog" aria-modal="true" aria-label="구글 로그인">
     <button class="x" type="button" aria-label="닫기">×</button>
-    <h3>행성을 남기려면 구글 계정으로 로그인해 주세요</h3>
+    <h3>${pending === 'open' ? '행성을 꾸미기 전에 구글 계정으로 로그인해 주세요' : '행성을 남기려면 구글 계정으로 로그인해 주세요'}</h3>
     <p>방명록에는 닉네임과 구글 계정 이름이 함께 보여요. 이메일은 보이지 않아요.</p>
     ${pending === 'create' ? `<div class="mini">${planetHTML(gb.draft)}</div>` : ''}
     <p class="err" id="lErr" hidden></p>
@@ -1641,6 +1645,8 @@ async function afterSignIn(user, pending) {
     if (mine) openAlready(mine); else { renderPanel(); doCreate(); }
   } else {
     if (mine) { gb.mode = 'edit'; gb.saved = clone(mine); gb.draft = clone(mine); }
+    else if (pending === 'open') { gb.mode = 'create'; gb.saved = null; }
+    if (pending === 'open') gb.collapsed = false; // 로그인하면 바로 꾸미기 창이 열림
     renderPanel(); renderFront(); renderSpace();
   }
 }
@@ -1712,8 +1718,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(1600)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1792945393"></script>
-<script src="firebase-live.js?v=1792945393"></script>
+<script src="firebase-config.js?v=1792945669"></script>
+<script src="firebase-live.js?v=1792945669"></script>
 
 </body>
 </html>
