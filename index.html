@@ -273,6 +273,7 @@ body[data-route="home"] #sound, body[data-route="guestbook"] #sound { display: n
 .sw { width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--color-border); background: var(--c); cursor: pointer; position: relative; padding: 0; }
 .sw[aria-pressed="true"], .opt[aria-pressed="true"] { border-color: var(--color-primary); }
 .sw[aria-pressed="true"]::after, .opt[aria-pressed="true"]::after { content: ""; position: absolute; right: -4px; top: -4px; width: 16px; height: 16px; border-radius: 50%; background: var(--color-primary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 8.2l2.2 2.2 4.8-4.8' fill='none' stroke='%231E1216' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 14px no-repeat; }
+.opt[aria-pressed="true"]::after { right: 3px; top: 3px; width: 15px; height: 15px; background-size: 13px; } /* 칸 안쪽 모서리에 두어 오른쪽 끝 칸에서도 잘리지 않게 */
 .opts { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
 .opts.six { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .opt { position: relative; aspect-ratio: 1; max-width: 100%; border: 1.5px solid var(--color-border); border-radius: 10px; background: var(--color-surface); cursor: pointer; padding: 4px; display: grid; place-items: center; transition: border-color .2s, background .2s; }
@@ -1663,8 +1664,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(1600)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1792944254"></script>
-<script src="firebase-live.js?v=1792944254"></script>
+<script src="firebase-config.js?v=1792944416"></script>
+<script src="firebase-live.js?v=1792944416"></script>
 
 </body>
 </html>
