@@ -198,19 +198,19 @@ body[data-route="home"] #sound, body[data-route="guestbook"] #sound { display: n
 
 /* ---------- guestbook ---------- */
 .gb { height: 100%; display: flex; flex-direction: column; }
-.gb-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 392px; gap: 0; overflow: hidden; transition: grid-template-columns .8s cubic-bezier(.45,0,.2,1), grid-template-rows .8s cubic-bezier(.45,0,.2,1); }
-.gb-body.collapsed { grid-template-columns: minmax(0,1fr) 0px; }
-.gb-body .panel { width: 392px; } /* 칸이 줄어드는 동안 창은 같은 폭으로 밀려 나감 */
-@media (max-width: 980px) { /* 좁은 화면: 위는 우주, 아래는 꾸미기 창(창 안에서 스크롤) */
-  .gb-body, .gb-body.collapsed { grid-template-columns: 1fr; grid-template-rows: 100% 0%; }
-  .gb-body:not(.collapsed) { grid-template-rows: 38% 62%; }
-  .gb-body .panel { width: auto; }
-  .gb-body .space { min-height: 0; }
-  .gb-body:not(.collapsed) .front { top: 62%; }
-  .panel { position: relative; z-index: 4; }
-  .gb-body:not(.collapsed) .panel { border-left: 0; border-top: 1px solid rgba(111,103,112,.45); padding-top: 18px; }
+.gb-body { flex: 1; min-height: 0; position: relative; overflow: hidden; }
+/* 꾸미기 창은 우주 위에 겹쳐서 옆(휴대폰은 아래)에서 밀려 들어옴. 우주 크기는 그대로라 행성은 움직이지 않음 */
+.gb-body .panel { position: absolute; top: 0; right: 0; bottom: 0; width: 392px; z-index: 4; transition: transform .85s cubic-bezier(.45,0,.2,1), visibility 0s; }
+.gb-body.collapsed .panel { transform: translateX(100%); visibility: hidden; transition: transform .85s cubic-bezier(.45,0,.2,1), visibility 0s .85s; }
+@media (max-width: 980px) {
+  .gb-body .panel { top: auto; left: 0; width: auto; height: 62%; border-left: 0; border-top: 1px solid rgba(111,103,112,.45); padding-top: 18px; }
+  .gb-body.collapsed .panel { transform: translateY(100%); }
 }
-.space { position: relative; min-width: 0; min-height: 520px; overflow: hidden; }
+/* 카메라: 편집할 때 우주 전체가 내 행성 쪽으로 다가가며 확대됨 */
+.cam { position: absolute; inset: 0; transform-origin: 0 0; transition: transform .95s cubic-bezier(.45,0,.2,1); will-change: transform; }
+.space-intro { transition: opacity .6s; }
+.gb-body:not(.collapsed) .space-intro { opacity: 0; }
+.space { position: relative; min-width: 0; height: 100%; overflow: hidden; }
 .space-intro { position: absolute; left: max(var(--side), env(safe-area-inset-left, 0px)); top: 8px; z-index: 2; pointer-events: none; }
 .space-intro h1 { margin: 0; font-family: var(--font-display); font-weight: 300; font-size: 32px; letter-spacing: .02em; line-height: 1.2; }
 .space-intro p { margin: 6px 0 0; color: var(--color-text-muted); font-family: var(--font-display); font-weight: 300; letter-spacing: .06em; }
@@ -220,7 +220,6 @@ body[data-route="home"] #sound, body[data-route="guestbook"] #sound { display: n
 .sp.enter { animation: spIn .6s ease-out; }
 .sp.leaving { opacity: 0; pointer-events: none; }
 .sp.pulse .pl { animation: spPulse .45s ease-out; }
-.sp.editing::after { content: ""; position: absolute; inset: 18% 8% -2%; border-radius: 50%; border: 1px dashed rgba(245,183,163,.55); pointer-events: none; } /* 고치는 중인 내 행성 표시 */
 @keyframes spIn { from { opacity: 0; } }
 @keyframes spPulse { 40% { transform: scale(1.08); } }
 .front.front-in { animation: frontIn .6s cubic-bezier(.22,1,.36,1); }
@@ -273,7 +272,6 @@ body[data-route="home"] #sound, body[data-route="guestbook"] #sound { display: n
 
 /* panel */
 .panel { min-width: 0; overflow: auto; border-left: 1px solid rgba(111,103,112,.45); background: rgba(22,20,26,.86); padding: 26px 28px 40px; padding-right: max(28px, env(safe-area-inset-right, 0px)); display: grid; align-content: start; gap: 22px; }
-.gb-body.collapsed .panel { visibility: hidden; transition: visibility 0s .8s; } /* 닫히는 움직임이 끝난 뒤 숨김 */
 .panel h2 { margin: 0; font-family: var(--font-display); font-weight: 300; font-size: 30px; letter-spacing: .02em; line-height: 1.1; }
 .panel-sub { margin: -14px 0 0; color: var(--color-text-muted); font-size: 13px; }
 .group { display: grid; gap: 10px; border: 0; margin: 0; padding: 0; min-width: 0; }
@@ -1168,8 +1166,8 @@ function Guestbook() {
     <div class="gb-body" id="gbBody">
       <div class="space" id="space">
         <div class="space-intro"><h1>a little space for you</h1><p>leave a note, grow a planet.</p></div>
-        <div id="planets"></div>
-        <div class="front" id="front"><div class="bob"></div><span class="front-tag">my planet</span></div>
+        <div class="cam" id="cam"><div id="planets"></div>
+        <div class="front" id="front"><div class="bob"></div><span class="front-tag">my planet</span></div></div>
       </div>
       <aside class="panel" id="panel" aria-label="내 행성 꾸미기"></aside>
     </div></section>`);
@@ -1234,8 +1232,7 @@ function slotFor(list) {
   });
   return pos;
 }
-// 관리자가 자기 행성을 고칠 때는 아래 미리보기 없이 가운데 자리에서 바로 바뀜
-const editInPlace = () => gb.mode === 'edit' && !gb.collapsed && !!auth.user && auth.user.uid === adminId();
+const editInPlace = () => gb.mode === 'edit' && !gb.collapsed && !!auth.user; // 내 행성을 편집할 때는 아래 미리보기 없이 제자리에서 바뀜
 function renderSpace() {
   const wrap = gb.root && $('#planets', gb.root); if (!wrap) return;
   $$('.space-msg', wrap).forEach(n => n.remove());
@@ -1248,14 +1245,7 @@ function renderSpace() {
   const shown = gb.planets.filter(p => !(gb.mode === 'edit' && !gb.collapsed && p.id === uid && !inPlace));
   const pos = slotFor(gb.planets), space = $('#space', gb.root);
   // 행성 크기는 우주 칸 크기에 맞춰 줄이고 키움 (1000x640 기준이 1배)
-  // 창이 열리고 닫히는 중이어도 끝난 뒤 크기를 기준으로 계산 → 자리와 크기가 함께 부드럽게 바뀜
-  const body = $('#gbBody', gb.root), narrowGb = matchMedia('(max-width: 980px)').matches;
-  let sw = space.offsetWidth || 1000, sh = space.offsetHeight || 640;
-  if (body && body.clientWidth) {
-    if (narrowGb) sh = body.clientHeight * (gb.collapsed ? 1 : .38) || sh;
-    else sw = body.clientWidth - (gb.collapsed ? 0 : 392);
-  }
-  const k = Math.max(.5, Math.min(1.35, sw / 1000, sh / 640));
+  const sw = space.offsetWidth || 1000, sh = space.offsetHeight || 640, k = Math.max(.5, Math.min(1.35, sw / 1000, sh / 640));
   if (!gb.planets.filter(p => p.id !== uid && p.id !== adminId()).length && !gb.planets.some(p => p.id === adminId()) && gb.mode === 'create') {
     wrap.appendChild(el('<div class="space-msg ko"><p>아직 조용한 우주예요. 첫 번째 행성을 띄워 주세요.</p></div>'));
   }
@@ -1286,8 +1276,23 @@ function renderSpace() {
     b.classList.toggle('edge-l', x < 25); b.classList.toggle('edge-r', x > 75); b.classList.toggle('editing', mine && inPlace);
     b.style.setProperty('--x', x + '%'); b.style.setProperty('--y', y + '%'); b.style.setProperty('--size', size + 'px');
   });
-  // 빠지는 행성(편집하러 앞으로 나온 내 행성 등)은 살짝 흐려지며 사라짐
+  // 빠진 행성은 살짝 흐려지며 사라짐
   old.forEach(n => { n.classList.add('leaving'); setTimeout(() => n.remove(), 450); });
+  moveCam();
+}
+// 카메라 이동: 편집 창이 열리면 내 행성(만들 때는 앞의 미리보기)을 보이는 칸 가운데로 당겨 확대
+function moveCam() {
+  const cam = gb.root && $('#cam', gb.root), space = gb.root && $('#space', gb.root); if (!cam || !space) return;
+  if (gb.collapsed) { cam.style.transform = ''; return; }
+  const W = space.offsetWidth, H = space.offsetHeight, narrow = matchMedia('(max-width: 980px)').matches;
+  const vw = narrow ? W : W - 392, vh = narrow ? H * .38 : H; // 꾸미기 창에 가리지 않는 칸
+  let tx, ty, size;
+  const mine = auth.user && $(`.sp[data-id="${CSS.escape(auth.user.uid)}"]`, cam), f = $('#front', cam);
+  if (gb.mode === 'edit' && mine) { tx = mine.offsetLeft; ty = mine.offsetTop; size = mine.offsetWidth; }
+  else if (f && !f.hidden) { tx = f.offsetLeft; ty = f.offsetTop; size = f.offsetWidth; }
+  else { cam.style.transform = ''; return; }
+  const z = Math.max(.8, Math.min(1.7, (Math.min(vw, vh) * .62) / size));
+  cam.style.transform = `translate(${vw / 2 - tx * z}px, ${vh / 2 + (narrow ? 0 : 10) - ty * z}px) scale(${z})`;
 }
 // 화면 크기가 바뀌면 행성 크기와 자리를 다시 계산
 let spaceResize = 0;
@@ -1707,8 +1712,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(1600)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1792945005"></script>
-<script src="firebase-live.js?v=1792945005"></script>
+<script src="firebase-config.js?v=1792945393"></script>
+<script src="firebase-live.js?v=1792945393"></script>
 
 </body>
 </html>
