@@ -164,6 +164,9 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 .thumb { position: relative; aspect-ratio: 16 / 9; max-width: 100%; border-radius: 6px; overflow: hidden; background: var(--color-surface); border: 1px solid rgba(111,103,112,.4); }
 .thumb > :is(canvas, video) { width: 100%; height: 100%; display: block; object-fit: cover; transition: transform .8s cubic-bezier(.2,.7,.2,1), filter .8s; }
 .work-card:hover .thumb > :is(canvas, video), .work-card:focus-visible .thumb > :is(canvas, video) { filter: brightness(1.12); }
+/* 호버 확대: 안의 그림이 아니라 썸네일 칸 전체를 키워서 가장자리가 잘리지 않음 */
+.work-card .thumb { transition: transform .8s cubic-bezier(.2,.7,.2,1), box-shadow .8s; }
+.work-card:hover .thumb, .work-card:focus-visible .thumb { transform: scale(1.04); box-shadow: 0 18px 50px rgba(0,0,0,.45); }
 .thumb > .vbox { position: relative; width: 100%; height: 100%; transition: filter .8s; }
 .work-card:hover .thumb > .vbox, .work-card:focus-visible .thumb > .vbox { filter: brightness(1.12); }
 .vbox > video, .vbox > .vrest { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: cover; }
@@ -1997,8 +2000,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1793036819"></script>
-<script src="firebase-live.js?v=1793036819"></script>
+<script src="firebase-config.js?v=1793037372"></script>
+<script src="firebase-live.js?v=1793037372"></script>
 
 </body>
 </html>
