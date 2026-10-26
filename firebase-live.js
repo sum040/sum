@@ -38,17 +38,24 @@
   const need = () => { if (!auth.user) throw fail('unauthenticated'); };
 
   db.reset = function () {};
+  // 방명록이 많아져도 공전 궤도에 올릴 수 있게 최근 200개. 관리자 행성과 내 행성은 오래돼도 늘 넣음
+  const LIMIT = 200;
+  const pinned = async (fb, docs) => {
+    const ids = [cfg.adminUid, auth.user && auth.user.uid].filter(id => id && !docs.some(d => d.id === id));
+    const extra = await Promise.all(ids.map(id => col(fb).doc(id).get().then(s => s.exists ? toDoc(s) : null).catch(() => null)));
+    return docs.concat(extra.filter(Boolean));
+  };
   db.listPlanets = async function () {
     const fb = await whenReady;
-    const q = await col(fb).orderBy('createdAt', 'desc').limit(30).get(); // 최근 30개
-    return q.docs.map(toDoc);
+    const q = await col(fb).orderBy('createdAt', 'desc').limit(LIMIT).get();
+    return pinned(fb, q.docs.map(toDoc));
   };
   // 실시간 목록: 누가 행성을 남기거나 고치거나 지우면 바로 알려 줌
   db.watchPlanets = function (cb) {
     let stop = null, off = false;
     whenReady.then(fb => {
       if (off) return;
-      stop = col(fb).orderBy('createdAt', 'desc').limit(30).onSnapshot(q => cb(q.docs.map(toDoc)), e => console.warn('실시간 목록 실패:', e.code));
+      stop = col(fb).orderBy('createdAt', 'desc').limit(LIMIT).onSnapshot(q => pinned(fb, q.docs.map(toDoc)).then(l => { if (!off) cb(l); }), e => console.warn('실시간 목록 실패:', e.code));
     }).catch(() => {});
     return () => { off = true; if (stop) stop(); };
   };
