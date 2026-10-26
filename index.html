@@ -1200,7 +1200,7 @@ async function loadPlanets() {
 /* 공전: 숨 행성은 가운데에 가만히 있고, 다른 행성은 그 둘레의 보이지 않는 구(공) 위에 고르게 흩어져 있음.
    드래그(휠, 화살표)로 구를 어느 방향으로든 굴리면 앞으로 오는 행성은 크고 밝게, 뒤로 가는 행성은 작고 흐리게 보임.
    행성이 많아지면 구가 커져 화면 밖까지 이어지고, 굴려야 보이는 행성이 생김 */
-const orbit = { M: [1, 0, 0, 0, 1, 0, 0, 0, 1], vx: 0, vy: 0, drift: 1, items: new Map(), raf: 0, drag: null, swallow: false, hover: 0, W: 0, H: 0 };
+const orbit = { M: [1, 0, 0, 0, 1, 0, 0, 0, 1], vx: 0, vy: 0, drift: 1, push: 1, items: new Map(), raf: 0, drag: null, swallow: false, hover: 0, W: 0, H: 0 };
 // 회전 행렬 M에 화면 기준 가로축(ax)·세로축(ay) 회전을 더함
 function orbitRotate(ax, ay) {
   const cy = Math.cos(ay), sy = Math.sin(ay), cx = Math.cos(ax), sx = Math.sin(ax), m = orbit.M;
@@ -1237,9 +1237,9 @@ function orbitPos(it, L) {
   const x = m[0] * a + m[1] * b + m[2] * c, y = m[3] * a + m[4] * b + m[5] * c, z = m[6] * a + m[7] * b + m[8] * c;
   const f = L.D / (L.D - z * L.R), t = (z + 1) / 2, s = .5 + .5 * t;
   let px = x * L.R * f, py = y * L.R * .82 * f;
-  // 앞쪽 행성은 숨 행성을 가리지 않게 가운데를 비켜 지나감
-  if (z > 0 && L.hole) {
-    const need = (L.hole + it.w * s * .42) * Math.min(1, z * 3), d = Math.hypot(px, py);
+  // 앞쪽 행성은 숨 행성을 가리지 않게 가운데를 비켜 감. 끄는 동안(push 0)은 겹쳐 지나가고, 놓으면 부드럽게 비켜남
+  if (z > 0 && L.hole && orbit.push > .001) {
+    const need = (L.hole + it.w * s * .42) * Math.min(1, z * 3) * orbit.push, d = Math.hypot(px, py);
     if (d < need) { const ux = d > 1 ? px / d : (x >= 0 ? 1 : -1), uy = d > 1 ? py / d : 0; px = ux * need; py = uy * need; }
   }
   // 앞쪽 절반만 숨 행성보다 앞에 그림
@@ -1270,6 +1270,7 @@ function orbitTick(now) {
   const frozen = orbitFrozen();
   // 가만히 두면 천천히 돎. 행성에 마우스를 올리거나 보는 중이면 멈춤
   orbit.drift += ((frozen || orbit.hover || orbit.drag ? 0 : 1) - orbit.drift) * .06;
+  orbit.push += ((orbit.drag && orbit.drag.moved ? 0 : 1) - orbit.push) * (1 - Math.exp(-dt * (orbit.drag ? 12 : 3))); // 놓으면 1초쯤에 걸쳐 비켜남
   if (frozen) { orbit.vx = orbit.vy = 0; }
   else if (!orbit.drag) {
     orbitRotate(orbit.vy, orbit.vx + .06 * dt * orbit.drift);
@@ -1830,8 +1831,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1792996966"></script>
-<script src="firebase-live.js?v=1792996966"></script>
+<script src="firebase-config.js?v=1792997387"></script>
+<script src="firebase-live.js?v=1792997387"></script>
 
 </body>
 </html>
