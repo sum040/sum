@@ -69,9 +69,8 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 #loader { position: fixed; inset: 0; z-index: 60; background: var(--color-bg); display: grid; place-items: center; transition: opacity var(--ld-fade, .45s) ease; }
 #loader.gone { opacity: 0; pointer-events: none; }
 .loader-inner { display: grid; justify-items: center; gap: 22px; }
-.breath-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 30px 10px rgba(245,183,163,.45); transform: scale(1.5); animation: inhale var(--ld-hold, .9s) cubic-bezier(.45,0,.3,1) backwards; will-change: transform, opacity; } /* 로딩 동안 숨 한 번 들이쉬고 */
-#loader.expand .breath-dot { transform: scale(2.4); opacity: 0; transition: transform .6s cubic-bezier(.22,1,.36,1), opacity .45s ease-out; } /* 들이쉰 크기에서 이어서 살짝 커지며 사라짐 */
-@keyframes inhale { from { transform: scale(.7); opacity: .6 } to { transform: scale(1.5); opacity: 1 } }
+.breath-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 30px 10px rgba(245,183,163,.45); transform: scale(2.4); opacity: 0; animation: bloom var(--ld-dot, .9s) cubic-bezier(.3,0,.4,1) backwards; will-change: transform, opacity; } /* 멈춤 없이 숨 들이쉬듯 커지며 그대로 사라짐 */
+@keyframes bloom { 0% { transform: scale(.7); opacity: .6 } 45% { opacity: 1 } 100% { transform: scale(2.4); opacity: 0 } }
 @keyframes breathe { 0%,100% { transform: scale(.7); opacity: .6 } 50% { transform: scale(1.5); opacity: 1 } }
 .loader-word { font-family: var(--font-display); font-weight: 200; letter-spacing: .35em; font-size: 18px; color: var(--color-text-muted); padding-left: .35em; }
 .loader-actions { display: grid; justify-items: center; gap: 12px; min-height: 84px; opacity: 0; transform: translateY(6px); transition: opacity .6s, transform .6s; }
@@ -1739,9 +1738,9 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   ['pointerdown', 'keydown', 'touchstart'].forEach(ev => addEventListener(ev, () => { if (sound.enabled) sound.ensure(); }, { passive: true }));
   render(parseRoute());
   bg.set(SCENES.loader);
-  // 로딩 화면 시간(ms): hold 숨 들이쉬는 동안 기다림, out 점이 커지기 시작한 뒤 화면이 흐려지기까지, fade 흐려지는 시간, max 글꼴을 기다리는 최대 시간
-  const LOADER = { hold: 900, out: 150, fade: 450, max: 1500 };
-  loader.style.setProperty('--ld-hold', LOADER.hold + 'ms'); loader.style.setProperty('--ld-fade', LOADER.fade + 'ms');
+  // 로딩 화면 시간(ms): dot 점이 커지며 사라지는 시간, hold 화면이 흐려지기 시작할 때까지, fade 흐려지는 시간, max 글꼴을 기다리는 최대 시간
+  const LOADER = { dot: 900, hold: 400, out: 0, fade: 500, max: 1200 };
+  loader.style.setProperty('--ld-dot', LOADER.dot + 'ms'); loader.style.setProperty('--ld-fade', LOADER.fade + 'ms');
   const enter = () => {
     entered = true;
     loader.classList.add('expand');
@@ -1753,8 +1752,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1792985533"></script>
-<script src="firebase-live.js?v=1792985533"></script>
+<script src="firebase-config.js?v=1792985645"></script>
+<script src="firebase-live.js?v=1792985645"></script>
 
 </body>
 </html>
