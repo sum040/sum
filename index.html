@@ -215,13 +215,11 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 .space-msg { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); text-align: center; color: var(--color-text-muted); display: grid; gap: 12px; justify-items: center; z-index: 2; max-width: 80%; }
 .sp { position: absolute; left: 0; top: 0; width: var(--size); height: var(--size); transform: translate(-50%, -50%); border: 0; padding: 0; background: none; cursor: pointer; border-radius: 50%; opacity: var(--o, 1); } /* 자리는 공전(orbit)이 매 장면 transform으로 정함 */
 .sp { transition: width .8s cubic-bezier(.45,0,.2,1), height .8s cubic-bezier(.45,0,.2,1), opacity .45s; }
-.sp.focus { z-index: 200 !important; --o: 1; } /* 보거나 편집하는 행성은 맨 앞 */
+.sp.focus { z-index: 1000 !important; --o: 1; } /* 보거나 편집하는 행성은 맨 앞 */
 .gb-body.viewing .sp:not(.focus) { opacity: .16 !important; } /* 보는 중에는 다른 행성이 정보를 가리지 않게 흐리게 */
-.space { touch-action: pan-y; cursor: grab; }
+.space { touch-action: none; cursor: grab; }
 .space.dragging, .space.dragging .sp { cursor: grabbing; }
 .gb-body.viewing .space, .gb-body:not(.collapsed) .space { cursor: default; }
-.orbits { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
-.orbits ellipse { fill: none; stroke: rgba(245,183,163,.1); stroke-width: 1; stroke-dasharray: 2 6; }
 .orbit-hint { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); margin: 0; z-index: 3; pointer-events: none; font-family: var(--font-display); font-weight: 300; font-size: 13px; letter-spacing: .14em; color: var(--color-text-muted); opacity: .8; transition: opacity .8s; }
 .orbit-hint.used, .gb-body.viewing .orbit-hint, .gb-body:not(.collapsed) .orbit-hint { opacity: 0; }
 .sp.enter { animation: spIn .6s ease-out; }
@@ -265,7 +263,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 .sp.arrive .bob { animation: arrive 1.4s ease-out, bob 7s ease-in-out 1.4s infinite; }
 @keyframes arrive { 0% { transform: scale(.3); filter: brightness(3) blur(6px); opacity: 0 } 60% { transform: scale(1.15); filter: brightness(1.6); opacity: 1 } 100% { transform: scale(1); filter: none } }
 .sp.scatter .bob, .front.scatter { animation: none; transform: scale(1.35); filter: blur(14px) brightness(2); opacity: 0; transition: transform .9s ease-out, filter .9s, opacity .9s; }
-.front { position: absolute; z-index: 220 !important; left: 50%; top: 76%; width: clamp(130px, 17vw, 260px); aspect-ratio: 1; transform: translate(-50%, -50%) scale(var(--grow, 1)); transition: transform .45s cubic-bezier(.2,.7,.2,1), opacity .9s; z-index: 3; }
+.front { position: absolute; z-index: 1100 !important; left: 50%; top: 76%; width: clamp(130px, 17vw, 260px); aspect-ratio: 1; transform: translate(-50%, -50%) scale(var(--grow, 1)); transition: transform .45s cubic-bezier(.2,.7,.2,1), opacity .9s; z-index: 3; }
 .front .bob { width: 100%; height: 100%; animation: bob 6s ease-in-out infinite; }
 .front.grow { --grow: 1.1; }
 .front.pulse .bob svg { animation: pulse .45s ease-out; }
@@ -1140,7 +1138,7 @@ function Guestbook() {
     <div class="gb-body" id="gbBody">
       <div class="space" id="space">
         <div class="space-intro"><h1>a little space for you</h1><p>leave a note, grow a planet.</p></div>
-        <div class="cam" id="cam"><svg class="orbits" id="orbits" aria-hidden="true"></svg><div id="planets"></div>
+        <div class="cam" id="cam"><div id="planets"></div>
         <div class="front" id="front"><div class="bob"></div><span class="front-tag">my planet</span></div></div>
         <p class="orbit-hint" aria-hidden="true">drag to orbit</p>
         <div class="view-info ko" id="viewInfo" aria-live="polite"></div>
@@ -1199,39 +1197,60 @@ async function loadPlanets() {
   catch (e) { gb.planets = []; gb.listError = true; }
   renderSpace();
 }
-/* 공전: 먼저 남긴 행성부터 안쪽 궤도에 차례로 놓음. 궤도는 바깥으로 갈수록 커져 화면 밖까지 이어지고,
-   드래그(휠, 좌우 화살표)로 돌리면 화면에 보이는 행성이 바뀜. 안쪽 궤도가 조금 더 빨리 돎 */
-const orbit = { phi: 0, vel: 0, drift: 1, rings: [], items: new Map(), raf: 0, drag: null, swallow: false, hover: 0, W: 0, H: 0 };
+/* 공전: 숨 행성은 가운데에 가만히 있고, 다른 행성은 그 둘레의 보이지 않는 구(공) 위에 고르게 흩어져 있음.
+   드래그(휠, 화살표)로 구를 어느 방향으로든 굴리면 앞으로 오는 행성은 크고 밝게, 뒤로 가는 행성은 작고 흐리게 보임.
+   행성이 많아지면 구가 커져 화면 밖까지 이어지고, 굴려야 보이는 행성이 생김 */
+const orbit = { M: [1, 0, 0, 0, 1, 0, 0, 0, 1], vx: 0, vy: 0, drift: 1, items: new Map(), raf: 0, drag: null, swallow: false, hover: 0, W: 0, H: 0 };
+// 회전 행렬 M에 화면 기준 가로축(ax)·세로축(ay) 회전을 더함
+function orbitRotate(ax, ay) {
+  const cy = Math.cos(ay), sy = Math.sin(ay), cx = Math.cos(ax), sx = Math.sin(ax), m = orbit.M;
+  const Ry = [cy, 0, sy, 0, 1, 0, -sy, 0, cy], Rx = [1, 0, 0, 0, cx, -sx, 0, sx, cx];
+  const mul = (a, b) => [0, 1, 2].flatMap(r => [0, 1, 2].map(c => a[r * 3] * b[c] + a[r * 3 + 1] * b[3 + c] + a[r * 3 + 2] * b[6 + c]));
+  let n = mul(Rx, mul(Ry, m));
+  // 오차가 쌓이지 않게 다시 직교로 맞춤
+  const nrm = v => { const l = Math.hypot(...v); return v.map(x => x / l); };
+  const a = nrm(n.slice(0, 3)); let b = n.slice(3, 6); const d = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  b = nrm(b.map((x, i) => x - d * a[i]));
+  const c = [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  orbit.M = [...a, ...b, ...c];
+}
 function orbitLayout(list, k, W, H) {
   const admin = adminId(), place = {};
   const cx = W * CENTER[0] / 100, cy = H * CENTER[1] / 100;
-  // 바깥 궤도는 옆으로 길게 퍼져 화면 밖으로 나가고, 위아래로는 조금씩만 커짐
-  const r0 = Math.max(W * .3, 250 * k), gapX = Math.max(W * .24, 220 * k), ry0 = Math.max(H * .2, 130 * k), gapY = Math.max(H * .13, 90 * k), spacing = 190 * k;
   const others = [...list].filter(p => p.id !== admin).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-  const rings = []; let i = 0;
-  while (i < others.length) {
-    const ring = rings.length, rx = r0 + ring * gapX, ry = ry0 + ring * gapY;
-    const cap = Math.max(5, Math.floor(2 * Math.PI * Math.sqrt((rx * rx + ry * ry) / 2) / spacing));
-    const members = others.slice(i, i + cap); i += cap;
-    rings.push({ rx, ry, speed: 1 / (1 + ring * .45) });
-    members.forEach((p, j) => { place[p.id] = { ring, ang: ring * .9 + .35 + 2 * Math.PI * j / members.length }; });
-  }
-  if (list.some(p => p.id === admin)) place[admin] = { ring: -1, ang: 0 };
-  return { place, rings, cx, cy };
+  const n = others.length;
+  // 구 크기: 20개까지는 화면 안, 그보다 많으면 개수에 맞춰 커짐
+  const R = Math.max(Math.min(W * .4, H * .5), 240 * k) * Math.max(1, Math.sqrt(n / 20));
+  // 피보나치 구: 공 표면에 고르게 흩뿌림
+  others.forEach((p, i) => {
+    const y = n === 1 ? 0 : 1 - 2 * (i + .5) / n, rr = Math.sqrt(1 - y * y), a = i * 2.39996323 + .7;
+    place[p.id] = [rr * Math.cos(a), y, rr * Math.sin(a)];
+  });
+  if (list.some(p => p.id === admin)) place[admin] = null;
+  return { place, R, cx, cy, D: R * 2.6, hole: list.some(p => p.id === admin) ? 110 * k : 0 };
 }
 const orbitFrozen = () => !!gb.viewId || !gb.collapsed;
 // 행성 하나의 지금 자리: 화면 좌표, 깊이에 따른 크기, 흐림, 겹침 순서
 function orbitPos(it, L) {
-  if (it.ring < 0) return { x: L.cx, y: L.cy, s: 1, o: 1, z: 60 };
-  const R = L.rings[it.ring] || L.rings[L.rings.length - 1], a = it.cur + orbit.phi * R.speed, t = (Math.sin(a) + 1) / 2;
-  return { x: L.cx + it.rx * Math.cos(a), y: L.cy + it.ry * Math.sin(a), s: .55 + .45 * t, o: .4 + .6 * t, z: 10 + Math.round(t * 90) };
+  if (!it.v) return { x: L.cx, y: L.cy, s: 1, o: 1, z: 500 };
+  const m = orbit.M, [a, b, c] = it.v;
+  const x = m[0] * a + m[1] * b + m[2] * c, y = m[3] * a + m[4] * b + m[5] * c, z = m[6] * a + m[7] * b + m[8] * c;
+  const f = L.D / (L.D - z * L.R), t = (z + 1) / 2, s = .5 + .5 * t;
+  let px = x * L.R * f, py = y * L.R * .82 * f;
+  // 앞쪽 행성은 숨 행성을 가리지 않게 가운데를 비켜 지나감
+  if (z > 0 && L.hole) {
+    const need = (L.hole + it.w * s * .42) * Math.min(1, z * 3), d = Math.hypot(px, py);
+    if (d < need) { const ux = d > 1 ? px / d : (x >= 0 ? 1 : -1), uy = d > 1 ? py / d : 0; px = ux * need; py = uy * need; }
+  }
+  // 앞쪽 절반만 숨 행성보다 앞에 그림
+  return { x: L.cx + px, y: L.cy + py, s, o: .3 + .7 * t, z: z > 0 ? 501 + Math.round(z * 400) : 499 + Math.round(z * 400) };
 }
 function orbitPaint() {
   const L = orbit.L; if (!L) return;
   orbit.items.forEach(it => {
     const n = it.node; if (!n.isConnected) return;
-    // 궤도나 자리가 바뀌면 그쪽으로 미끄러지듯 옮김
-    it.cur += (it.ang - it.cur) * .08; it.rx += (it.trx - it.rx) * .08; it.ry += (it.try - it.ry) * .08;
+    // 자리가 바뀌면(행성이 늘거나 줄면) 그쪽으로 미끄러지듯 옮김
+    if (it.v && it.tv) { const v = it.v.map((x, i) => x + (it.tv[i] - x) * .08), l = Math.hypot(...v) || 1; it.v = v.map(x => x / l); }
     const q = orbitPos(it, L), half = it.w * q.s / 2;
     it.p = q;
     const off = q.x + half < -40 || q.x - half > orbit.W + 40 || q.y + half < -40 || q.y - half > orbit.H + 40;
@@ -1251,8 +1270,12 @@ function orbitTick(now) {
   const frozen = orbitFrozen();
   // 가만히 두면 천천히 돎. 행성에 마우스를 올리거나 보는 중이면 멈춤
   orbit.drift += ((frozen || orbit.hover || orbit.drag ? 0 : 1) - orbit.drift) * .06;
-  if (!orbit.drag) { orbit.phi += orbit.vel + .035 * dt * orbit.drift; orbit.vel *= .94; if (Math.abs(orbit.vel) < 1e-5) orbit.vel = 0; }
-  if (frozen) orbit.vel = 0;
+  if (frozen) { orbit.vx = orbit.vy = 0; }
+  else if (!orbit.drag) {
+    orbitRotate(orbit.vy, orbit.vx + .06 * dt * orbit.drift);
+    orbit.vx *= .94; orbit.vy *= .94;
+    if (Math.abs(orbit.vx) < 1e-5) orbit.vx = 0; if (Math.abs(orbit.vy) < 1e-5) orbit.vy = 0;
+  }
   orbitPaint();
   orbit.raf = requestAnimationFrame(orbitTick);
 }
@@ -1260,23 +1283,24 @@ function orbitStart() { if (!orbit.raf) { orbit.last = 0; orbit.raf = requestAni
 function orbitBind(space) {
   const hint = $('.orbit-hint', space);
   const used = () => hint && hint.classList.add('used');
+  const per = () => 2.4 / Math.max(600, Math.min(orbit.W, orbit.H * 1.6)); // 화면 너비만큼 끌면 반 바퀴쯤
+  const cap = v => Math.max(-.08, Math.min(.08, v));
   space.addEventListener('pointerdown', e => {
     if (e.button !== 0 || orbitFrozen() || e.target.closest('.view-info, .open-panel, .panel, .space-msg')) return;
-    orbit.drag = { x: e.clientX, phi: orbit.phi, lx: e.clientX, lt: performance.now(), v: 0, moved: false, id: e.pointerId };
+    orbit.drag = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, lt: performance.now(), vx: 0, vy: 0, moved: false, id: e.pointerId };
   });
   space.addEventListener('pointermove', e => {
     const d = orbit.drag; if (!d || d.id !== e.pointerId) return;
-    const dx = e.clientX - d.x;
-    if (!d.moved && Math.abs(dx) > 6) { d.moved = true; space.classList.add('dragging'); try { space.setPointerCapture(e.pointerId); } catch (_) {} used(); }
+    if (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6) { d.moved = true; space.classList.add('dragging'); try { space.setPointerCapture(e.pointerId); } catch (_) {} used(); }
     if (!d.moved) return;
-    const per = 2.6 / Math.max(600, orbit.W); // 화면 너비만큼 끌면 반 바퀴쯤
-    orbit.phi = d.phi + dx * per;
-    const t = performance.now(); d.v = (e.clientX - d.lx) * per / Math.max(1, (t - d.lt) / 16.7); d.lx = e.clientX; d.lt = t;
+    const k = per(), dx = (e.clientX - d.lx) * k, dy = (e.clientY - d.ly) * k, t = performance.now(), fr = Math.max(1, (t - d.lt) / 16.7);
+    orbitRotate(-dy, dx); // 끄는 방향으로 구가 굴러감
+    d.vx = dx / fr; d.vy = -dy / fr; d.lx = e.clientX; d.ly = e.clientY; d.lt = t;
   });
   const end = e => {
     const d = orbit.drag; if (!d || (e.pointerId !== undefined && d.id !== e.pointerId)) return;
     orbit.drag = null; space.classList.remove('dragging');
-    if (d.moved) { orbit.vel = Math.max(-.08, Math.min(.08, d.v)); orbit.swallow = true; setTimeout(() => { orbit.swallow = false; }, 0); }
+    if (d.moved) { orbit.vx = cap(d.vx); orbit.vy = cap(d.vy); orbit.swallow = true; setTimeout(() => { orbit.swallow = false; }, 0); }
   };
   space.addEventListener('pointerup', end); space.addEventListener('pointercancel', end);
   // 끌고 난 뒤의 클릭은 행성 열기로 치지 않음
@@ -1284,12 +1308,12 @@ function orbitBind(space) {
   space.addEventListener('wheel', e => {
     if (orbitFrozen() || e.target.closest('.panel, .view-info')) return;
     e.preventDefault(); used();
-    orbit.vel += (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * -.00012;
-    orbit.vel = Math.max(-.08, Math.min(.08, orbit.vel));
+    orbit.vx = cap(orbit.vx - e.deltaX * .00012); orbit.vy = cap(orbit.vy + e.deltaY * .00012);
   }, { passive: false });
   space.addEventListener('keydown', e => {
-    if (orbitFrozen() || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
-    e.preventDefault(); used(); orbit.vel += e.key === 'ArrowLeft' ? .025 : -.025;
+    const dir = { ArrowLeft: [-.025, 0], ArrowRight: [.025, 0], ArrowUp: [0, .025], ArrowDown: [0, -.025] }[e.key];
+    if (orbitFrozen() || !dir) return;
+    e.preventDefault(); used(); orbit.vx = cap(orbit.vx + dir[0]); orbit.vy = cap(orbit.vy + dir[1]);
   });
 }
 const editInPlace = () => gb.mode === 'edit' && !gb.collapsed && !!auth.user; // 내 행성을 편집할 때는 아래 미리보기 없이 제자리에서 바뀜
@@ -1339,17 +1363,15 @@ function renderSpace() {
     b.classList.toggle('editing', mine && inPlace);
     b.classList.toggle('focus', p.id === gb.viewId || (mine && inPlace));
     b.style.setProperty('--size', size + 'px');
-    const pl = pos[p.id], R = L.rings[pl.ring] || { rx: 0, ry: 0 };
+    const v = pos[p.id];
     let it = orbit.items.get(p.id);
-    if (!it) { it = { cur: pl.ang, rx: R.rx, ry: R.ry }; orbit.items.set(p.id, it); }
-    Object.assign(it, { node: b, w: size, ring: pl.ring, ang: it.cur + (((pl.ang - it.cur) % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI) - Math.PI, trx: R.rx, try: R.ry });
+    if (!it) { it = { v: v && v.slice() }; orbit.items.set(p.id, it); }
+    Object.assign(it, { node: b, w: size, tv: v });
+    if (!v) it.v = null; else if (!it.v) it.v = v.slice();
     alive.add(p.id);
   });
   orbit.items.forEach((it, id) => { if (!alive.has(id)) orbit.items.delete(id); });
   if (!space.dataset.orbit) { space.dataset.orbit = '1'; orbitBind(space); }
-  // 궤도 선: 희미한 점선 타원
-  const ov = $('#orbits', gb.root);
-  if (ov) { ov.setAttribute('width', sw); ov.setAttribute('height', sh); ov.innerHTML = L.rings.map(R => `<ellipse cx="${L.cx}" cy="${L.cy}" rx="${R.rx.toFixed(1)}" ry="${R.ry.toFixed(1)}"/>`).join(''); }
   orbitPaint(); orbitStart();
   // 빠진 행성은 살짝 흐려지며 사라짐
   old.forEach(n => { n.classList.add('leaving'); setTimeout(() => n.remove(), 450); });
@@ -1808,8 +1830,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1792996486"></script>
-<script src="firebase-live.js?v=1792996486"></script>
+<script src="firebase-config.js?v=1792996966"></script>
+<script src="firebase-live.js?v=1792996966"></script>
 
 </body>
 </html>
