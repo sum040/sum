@@ -551,8 +551,8 @@ function rulesCheck(d) {
    2. 작업물 (코드 안 데이터 파일). 지금은 자리표시 내용입니다.
    ===================================================================== */
 const WORKS = [
-  { slug: 'slow-garden', order: 1, title: 'Slow Garden', summary: '마우스를 따라 천천히 피어나는 꽃 정원', result: '(예시) 공개 첫 주 방문자 평균 머문 시간 2분 40초', description: '자리표시 설명입니다. 실제 작업물의 설명으로 바꿀 자리예요.\n어두운 화면 위에서 커서가 지나간 자리마다 흐린 꽃이 천천히 피어나는 웹 작업이라고 가정했습니다.', year: 2026, tools: ['Figma', 'Three.js', 'GLSL'], siteUrl: 'https://example.com/slow-garden', thumb: 'garden', thumbnailAlt: '검은 배경에서 흐릿하게 빛나는 꽃들이 피어나는 화면' },
-  { slug: 'tide-letters', order: 2, title: 'Tide Letters', summary: '파도처럼 밀려왔다 흩어지는 글자 실험', description: '', year: 2025, tools: ['Figma', 'p5.js'], siteUrl: '', thumb: 'tide', thumbnailAlt: '어두운 바다 위로 빛나는 물결 선이 겹쳐 흐르는 화면' },
+  { slug: 'find-bananas', order: 1, title: 'Find Bananas', summary: '명화 속에 숨은 진짜 바나나를 찾는 게임', description: '바나나 괴물이 유명 화가의 그림을 훔쳐 갔어요.\n그림을 돌려받으려면 그림 속으로 들어가 진짜 바나나를 찾아야 해요.', year: 2026, tools: ['Claude'], siteUrl: 'https://sum040.github.io/find-bananas/', thumb: 'assets/works/find-bananas.jpg', thumbnailAlt: 'Find Bananas 첫 화면. 크림색 배경에 큰 제목과 게임 시작 버튼, 노란 바나나 하나가 떠 있음' },
+  { slug: 'lingo-loop', order: 2, title: 'Lingo Loop', summary: 'UX/UI·AI 영어 용어를 치며 익히는 타자 연습', description: '주니어 디자이너가 UX/UI, AI 개발, 프롬프트에 쓰이는 영어 용어를 직접 타이핑하며 타자 속도를 높이고 용어도 함께 익히는 사이트예요.\n게임 페이지에서는 혼자서도, 친구와도 용어 타이핑 게임을 할 수 있어요.', year: 2026, tools: ['Claude'], siteUrl: 'https://sum040.github.io/lingo-loop/', thumb: 'assets/works/lingo-loop.jpg', thumbnailAlt: 'Lingo Loop 첫 화면. 노란 타자 게임 배너와 연습 모드 카드 세 개' },
 ].sort((a, b) => a.order - b.order);
 
 /* =====================================================================
@@ -923,7 +923,7 @@ void main(){
 })();
 const FLOWERS = [[.62, .70, .16, .6], [.75, .40, .18, .75], [.54, .22, .13, .55], [.86, .66, .13, .85], [.47, .82, .11, .7], [.80, .15, .12, .6], [.66, .55, .10, .9], [.38, .22, .11, .8], [.90, .88, .12, .7],
   [.70, .28, .12, .7], [.57, .46, .12, .8], [.83, .52, .11, .65], [.73, .86, .10, .75]]; // 뒤 4송이는 앞 꽃들과 겹치게 끼워 넣음 (셰이더 uFl[13]과 개수 같아야 함)
-const SCENES = { home: { flower: 1, stars: 0, mask: 1 }, works: { flower: .24, stars: .15, mask: 0 }, detail: { flower: .22, stars: .15, mask: 0 }, guestbook: { flower: .12, stars: 1, mask: 0 }, lost: { flower: .25, stars: .5, mask: 0 }, loader: { flower: 0, stars: 0, mask: 1 } };
+const SCENES = { home: { flower: 1, stars: 0, mask: 1 }, works: { flower: .24, stars: .15, mask: 0 }, detail: { flower: 0, stars: .15, mask: 0 }, guestbook: { flower: .12, stars: 1, mask: 0 }, lost: { flower: .25, stars: .5, mask: 0 }, loader: { flower: 0, stars: 0, mask: 1 } };
 
 /* =====================================================================
    7. 작업물 썸네일 (영상 자리를 캔버스 그림으로 대신함)
@@ -932,6 +932,11 @@ const thumbs = new Set();
 function makeThumb(kind, alt) {
   const c = document.createElement('canvas'); c.width = 800; c.height = 500; c.setAttribute('role', 'img'); c.setAttribute('aria-label', alt);
   const x = c.getContext('2d'), seedT = kind === 'garden' ? 3.2 : 1.7;
+  if (kind.includes('/')) { // 실제 작업물 화면 이미지
+    const img = new Image(), draw = () => { if (img.complete && img.naturalWidth) { const k = Math.max(800 / img.naturalWidth, 500 / img.naturalHeight), w = img.naturalWidth * k, h = img.naturalHeight * k; x.drawImage(img, (800 - w) / 2, (500 - h) / 2, w, h); } };
+    x.fillStyle = '#0f0d12'; x.fillRect(0, 0, 800, 500); img.onload = draw; img.src = kind;
+    return { el: c, playing: false, t: 0, draw };
+  }
   const draw = t => {
     x.globalCompositeOperation = 'source-over'; x.fillStyle = '#0f0d12'; x.fillRect(0, 0, 800, 500);
     x.globalCompositeOperation = 'lighter';
@@ -1066,7 +1071,7 @@ function Main(r) {
         <dl class="intro-facts ko rv" style="--d:.3s"><div><dt>하는 일</dt><dd>제품 디자인 · 인터랙티브 웹 (예시)</dd></div><div><dt>좋아하는 것</dt><dd>빛 번짐, 꽃, 느린 움직임 (예시)</dd></div><div><dt>연락</dt><dd>tnals040@gmail.com</dd></div></dl>
         <a class="intro-down rv" style="--d:.4s" href="#works-list" aria-label="작업물로 내려가기">works ↓</a>
       </section>
-      <div class="page-head rv" id="works-list"><h1>works</h1><p class="ko">예시 작업물 2개 · 실제 작업물로 바꿀 자리예요</p></div>
+      <div class="page-head rv" id="works-list"><h1>works</h1></div>
       <div class="works-grid" id="grid"></div>
       <section class="outro" aria-label="마무리">
         <p class="say" aria-label="take one more breath"><span>take</span><span>one more</span><span>breath.</span></p>
@@ -1124,7 +1129,7 @@ function Main(r) {
     links.style.pointerEvents = p > .3 ? 'none' : '';
     const b = Math.max(0, Math.min(1, (p - .55) / .3));
     bar.style.setProperty('--bar', b.toFixed(3)); bar.classList.toggle('off', b < .5);
-    if (s.isConnected) bg.set({ flower: mix(SCENES.home.flower, SCENES.works.flower, e), stars: mix(SCENES.home.stars, SCENES.works.stars, e), mask: mix(SCENES.home.mask, SCENES.works.mask, e) });
+    if (s.isConnected && mainApi && mainApi.root === s && (current === 'home' || current === 'works')) bg.set({ flower: mix(SCENES.home.flower, SCENES.works.flower, e), stars: mix(SCENES.home.stars, SCENES.works.stars, e), mask: mix(SCENES.home.mask, SCENES.works.mask, e) });
     const now = p > .5 ? 'works' : 'home';
     if (now !== place) {
       place = now;
@@ -1155,7 +1160,7 @@ function Main(r) {
   const go = name => glide(spot(name));
   // 이미 같은 주소일 때도 메뉴·로고를 누르면 그 자리로 이동
   $$('a[href="#works"], a[href="#"]', s).forEach(a => a.addEventListener('click', e => { if (!s.isConnected) return; e.preventDefault(); go(a.getAttribute('href') === '#works' ? 'works' : 'home'); }));
-  $('.intro-down', s).onclick = e => { e.preventDefault(); glide($('#works-list', s).offsetTop - 90); };
+  $('.intro-down', s).onclick = e => { e.preventDefault(); const t = $('#works-list', s); glide(t.getBoundingClientRect().top - s.getBoundingClientRect().top + s.scrollTop - 90); };
   requestAnimationFrame(() => { s.scrollTop = target = pos = clamp(spot(r.name)); onScroll(); });
   s.tabIndex = -1; // 키보드(PageDown, 스페이스)로 바로 스크롤되게
   mainApi = { root: s, go };
@@ -1931,8 +1936,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1793001281"></script>
-<script src="firebase-live.js?v=1793001281"></script>
+<script src="firebase-config.js?v=1793002338"></script>
+<script src="firebase-live.js?v=1793002338"></script>
 
 </body>
 </html>
