@@ -1330,18 +1330,24 @@ function orbitRotate(ax, ay) {
 }
 function orbitLayout(list, k, W, H) {
   const admin = adminId(), place = {};
-  const cx = W * CENTER[0] / 100, cy = H * CENTER[1] / 100;
   const others = [...list].filter(p => p.id !== admin).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   const n = others.length;
-  // 구 크기: 20개까지는 화면 안, 그보다 많으면 개수에 맞춰 커짐
-  const R = Math.max(Math.min(W * .4, H * .5), 240 * k) * Math.max(1, Math.sqrt(n / 20));
+  // 화면을 꽉 채우는 타원 공: 가장 앞에 온 행성(캐릭터 포함)도 위아래 끝에서 잘리지 않게 크기를 맞춤
+  const D = 4; // 원근: 앞은 4/3배, 뒤는 4/5배로 보임
+  let g = 0; for (let a = 0; a < Math.PI; a += .01) g = Math.max(g, Math.cos(a) * D / (D - Math.sin(a))); // 화면 끝까지 가장 멀리 나가는 정도
+  const sf = Math.max(.72, Math.min(1, Math.sqrt(22 / Math.max(1, n)))); // 행성이 많으면 조금씩 작게
+  const half = 166 * k * sf / 2 + 16; // 가장 큰 행성의 반 + 둥실거림 여유
+  const cx = W / 2, cy = H / 2;
+  const Ry = Math.max(40, (H / 2 - half) / g);
+  // 22개가 넘으면 옆으로만 길어져 화면 밖까지 이어짐(드래그로 보기). 위아래는 늘 화면 안
+  const Rx = Math.max(40, (W / 2 - half) / g) * Math.max(1, Math.sqrt(n / 22));
   // 피보나치 구: 공 표면에 고르게 흩뿌림
   others.forEach((p, i) => {
     const y = n === 1 ? 0 : 1 - 2 * (i + .5) / n, rr = Math.sqrt(1 - y * y), a = i * 2.39996323 + .7;
     place[p.id] = [rr * Math.cos(a), y, rr * Math.sin(a)];
   });
   if (list.some(p => p.id === admin)) place[admin] = null;
-  return { place, R, cx, cy, D: R * 2.6, hole: list.some(p => p.id === admin) ? 110 * k : 0 };
+  return { place, Rx, Ry, cx, cy, D, sf, H, hole: list.some(p => p.id === admin) ? 110 * k : 0 };
 }
 const orbitFrozen = () => !!gb.viewId || !gb.collapsed;
 // 행성 하나의 지금 자리: 화면 좌표, 깊이에 따른 크기, 흐림, 겹침 순서
@@ -1349,8 +1355,8 @@ function orbitPos(it, L) {
   if (!it.v) return { x: L.cx, y: L.cy, s: 1, o: 1, z: 500 };
   const m = orbit.M, [a, b, c] = it.v;
   const x = m[0] * a + m[1] * b + m[2] * c, y = m[3] * a + m[4] * b + m[5] * c, z = m[6] * a + m[7] * b + m[8] * c;
-  const f = L.D / (L.D - z * L.R), t = (z + 1) / 2, s = .5 + .5 * t;
-  let px = x * L.R * f, py = y * L.R * .82 * f;
+  const f = L.D / (L.D - z), t = (z + 1) / 2, s = .5 + .5 * t;
+  let px = x * L.Rx * f, py = y * L.Ry * f;
   // 앞쪽 행성은 숨 행성을 가리지 않게 옆으로 둥글게 비켜 지나감. 끄는 동안(push 0)은 겹쳐 지나가고, 놓으면 부드럽게 비켜남
   // 움직이는 방향의 한쪽 옆(가까이 올 때 정한 쪽)으로만, 멀리서부터 서서히 휘어서 멈추거나 튀지 않음
   if (it.raw) { const vx = px - it.raw[0], vy = py - it.raw[1], sp = Math.hypot(vx, vy); if (sp > .05) it.m = [vx / sp, vy / sp]; }
@@ -1366,6 +1372,8 @@ function orbitPos(it, L) {
     const pp = (u + (u2 - u) * ww) * it.side;
     px = mx * along + nx * pp; py = my * along + ny * pp;
   } else it.side = 0;
+  // 비켜 가느라 위아래 끝을 넘으면 화면 안쪽에 머물게 함
+  const lim = L.H / 2 - it.w * s / 2 - 2; if (lim > 0) py = Math.max(-lim, Math.min(lim, py));
   // 앞쪽 절반만 숨 행성보다 앞에 그림
   return { x: L.cx + px, y: L.cy + py, s, o: .3 + .7 * t, z: z > 0 ? 501 + Math.round(z * 400) : 499 + Math.round(z * 400) };
 }
@@ -1465,7 +1473,7 @@ function renderSpace() {
   shown.forEach(p => {
     if (!(p.id in pos)) return;
     const mine = p.id === uid, look = mine && inPlace ? { ...p, ...pickFields(gb.draft) } : p;
-    const h = hashStr(p.id), size = Math.round((p.id === adminId() ? 220 : 136 + (h % 30)) * k);
+    const h = hashStr(p.id), size = Math.round((p.id === adminId() ? 220 : (136 + (h % 30)) * L.sf) * k);
     const sig = JSON.stringify([look.planetColor, look.cover, look.animal, look.animalColor, p.nickname, p.googleName, p.message, mine]);
     let b = old.get(p.id); old.delete(p.id);
     const fresh = !b || b.dataset.sig !== sig || p.id === gb.arriveId || gb.arriveIds.has(p.id);
@@ -1955,8 +1963,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1793025418"></script>
-<script src="firebase-live.js?v=1793025418"></script>
+<script src="firebase-config.js?v=1793025940"></script>
+<script src="firebase-live.js?v=1793025940"></script>
 
 </body>
 </html>
