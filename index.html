@@ -137,8 +137,8 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 .lines .ln { display: block; overflow: hidden; padding-bottom: .06em; }
 .lines .ln > span { display: block; transform: translateY(110%); transition: transform 1.2s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0s); }
 .lines.in .ln > span { transform: none; }
-.main .work-card .thumb canvas { transform: translateY(var(--py, 0px)) scale(1.12); }
-.main .work-card:hover .thumb canvas, .main .work-card:focus-visible .thumb canvas { transform: translateY(var(--py, 0px)) scale(1.17); }
+.main .work-card .thumb > :is(canvas, video) { transform: translateY(var(--py, 0px)) scale(1.12); }
+.main .work-card:hover .thumb > :is(canvas, video), .main .work-card:focus-visible .thumb > :is(canvas, video) { transform: translateY(var(--py, 0px)) scale(1.17); }
 
 /* 참고 사이트처럼: 구석의 큰 흐린 글자 */
 .main { overflow-x: hidden; } /* 옆에서 밀려 들어오는 글자 때문에 화면이 가로로 넓어지지 않게 */
@@ -163,9 +163,9 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 .works-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(20px, 3vw, 48px); }
 @media (max-width: 760px) { .works-grid { grid-template-columns: 1fr; } }
 .work-card { display: grid; gap: 16px; text-decoration: none; color: inherit; }
-.thumb { position: relative; aspect-ratio: 16 / 10; max-width: 100%; border-radius: 6px; overflow: hidden; background: var(--color-surface); border: 1px solid rgba(111,103,112,.4); }
-.thumb canvas { width: 100%; height: 100%; display: block; transition: transform .8s cubic-bezier(.2,.7,.2,1), filter .8s; }
-.work-card:hover .thumb canvas, .work-card:focus-visible .thumb canvas { transform: scale(1.04); filter: brightness(1.15); }
+.thumb { position: relative; aspect-ratio: 16 / 9; max-width: 100%; border-radius: 6px; overflow: hidden; background: var(--color-surface); border: 1px solid rgba(111,103,112,.4); }
+.thumb > :is(canvas, video) { width: 100%; height: 100%; display: block; object-fit: cover; transition: transform .8s cubic-bezier(.2,.7,.2,1), filter .8s; }
+.work-card:hover .thumb > :is(canvas, video), .work-card:focus-visible .thumb > :is(canvas, video) { transform: scale(1.04); filter: brightness(1.15); }
 .thumb .tag { position: absolute; left: 12px; top: 12px; font-size: 12px; padding: 3px 10px; border-radius: 999px; background: rgba(11,10,13,.7); color: var(--color-text-muted); }
 .work-meta { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 4px 16px; align-items: baseline; }
 .work-meta h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 26px; letter-spacing: .01em; }
@@ -556,7 +556,7 @@ function rulesCheck(d) {
    ===================================================================== */
 const WORKS = [
   { slug: 'find-bananas', order: 1, title: 'Find Bananas', summary: '명화 속에 숨은 진짜 바나나를 찾는 게임', description: '바나나 괴물이 유명 화가의 그림을 훔쳐 갔어요.\n그림을 돌려받으려면 그림 속으로 들어가 진짜 바나나를 찾아야 해요.', year: 2026, tools: ['Claude'], siteUrl: 'https://sum040.github.io/find-bananas/', thumb: 'assets/works/find-bananas.jpg', thumbnailAlt: 'Find Bananas 첫 화면. 크림색 배경에 큰 제목과 게임 시작 버튼, 노란 바나나 하나가 떠 있음' },
-  { slug: 'lingo-loop', order: 2, title: 'Lingo Loop', summary: 'UX/UI·AI 영어 용어를 치며 익히는 타자 연습', description: '주니어 디자이너가 UX/UI, AI 개발, 프롬프트에 쓰이는 영어 용어를 직접 타이핑하며 타자 속도를 높이고 용어도 함께 익히는 사이트예요.\n게임 페이지에서는 혼자서도, 친구와도 용어 타이핑 게임을 할 수 있어요.', year: 2026, tools: ['Claude'], siteUrl: 'https://sum040.github.io/lingo-loop/', thumb: 'assets/works/lingo-loop.jpg', thumbnailAlt: 'Lingo Loop 첫 화면. 노란 타자 게임 배너와 연습 모드 카드 세 개' },
+  { slug: 'lingo-loop', order: 2, title: 'Lingo Loop', summary: 'UX/UI·AI 영어 용어를 치며 익히는 타자 연습', description: '주니어 디자이너가 UX/UI, AI 개발, 프롬프트에 쓰이는 영어 용어를 직접 타이핑하며 타자 속도를 높이고 용어도 함께 익히는 사이트예요.\n게임 페이지에서는 혼자서도, 친구와도 용어 타이핑 게임을 할 수 있어요.', year: 2026, tools: ['Claude'], siteUrl: 'https://sum040.github.io/lingo-loop/', thumb: 'assets/works/lingo-loop.jpg', video: 'assets/works/lingo-loop.mp4', thumbnailAlt: 'Lingo Loop 소개 화면. 노란 배경에 큰 제목과 타자 연습 화면, 픽셀 캐릭터들' },
 ].sort((a, b) => a.order - b.order);
 
 /* =====================================================================
@@ -933,7 +933,12 @@ const SCENES = { home: { flower: 1, stars: 0, mask: 1 }, works: { flower: .24, s
    7. 작업물 썸네일 (영상 자리를 캔버스 그림으로 대신함)
    ===================================================================== */
 const thumbs = new Set();
-function makeThumb(kind, alt) {
+function makeThumb(kind, alt, video) {
+  if (video) { // 썸네일 영상: 소리 없이 반복. 카드에서는 마우스를 올리면, 상세에서는 바로 재생
+    const v = document.createElement('video'); v.muted = true; v.loop = true; v.playsInline = true; v.preload = 'metadata'; v.poster = kind; v.src = video; v.setAttribute('aria-label', alt);
+    let on = false;
+    return { el: v, t: 0, draw() {}, get playing() { return on; }, set playing(x) { on = x; if (x) { const pr = v.play(); if (pr) pr.catch(() => {}); } else v.pause(); } };
+  }
   const c = document.createElement('canvas'); c.width = 800; c.height = 500; c.setAttribute('role', 'img'); c.setAttribute('aria-label', alt);
   const x = c.getContext('2d'), seedT = kind === 'garden' ? 3.2 : 1.7;
   if (kind.includes('/')) { // 실제 작업물 화면 이미지
@@ -977,7 +982,7 @@ function makeThumb(kind, alt) {
   return api;
 }
 (function thumbLoop() {
-  thumbs.forEach(th => { if (th.playing && th.el.isConnected) { th.t += 1 / 60; th.draw(th.t); } if (!th.el.isConnected) thumbs.delete(th); });
+  thumbs.forEach(th => { if (th.playing && th.el.isConnected && th.el.tagName === 'CANVAS') { th.t += 1 / 60; th.draw(th.t); } if (!th.el.isConnected) thumbs.delete(th); });
   requestAnimationFrame(thumbLoop);
 })();
 
@@ -1093,7 +1098,7 @@ function Main(r) {
       <div class="work-meta"><h2></h2><span class="year">${w.year}</span>${w.summary ? '<p class="ko"></p>' : ''}<div class="chips"></div></div></a>`);
     $('h2', a).textContent = w.title; if (w.summary) $('p', a).textContent = w.summary;
     w.tools.forEach(t => { const c = el('<span class="chip"></span>'); c.textContent = t; $('.chips', a).appendChild(c); });
-    const th = makeThumb(w.thumb, w.thumbnailAlt); thumbs.add(th); $('.thumb', a).appendChild(th.el);
+    const th = makeThumb(w.thumb, w.thumbnailAlt, w.video); thumbs.add(th); $('.thumb', a).appendChild(th.el);
     a.addEventListener('pointerenter', () => { th.playing = true; sound.play('spark'); });
     a.addEventListener('pointerleave', () => { th.playing = false; });
     a.addEventListener('focus', () => th.playing = true); a.addEventListener('blur', () => th.playing = false);
@@ -1223,7 +1228,7 @@ function Detail(r) {
   else cta.appendChild(el('<p class="unpublished ko">지금은 공개되지 않은 작업이에요.</p>'));
   if (prev) $('.detail-foot div:first-child span', s).textContent = prev.title;
   if (next) $('.detail-foot .right span', s).textContent = next.title;
-  const th = makeThumb(w.thumb, w.thumbnailAlt); th.playing = true; thumbs.add(th); $('#big', s).appendChild(th.el);
+  const th = makeThumb(w.thumb, w.thumbnailAlt, w.video); th.playing = true; thumbs.add(th); $('#big', s).appendChild(th.el);
   return s;
 }
 
@@ -1971,8 +1976,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1793026781"></script>
-<script src="firebase-live.js?v=1793026781"></script>
+<script src="firebase-config.js?v=1793034705"></script>
+<script src="firebase-live.js?v=1793034705"></script>
 
 </body>
 </html>
