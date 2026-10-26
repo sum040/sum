@@ -185,7 +185,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 
 /* ---------- guestbook ---------- */
 .gb { height: 100%; display: flex; flex-direction: column; }
-.gb-body { flex: 1; min-height: 0; position: relative; overflow: hidden; }
+.gb-body { flex: 1; min-height: 0; position: relative; overflow: visible; clip-path: inset(-100vh 0 0 0); } /* 위쪽만 열어 둠: 높이 올라간 행성이 잘리지 않고 메뉴 뒤로 지나감 */
 /* 꾸미기 창은 우주 위에 겹쳐서 옆(휴대폰은 아래)에서 밀려 들어옴. 우주 크기는 그대로라 행성은 움직이지 않음 */
 .gb-body .panel { position: absolute; top: 0; right: 0; bottom: 0; width: 392px; z-index: 4; transition: transform .85s cubic-bezier(.45,0,.2,1), visibility 0s; }
 .gb-body.collapsed .panel { transform: translateX(100%); visibility: hidden; transition: transform .85s cubic-bezier(.45,0,.2,1), visibility 0s .85s; }
@@ -208,7 +208,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 .danger-ghost { border-color: var(--color-error); color: var(--color-error); }
 .gb-body.viewing .sp .bubble, .gb-body.viewing .sp .name-tag, .gb-body.viewing .sp .mine-tag { display: none; } /* 보는 중에는 말풍선 대신 아래 정보 */
 .gb-body:not(.collapsed) .space-intro { opacity: 0; }
-.space { position: relative; min-width: 0; height: 100%; overflow: hidden; }
+.space { position: relative; min-width: 0; height: 100%; overflow: visible; clip-path: inset(-100vh 0 0 0); }
 .space-intro { position: absolute; left: max(var(--side), env(safe-area-inset-left, 0px)); top: 8px; z-index: 2; pointer-events: none; }
 .space-intro h1 { margin: 0; font-family: var(--font-display); font-weight: 300; font-size: 32px; letter-spacing: .02em; line-height: 1.2; }
 .space-intro p { margin: 6px 0 0; color: var(--color-text-muted); font-family: var(--font-display); font-weight: 300; letter-spacing: .06em; }
@@ -1831,8 +1831,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1792997387"></script>
-<script src="firebase-live.js?v=1792997387"></script>
+<script src="firebase-config.js?v=1792997602"></script>
+<script src="firebase-live.js?v=1792997602"></script>
 
 </body>
 </html>
