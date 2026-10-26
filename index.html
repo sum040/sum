@@ -1335,12 +1335,12 @@ function orbitLayout(list, k, W, H) {
   // 화면을 꽉 채우는 타원 공: 가장 앞에 온 행성(캐릭터 포함)도 위아래 끝에서 잘리지 않게 크기를 맞춤
   const D = 4; // 원근: 앞은 4/3배, 뒤는 4/5배로 보임
   let g = 0; for (let a = 0; a < Math.PI; a += .01) g = Math.max(g, Math.cos(a) * D / (D - Math.sin(a))); // 화면 끝까지 가장 멀리 나가는 정도
-  const sf = Math.max(.72, Math.min(1, Math.sqrt(22 / Math.max(1, n)))); // 행성이 많으면 조금씩 작게
+  const sf = Math.max(.4, Math.min(1, Math.sqrt(22 / Math.max(1, n)))); // 행성이 많으면 작게 해서 모두 화면 안에
   const half = 166 * k * sf / 2 + 16; // 가장 큰 행성의 반 + 둥실거림 여유
   const cx = W / 2, cy = H / 2;
   const Ry = Math.max(40, (H / 2 - half) / g);
-  // 22개가 넘으면 옆으로만 길어져 화면 밖까지 이어짐(드래그로 보기). 위아래는 늘 화면 안
-  const Rx = Math.max(40, (W / 2 - half) / g) * Math.max(1, Math.sqrt(n / 22));
+  // 많아져도 드래그하지 않고 모두 보이게, 옆도 늘 화면 안
+  const Rx = Math.max(40, (W / 2 - half) / g);
   // 피보나치 구: 공 표면에 고르게 흩뿌림
   others.forEach((p, i) => {
     const y = n === 1 ? 0 : 1 - 2 * (i + .5) / n, rr = Math.sqrt(1 - y * y), a = i * 2.39996323 + .7;
@@ -1963,8 +1963,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1793025940"></script>
-<script src="firebase-live.js?v=1793025940"></script>
+<script src="firebase-config.js?v=1793026268"></script>
+<script src="firebase-live.js?v=1793026268"></script>
 
 </body>
 </html>
