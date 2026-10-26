@@ -140,7 +140,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 .wh-stick { position: sticky; top: 0; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .wh-stick .yr { position: absolute; top: 50%; font-family: var(--font-display); font-weight: 300; font-size: clamp(40px, 6vw, 96px); line-height: 1; letter-spacing: -.01em; font-variant-numeric: tabular-nums; transform: translate(var(--x, 0), -50%); }
 .wh-stick .yr.a { right: 50%; } .wh-stick .yr.b { left: 50%; }
-.wh-box { display: grid; place-items: center; gap: 10px; padding: 7vh 6vw; border-radius: 6px; background: var(--color-surface); border: 1px solid rgba(111,103,112,.4); transform: scale(var(--s, .6)); opacity: var(--o, 0); }
+.wh-box { position: relative; z-index: 1; display: grid; place-items: center; gap: 10px; padding: 7vh 6vw; border-radius: 6px; background: var(--color-surface); border: 1px solid rgba(111,103,112,.4); transform: scale(var(--s, .6)); opacity: var(--o, 0); }
 .wh-box h1 { margin: 0; font-family: var(--font-display); font-weight: 200; font-size: clamp(56px, 8vw, 128px); line-height: 1; letter-spacing: .01em; }
 .wh-box p { margin: 0; color: var(--color-text-muted); font-size: 14px; }
 .outro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 32px; align-items: end; margin-top: 22vh; }
@@ -1144,9 +1144,9 @@ function Main(r) {
       const wl = $('.nav a[href="#works"]', bar); if (now === 'works') wl.setAttribute('aria-current', 'page'); else wl.removeAttribute('aria-current');
     }
     const vh = s.clientHeight, cl = v => Math.max(0, Math.min(1, v));
-    // works 제목: 화면에 멈춘 채 상자가 커지고, 양쪽 연도가 바깥으로 벌어짐
+    // works 제목: 화면에 멈춘 채 큰 상자가 작아지면서, 뒤에 숨어 있던 양쪽 연도가 바깥으로 벌어짐 (참고 사이트)
     const pr = pin.getBoundingClientRect(), wp = cl((vh - pr.top) / (pr.height)), we = sm(cl(wp * 1.6));
-    box.style.setProperty('--s', (.6 + .4 * we).toFixed(3)); box.style.setProperty('--o', cl(wp * 3).toFixed(3));
+    box.style.setProperty('--s', (1.5 - .5 * we).toFixed(3)); box.style.setProperty('--o', cl(wp * 3).toFixed(3));
     yrs.forEach((n, i) => n.style.setProperty('--x', (i ? 1 : -1) * (we * 30).toFixed(2) + 'vw'));
     // 마지막 큰 문장: 줄마다 오른쪽에서 밀려 들어옴
     says.forEach(n => { const t = sm(cl((vh - n.getBoundingClientRect().top) / (vh * .55))); n.style.setProperty('--x', ((1 - t) * 30).toFixed(2) + 'vw'); n.style.setProperty('--o', t.toFixed(3)); });
@@ -1943,8 +1943,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1792999384"></script>
-<script src="firebase-live.js?v=1792999384"></script>
+<script src="firebase-config.js?v=1792999835"></script>
+<script src="firebase-live.js?v=1792999835"></script>
 
 </body>
 </html>
