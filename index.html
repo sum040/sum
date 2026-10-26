@@ -125,8 +125,12 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 /* 첫 화면은 잠시 멈춘 채(sticky) SUMin이 아래 가운데로 옮겨 가고, 오른쪽 위에 문장 세 줄이 밀려 들어옴 */
 .stage { position: sticky; top: 0; height: calc(100vh / var(--zoom, 1)); overflow: hidden; }
 .home-title { transform-origin: 50% 50%; }
+/* SUMin을 처음부터 1.75배 크기로 그려 두고 작게 줄여 보여 줌. 커질 때 확대가 아니라 덜 줄이는 것이라 글자가 깨지지 않음 */
+.stage .home-title { transform: none; transform-origin: 0 0; }
+.stage .wordmark { font-size: calc(clamp(64px, 10.5vw, 168px) * 1.75); }
+.stage .subline { font-size: calc(clamp(22px, 2.6vw, 40px) * 1.75); margin-top: calc(14px * 1.75); }
 .stage .say { position: absolute; right: var(--side); top: clamp(84px, 13vh, 150px); width: max-content; text-shadow: 0 2px 28px rgba(11,10,13,.55); }
-.hero .home-title, .hero .home-links, .hero .hint { will-change: transform, opacity, filter; }
+.hero .home-links, .hero .hint { will-change: opacity; }
 .main > .wrap { padding-top: 0; }
 .rv { opacity: 0; transform: translateY(48px); transition: opacity 1.1s cubic-bezier(.2,.7,.2,1), transform 1.1s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0s); }
 .rv.in { opacity: 1; transform: none; }
@@ -1098,12 +1102,13 @@ function Main(r) {
   $('.outro', s).appendChild(contactFooter());
   const says = $$('.say span', s), corners = $$('.corner', s), stage = $('.stage', s), sub = $('.subline', s);
   // 첫 화면 SUMin이 옮겨 갈 자리(아래 가운데, 크게)를 미리 재 둠
-  let mv = { dx: 0, dy: 0, k: 1 };
+  const BIG = 1.75; // CSS에서 SUMin을 키워 둔 배율
+  let mv = { y0: 0, x1: 0, y1: 0, s0: 1 / BIG, s1: 1 / BIG };
   const measure = () => {
-    const keep = title.style.transform; title.style.transform = '';
+    const keep = title.style.transform; title.style.transform = 'none';
     const r = title.getBoundingClientRect(), w = $('.wordmark', s).getBoundingClientRect(), sr = stage.getBoundingClientRect();
-    const k = Math.min(1.75, (sr.width * .84) / (w.width || 1));
-    mv = { dx: sr.width / 2 - (r.left - sr.left + r.width / 2), dy: sr.height * .73 - (r.top - sr.top + r.height / 2), k };
+    const s0 = 1 / BIG, s1 = Math.min(1, (sr.width * .84) / (w.width || 1));
+    mv = { y0: -.58 * r.height * s0, s0, s1, x1: sr.width / 2 - r.width * s1 / 2 - (r.left - sr.left), y1: sr.height * .76 - r.height * s1 / 2 - (r.top - sr.top) };
     title.style.transform = keep;
   };
   addEventListener('resize', () => { if (s.isConnected) { measure(); onScroll(); } });
@@ -1133,7 +1138,7 @@ function Main(r) {
     const y = s.scrollTop, H = hero.offsetHeight || 1, run = Math.max(1, H - vh), q = cl(y / run);
     // 멈춘 구간: SUMin이 아래 가운데로 옮겨 가며 커지고, inhale·링크는 흐려지고, 문장 세 줄이 차례로 밀려 들어옴
     const t = sm(cl(q / .6));
-    title.style.transform = `translate(${(mv.dx * t).toFixed(1)}px, calc(-58% + ${(mv.dy * t).toFixed(1)}px)) scale(${(1 + (mv.k - 1) * t).toFixed(4)})`;
+    title.style.transform = `translate(${(mv.x1 * t).toFixed(1)}px, ${mix(mv.y0, mv.y1, t).toFixed(1)}px) scale(${mix(mv.s0, mv.s1, t).toFixed(4)})`;
     sub.style.opacity = String(1 - cl(q / .3));
     links.style.opacity = hint.style.opacity = String(1 - cl(q / .15));
     links.style.pointerEvents = q > .1 ? 'none' : '';
@@ -1314,7 +1319,7 @@ async function loadPlanets() {
 /* 공전: 숨 행성은 가운데에 가만히 있고, 다른 행성은 그 둘레의 보이지 않는 구(공) 위에 고르게 흩어져 있음.
    드래그(휠, 화살표)로 구를 어느 방향으로든 굴리면 앞으로 오는 행성은 크고 밝게, 뒤로 가는 행성은 작고 흐리게 보임.
    행성이 많아지면 구가 커져 화면 밖까지 이어지고, 굴려야 보이는 행성이 생김 */
-const orbit = { M: [1, 0, 0, 0, 1, 0, 0, 0, 1], vx: 0, vy: 0, drift: 1, push: 1, items: new Map(), raf: 0, drag: null, swallow: false, hover: 0, W: 0, H: 0 };
+const orbit = { M: [1, 0, 0, 0, 1, 0, 0, 0, 1], vx: 0, vy: 0, drift: 1, push: 1, pushT: 1, released: false, items: new Map(), raf: 0, drag: null, swallow: false, hover: 0, W: 0, H: 0 };
 // 회전 행렬 M에 화면 기준 가로축(ax)·세로축(ay) 회전을 더함
 function orbitRotate(ax, ay) {
   const cy = Math.cos(ay), sy = Math.sin(ay), cx = Math.cos(ax), sx = Math.sin(ax), m = orbit.M;
@@ -1359,9 +1364,15 @@ function orbitPos(it, L) {
   let px = x * L.Rx * f, py = y * L.Ry * f;
   // 앞쪽 행성은 숨 행성을 가리지 않게 옆으로 둥글게 비켜 지나감. 끄는 동안(push 0)은 겹쳐 지나가고, 놓으면 부드럽게 비켜남
   // 움직이는 방향의 한쪽 옆(가까이 올 때 정한 쪽)으로만, 멀리서부터 서서히 휘어서 멈추거나 튀지 않음
-  if (it.raw) { const vx = px - it.raw[0], vy = py - it.raw[1], sp = Math.hypot(vx, vy); if (sp > .05) it.m = [vx / sp, vy / sp]; }
+  // 움직이는 방향은 숨 행성 근처에 들어오기 전까지만 따라가고, 근처에 있는 동안은 고정(비켜 가는 쪽이 바뀌어 튀지 않게)
+  if (it.raw && !it.side) {
+    const vx = px - it.raw[0], vy = py - it.raw[1], sp = Math.hypot(vx, vy);
+    if (sp > .05) it.m = [vx / sp, vy / sp];
+  }
   it.raw = [px, py];
-  const need = z > 0 && L.hole ? (L.hole + it.w * s * .42) * Math.min(1, z * 3) * orbit.push : 0, d = Math.hypot(px, py);
+  const full = z > 0 && L.hole ? (L.hole + it.w * s * .42) * Math.min(1, z * 3) : 0, need = full * orbit.push, d = Math.hypot(px, py);
+  // 겹친 채로 놓으면: 숨 행성 가운데에서 바깥쪽(가장 가까운 쪽)으로 곧게 비켜나게 방향을 맞춤
+  if (orbit.released && full && d < full * 2.2) { const ux = d > 1 ? px / d : 0, uy = d > 1 ? py / d : -1; it.m = [uy, -ux]; it.side = 1; }
   if (need > .5 && d < need * 2.2) {
     const [mx, my] = it.m || (d > 1 ? [-py / d, px / d] : [1, 0]), nx = -my, ny = mx;
     const along = px * mx + py * my, perp = px * nx + py * ny;
@@ -1371,7 +1382,7 @@ function orbitPos(it, L) {
     const w = Math.min(1, Math.max(0, (need * 2.2 - d) / (need * .9))), ww = w * w * (3 - 2 * w); // 바깥 테두리에선 0이라 이어짐
     const pp = (u + (u2 - u) * ww) * it.side;
     px = mx * along + nx * pp; py = my * along + ny * pp;
-  } else it.side = 0;
+  } else if (!full || d >= full * 2.2) it.side = 0; // 숨 행성 근처를 벗어나야 방향을 다시 정함
   // 비켜 가느라 위아래 끝을 넘으면 화면 안쪽에 머물게 함
   const lim = L.H / 2 - it.w * s / 2 - 2; if (lim > 0) py = Math.max(-lim, Math.min(lim, py));
   // 앞쪽 절반만 숨 행성보다 앞에 그림
@@ -1379,6 +1390,7 @@ function orbitPos(it, L) {
 }
 function orbitPaint() {
   const L = orbit.L; if (!L) return;
+  queueMicrotask(() => { orbit.released = false; }); // 놓은 순간 한 번만 방향을 맞춤
   orbit.items.forEach(it => {
     const n = it.node; if (!n.isConnected) return;
     // 자리가 바뀌면(행성이 늘거나 줄면) 그쪽으로 미끄러지듯 옮김
@@ -1398,11 +1410,13 @@ function orbitPaint() {
 function orbitTick(now) {
   orbit.raf = 0;
   if (!gb.root || !gb.root.isConnected) return;
-  const dt = Math.min(.05, (now - (orbit.last || now)) / 1000); orbit.last = now;
+  const dt = Math.max(0, Math.min(.05, (now - (orbit.last || now)) / 1000)); orbit.last = now;
   const frozen = orbitFrozen();
   // 가만히 두면 천천히 돎. 행성에 마우스를 올리거나 보는 중이면 멈춤
   orbit.drift += ((frozen || orbit.hover || orbit.drag ? 0 : 1) - orbit.drift) * .06;
-  orbit.push += ((orbit.drag && orbit.drag.moved ? 0 : 1) - orbit.push) * (1 - Math.exp(-dt * (orbit.drag ? 12 : 3))); // 놓으면 1초쯤에 걸쳐 비켜남
+  // 끄는 동안은 겹쳐 지나가고(push 0), 놓으면 0.9초 동안 천천히 시작해 천천히 멈추며 비켜남
+  orbit.pushT = orbit.drag && orbit.drag.moved ? Math.max(0, orbit.pushT - dt * 8) : Math.min(1, orbit.pushT + dt / .9);
+  orbit.push = orbit.pushT * orbit.pushT * (3 - 2 * orbit.pushT);
   if (frozen) { orbit.vx = orbit.vy = 0; }
   else if (!orbit.drag) {
     orbitRotate(orbit.vy, orbit.vx + .06 * dt * orbit.drift);
@@ -1433,7 +1447,7 @@ function orbitBind(space) {
   const end = e => {
     const d = orbit.drag; if (!d || (e.pointerId !== undefined && d.id !== e.pointerId)) return;
     orbit.drag = null; space.classList.remove('dragging');
-    if (d.moved) { orbit.vx = cap(d.vx); orbit.vy = cap(d.vy); orbit.swallow = true; setTimeout(() => { orbit.swallow = false; }, 0); }
+    if (d.moved) { orbit.released = true; orbit.vx = cap(d.vx); orbit.vy = cap(d.vy); orbit.swallow = true; setTimeout(() => { orbit.swallow = false; }, 0); }
   };
   space.addEventListener('pointerup', end); space.addEventListener('pointercancel', end);
   // 끌고 난 뒤의 클릭은 행성 열기로 치지 않음
@@ -1957,8 +1971,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1793026309"></script>
-<script src="firebase-live.js?v=1793026309"></script>
+<script src="firebase-config.js?v=1793026781"></script>
+<script src="firebase-live.js?v=1793026781"></script>
 
 </body>
 </html>
