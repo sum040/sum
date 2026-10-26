@@ -1614,7 +1614,6 @@ function renderPanel() {
     ${!auth.user ? '<p class="login-hint ko">남길 때 구글 계정으로 로그인해요. 닉네임과 구글 이름이 함께 보여요.</p>' : ''}
     <div class="panel-actions">
       <button class="btn block" type="button" id="submit">${edit ? 'save changes' : 'leave a note'}</button>
-      <button class="link ko" type="button" id="reset">${edit ? '되돌리기' : '처음 모습으로'}</button>
       ${edit ? '<button class="link danger" type="button" id="del" style="margin-top:14px;font-size:13px">delete my planet</button>' : ''}
     </div>`;
   // 색
@@ -1650,11 +1649,6 @@ function renderPanel() {
     gb.draft.message = v; showErr('note', null); refreshPanel();
   });
   $('#submit', panel).onclick = submit;
-  $('#reset', panel).onclick = () => {
-    if (edit) gb.draft = clone(gb.saved);
-    else gb.draft = { ...defaultDraft(), nickname: gb.draft.nickname, message: gb.draft.message };
-    nick.value = gb.draft.nickname; note.value = gb.draft.message; changed(true);
-  };
   if (edit) $('#del', panel).onclick = () => askDelete(auth.user.uid, true);
   renderBanner(); refreshPanel();
 }
@@ -1963,8 +1957,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1793026268"></script>
-<script src="firebase-live.js?v=1793026268"></script>
+<script src="firebase-config.js?v=1793026309"></script>
+<script src="firebase-live.js?v=1793026309"></script>
 
 </body>
 </html>
