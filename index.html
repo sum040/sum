@@ -1984,6 +1984,10 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   const loader = document.getElementById('loader');
   // 크롬은 첫 클릭(또는 키 입력) 전에는 소리를 막음. 그 뒤부터 소리가 남.
   ['pointerdown', 'keydown', 'touchstart'].forEach(ev => addEventListener(ev, () => { if (sound.enabled) sound.ensure(); }, { passive: true }));
+  // 새로고침하면 어느 화면에 있었든 첫 홈 화면 맨 위로 (주소를 직접 열거나 링크로 들어온 경우는 그 화면 그대로)
+  try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
+  const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+  if (nav && nav.type === 'reload' && location.hash) { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} }
   render(parseRoute());
   bg.set(SCENES.loader);
   // 로딩 화면 시간(ms): dot 점이 커지며 사라지는 시간, hold 화면이 흐려지기 시작할 때까지, fade 흐려지는 시간, max 글꼴을 기다리는 최대 시간
@@ -2000,8 +2004,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1793037372"></script>
-<script src="firebase-live.js?v=1793037372"></script>
+<script src="firebase-config.js?v=1793038324"></script>
+<script src="firebase-live.js?v=1793038324"></script>
 
 </body>
 </html>
