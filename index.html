@@ -121,7 +121,11 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 /* ---------- 홈 + 작업물 한 페이지 (스크롤하면 홈이 흐려지며 올라가고 작업물이 나타남) ---------- */
 .main > .topbar { position: fixed; left: 0; right: 0; top: 0; opacity: var(--bar, 0); transform: translateY(calc((1 - var(--bar, 0)) * -14px)); }
 .main > .topbar.off { pointer-events: none; }
-.hero.home { position: relative; display: block; flex: none; height: calc(100vh / var(--zoom, 1)); padding: 0; }
+.hero.home { position: relative; display: block; flex: none; height: calc(230vh / var(--zoom, 1)); padding: 0; }
+/* 첫 화면은 잠시 멈춘 채(sticky) SUMin이 아래 가운데로 옮겨 가고, 오른쪽 위에 문장 세 줄이 밀려 들어옴 */
+.stage { position: sticky; top: 0; height: calc(100vh / var(--zoom, 1)); overflow: hidden; }
+.home-title { transform-origin: 50% 50%; }
+.stage .say { position: absolute; right: var(--side); top: clamp(84px, 13vh, 150px); width: max-content; text-shadow: 0 2px 28px rgba(11,10,13,.55); }
 .hero .home-title, .hero .home-links, .hero .hint { will-change: transform, opacity, filter; }
 .main > .wrap { padding-top: 0; }
 .rv { opacity: 0; transform: translateY(48px); transition: opacity 1.1s cubic-bezier(.2,.7,.2,1), transform 1.1s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0s); }
@@ -132,22 +136,18 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 .main .work-card .thumb canvas { transform: translateY(var(--py, 0px)) scale(1.12); }
 .main .work-card:hover .thumb canvas, .main .work-card:focus-visible .thumb canvas { transform: translateY(var(--py, 0px)) scale(1.17); }
 
-/* 참고 사이트처럼: 구석의 큰 글자, 끝의 큰 문장과 합쳐지는 SUMin */
+/* 참고 사이트처럼: 구석의 큰 흐린 글자 */
 .main { overflow-x: hidden; } /* 옆에서 밀려 들어오는 글자 때문에 화면이 가로로 넓어지지 않게 */
-.outro, .mark { overflow: clip; overflow-clip-margin: var(--side); }
+
 .main > .wrap { position: relative; z-index: 1; }
 .corner { position: fixed; bottom: max(2vh, 12px); z-index: 0; margin: 0; font-family: var(--font-title); font-size: clamp(56px, 10vw, 160px); line-height: .8; color: rgba(246,241,238,.07); pointer-events: none; opacity: 0; user-select: none; }
 .corner.l { left: var(--side); } .corner.r { right: var(--side); }
-.outro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 32px; align-items: end; margin-top: 22vh; }
-@media (max-width: 760px) { .outro { grid-template-columns: 1fr; } }
+.outro { margin-top: 22vh; }
 .outro .contact { margin: 0; padding: 0; border: 0; order: -1; }
 .say { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: clamp(48px, 7.4vw, 124px); line-height: .98; letter-spacing: -.03em; display: grid; justify-items: end; }
-.say span { display: block; transform: translateX(var(--x, 30vw)); opacity: var(--o, 0); }
+.say span { display: block; white-space: nowrap; transform: translateX(var(--x, 30vw)); opacity: var(--o, 0); }
 .say span:nth-child(2) { margin-right: 12%; }
 .say span:nth-child(3) { margin-right: 4%; }
-.mark { margin: 18vh 0 0; display: flex; justify-content: center; font-family: var(--font-title); font-size: clamp(72px, 17vw, 300px); line-height: .85; }
-.mark .sum { color: var(--color-primary); transform: translateX(var(--x, 0)); }
-.mark .in { color: var(--color-text); transform: translateX(calc(var(--x, 0) * -1)); }
 .mark-foot { display: flex; justify-content: space-between; gap: 16px; margin-top: 28px; font-size: 13px; color: var(--color-text-muted); }
 
 /* ---------- works list ---------- */
@@ -1054,14 +1054,15 @@ function render(r, anim) {
 let mainApi = null;
 function Main(r) {
   const s = el(`<section class="screen page main" aria-label="홈과 작업물">${topbar('home')}
-    <div class="hero home" aria-label="홈">
+    <div class="hero home" aria-label="홈"><div class="stage">
       <div class="home-title">
         <h1 class="wordmark" aria-label="Sumin"><span class="sum">SUM</span><span class="in">in</span></h1>
         <p class="subline" aria-label="inhale"><span class="in">in</span><span class="hale">hale</span></p>
       </div>
       <nav class="home-links" aria-label="주 메뉴"><a href="#works">works</a><a href="#guestbook">guestbook</a></nav>
       <p class="hint">move to breathe</p>
-    </div>
+      <p class="say" aria-label="take one more breath"><span>take</span><span>one more</span><span>breath.</span></p>
+    </div></div>
     <div class="wrap">
       <section class="intro" aria-label="소개">
         <p class="proto-note ko rv">자리표시 소개예요. 내용을 받으면 바꿀게요.</p>
@@ -1073,10 +1074,7 @@ function Main(r) {
       </section>
       <div class="page-head rv" id="works-list"><h1>works</h1></div>
       <div class="works-grid" id="grid"></div>
-      <section class="outro" aria-label="마무리">
-        <p class="say" aria-label="take one more breath"><span>take</span><span>one more</span><span>breath.</span></p>
-      </section>
-      <div class="mark" aria-hidden="true"><span class="sum">SUM</span><span class="in">in</span></div>
+      <section class="outro" aria-label="마무리"></section>
       <div class="mark-foot"><span>© 2026 SUMin</span><span>inhale</span></div>
     </div>
     <p class="corner l" aria-hidden="true">SUM</p><p class="corner r" aria-hidden="true">in</p></section>`);
@@ -1098,7 +1096,17 @@ function Main(r) {
     grid.appendChild(a);
   });
   $('.outro', s).appendChild(contactFooter());
-  const says = $$('.say span', s), mark = $('.mark', s), corners = $$('.corner', s);
+  const says = $$('.say span', s), corners = $$('.corner', s), stage = $('.stage', s), sub = $('.subline', s);
+  // 첫 화면 SUMin이 옮겨 갈 자리(아래 가운데, 크게)를 미리 재 둠
+  let mv = { dx: 0, dy: 0, k: 1 };
+  const measure = () => {
+    const keep = title.style.transform; title.style.transform = '';
+    const r = title.getBoundingClientRect(), w = $('.wordmark', s).getBoundingClientRect(), sr = stage.getBoundingClientRect();
+    const k = Math.min(1.75, (sr.width * .84) / (w.width || 1));
+    mv = { dx: sr.width / 2 - (r.left - sr.left + r.width / 2), dy: sr.height * .73 - (r.top - sr.top + r.height / 2), k };
+    title.style.transform = keep;
+  };
+  addEventListener('resize', () => { if (s.isConnected) { measure(); onScroll(); } });
 
   // 휠 스크롤을 관성 있게 부드럽게 (터치와 키보드는 원래대로)
   let target = 0, pos = 0, running = false;
@@ -1121,13 +1129,17 @@ function Main(r) {
   let place = null;
   const onScroll = () => {
     if (!running) target = pos = s.scrollTop;
-    const y = s.scrollTop, h = hero.offsetHeight || 1, p = Math.min(1, y / h), e = sm(p);
-    title.style.transform = `translate3d(0, calc(-58% + ${y * .45}px), 0) scale(${1 - .07 * e})`;
-    title.style.opacity = String(Math.max(0, 1 - p * 1.35));
-    title.style.filter = `blur(${(e * 8).toFixed(2)}px)`;
-    links.style.opacity = hint.style.opacity = String(Math.max(0, 1 - p * 3));
-    links.style.pointerEvents = p > .3 ? 'none' : '';
-    const b = Math.max(0, Math.min(1, (p - .55) / .3));
+    const vh = s.clientHeight, cl = v => Math.max(0, Math.min(1, v));
+    const y = s.scrollTop, H = hero.offsetHeight || 1, run = Math.max(1, H - vh), q = cl(y / run);
+    // 멈춘 구간: SUMin이 아래 가운데로 옮겨 가며 커지고, inhale·링크는 흐려지고, 문장 세 줄이 차례로 밀려 들어옴
+    const t = sm(cl(q / .6));
+    title.style.transform = `translate(${(mv.dx * t).toFixed(1)}px, calc(-58% + ${(mv.dy * t).toFixed(1)}px)) scale(${(1 + (mv.k - 1) * t).toFixed(4)})`;
+    sub.style.opacity = String(1 - cl(q / .3));
+    links.style.opacity = hint.style.opacity = String(1 - cl(q / .15));
+    links.style.pointerEvents = q > .1 ? 'none' : '';
+    says.forEach((n, i) => { const u = sm(cl((q - .25 - i * .12) / .3)); n.style.setProperty('--x', ((1 - u) * 30).toFixed(2) + 'vw'); n.style.setProperty('--o', u.toFixed(3)); });
+    const p = cl((y - run) / vh), e = sm(cl((y - run * .6) / (run * .4 + vh * .6)));
+    const b = cl((p - .4) / .3);
     bar.style.setProperty('--bar', b.toFixed(3)); bar.classList.toggle('off', b < .5);
     if (s.isConnected && mainApi && mainApi.root === s && (current === 'home' || current === 'works')) bg.set({ flower: mix(SCENES.home.flower, SCENES.works.flower, e), stars: mix(SCENES.home.stars, SCENES.works.stars, e), mask: mix(SCENES.home.mask, SCENES.works.mask, e) });
     const now = p > .5 ? 'works' : 'home';
@@ -1140,12 +1152,8 @@ function Main(r) {
       }
       const wl = $('.nav a[href="#works"]', bar); if (now === 'works') wl.setAttribute('aria-current', 'page'); else wl.removeAttribute('aria-current');
     }
-    const vh = s.clientHeight, cl = v => Math.max(0, Math.min(1, v));
-    // 마지막 큰 문장: 줄마다 오른쪽에서 밀려 들어옴
-    says.forEach(n => { const t = sm(cl((vh - n.getBoundingClientRect().top) / (vh * .55))); n.style.setProperty('--x', ((1 - t) * 30).toFixed(2) + 'vw'); n.style.setProperty('--o', t.toFixed(3)); });
-    // 구석의 SUM · in 은 끝에 닿으면 가운데로 모여 SUMin이 됨
+    // 구석의 SUM · in 은 첫 화면을 지나면 나타나고, 맨 끝에 닿으면 사라짐
     const m = sm(cl(1 - (maxY() - y) / (vh * .9)));
-    mark.style.setProperty('--x', ((1 - m) * -28).toFixed(2) + 'vw'); mark.style.opacity = (.25 + .75 * m).toFixed(3);
     corners.forEach(c => c.style.opacity = (cl((p - .7) / .3) * (1 - m)).toFixed(3));
     // 썸네일은 카드보다 조금 느리게 움직임 (깊이감)
     $$('.work-card .thumb', s).forEach(t => { const rc = t.getBoundingClientRect(); if (rc.bottom < -50 || rc.top > vh + 50) return; t.style.setProperty('--py', (((rc.top + rc.height / 2) / vh - .5) * -26).toFixed(1) + 'px'); });
@@ -1161,7 +1169,8 @@ function Main(r) {
   // 이미 같은 주소일 때도 메뉴·로고를 누르면 그 자리로 이동
   $$('a[href="#works"], a[href="#"]', s).forEach(a => a.addEventListener('click', e => { if (!s.isConnected) return; e.preventDefault(); go(a.getAttribute('href') === '#works' ? 'works' : 'home'); }));
   $('.intro-down', s).onclick = e => { e.preventDefault(); const t = $('#works-list', s); glide(t.getBoundingClientRect().top - s.getBoundingClientRect().top + s.scrollTop - 90); };
-  requestAnimationFrame(() => { s.scrollTop = target = pos = clamp(spot(r.name)); onScroll(); });
+  requestAnimationFrame(() => { measure(); s.scrollTop = target = pos = clamp(spot(r.name)); onScroll(); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (s.isConnected) { measure(); onScroll(); } });
   s.tabIndex = -1; // 키보드(PageDown, 스페이스)로 바로 스크롤되게
   mainApi = { root: s, go };
   return s;
@@ -1936,8 +1945,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1793002338"></script>
-<script src="firebase-live.js?v=1793002338"></script>
+<script src="firebase-config.js?v=1793024077"></script>
+<script src="firebase-live.js?v=1793024077"></script>
 
 </body>
 </html>
