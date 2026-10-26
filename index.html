@@ -216,7 +216,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 .sp { position: absolute; left: 0; top: 0; width: var(--size); height: var(--size); transform: translate(-50%, -50%); border: 0; padding: 0; background: none; cursor: pointer; border-radius: 50%; opacity: var(--o, 1); } /* 자리는 공전(orbit)이 매 장면 transform으로 정함 */
 .sp { transition: width .8s cubic-bezier(.45,0,.2,1), height .8s cubic-bezier(.45,0,.2,1), opacity .45s; }
 .sp.focus { z-index: 1000 !important; --o: 1; } /* 보거나 편집하는 행성은 맨 앞 */
-.gb-body.viewing .sp:not(.focus) { opacity: .16 !important; } /* 보는 중에는 다른 행성이 정보를 가리지 않게 흐리게 */
+.gb-body.viewing .sp:not(.focus) { opacity: 0 !important; pointer-events: none; transition: opacity .6s; } /* 보는 중에는 다른 행성은 사라짐 */
 .space { touch-action: none; cursor: grab; }
 .space.dragging, .space.dragging .sp { cursor: grabbing; }
 .gb-body.viewing .space, .gb-body:not(.collapsed) .space { cursor: default; }
@@ -1386,7 +1386,7 @@ function moveCam() {
   const vn = gb.viewId && $(`.sp[data-id="${CSS.escape(gb.viewId)}"]`, cam);
   const at = n => { const it = orbit.items.get(n.dataset.id), q = it && it.p ? it.p : { x: n.offsetLeft, y: n.offsetTop, s: 1 }; return [q.x, q.y, (it ? it.w : n.offsetWidth) * q.s]; };
   if (vn) { // 행성 보기: 위쪽 칸 가운데로, 아래는 정보 자리
-    const [vx, vy, vs] = at(vn), vh = H * (narrow ? .5 : .58), z = Math.max(1, Math.min(2.2, (Math.min(W, vh) * .62) / vs));
+    const [vx, vy, vs] = at(vn), vh = H * (narrow ? .5 : .58), z = Math.max(.3, Math.min(8, (Math.min(W, vh) * .62) / vs)); // 멀든 가깝든 늘 같은 크기로
     cam.style.transform = `translate(${W / 2 - vx * z}px, ${vh / 2 + 30 - vy * z}px) scale(${z})`; return;
   }
   if (gb.collapsed) { cam.style.transform = ''; return; }
@@ -1396,7 +1396,7 @@ function moveCam() {
   if (gb.mode === 'edit' && mine) [tx, ty, size] = at(mine);
   else if (f && !f.hidden) { tx = f.offsetLeft; ty = f.offsetTop; size = f.offsetWidth; }
   else { cam.style.transform = ''; return; }
-  const z = Math.max(.8, Math.min(1.7, (Math.min(vw, vh) * .62) / size));
+  const z = Math.max(.3, Math.min(8, (Math.min(vw, vh) * .62) / size));
   cam.style.transform = `translate(${vw / 2 - tx * z}px, ${vh / 2 + (narrow ? 0 : 10) - ty * z}px) scale(${z})`;
 }
 // 화면 크기가 바뀌면 행성 크기와 자리를 다시 계산
@@ -1831,8 +1831,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1792997602"></script>
-<script src="firebase-live.js?v=1792997602"></script>
+<script src="firebase-config.js?v=1792997848"></script>
+<script src="firebase-live.js?v=1792997848"></script>
 
 </body>
 </html>
