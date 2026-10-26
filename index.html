@@ -591,7 +591,7 @@ const ANIMAL_ART = {
   cat: { split: 7, nat: ["#E59A55", "#B86E33", "#F6D3A6", "#FBE6C8"], nose: "#E58A9A", act: ["13,2,.;1,9,.;2,9,F", "1,9,.;0,9,F"], play: [0,0,0,0,-1,-1,1,1,-1,-1,1,1],
     rows: ["..................", "..................", "..........F..F....", "..........FFFFF...", ".........FFFFFFF..", ".........FFFEFFF..", ".........FFFFFCN..", "..........FFFCC...", ".........FFFFF....", ".F......FFFFFM....", ".F.....FFFFFMM....", ".FF....FFFFFMM....", "..FFFFFFFFDFMD....", "......FFFFD.DD...."] },
   puppy: { split: 8, nat: ["#E9CDA2", "#C49A6C", "#F4E4CA", "#FBF2E4"], nose: "#2A1E2E", ear: "#9C6A43", act: ["1,8,.;0,8,F", "1,8,.;2,8,F"], play: [0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
-    rows: ["..................", "..................", ".........FFFF.....", "........FFFFFF....", ".......RRFFFFEF...", ".......RRFFFFFCCN.", ".......RRRFFFFCC..", "........RR.FFF....", ".F.......FFF......", ".FF...FFFFFFF.....", "..FFFFFFFFFFFM....", "...FFFFFFFFFFM....", "...FFFFFFFFFFM....", "...FF.FF..FF.FF..."] },
+    rows: ["..................", "..................", ".........FFFF.....", "........FFFFFF....", ".......RRFFFFEF...", ".......RRFFFFFCCN.", ".......RRRFFFFCC..", "........RRFFFF....", ".F......FFFF......", ".FF...FFFFFFF.....", "..FFFFFFFFFFFM....", "...FFFFFFFFFFM....", "...FFFFFFFFFFM....", "...FF.FF..FF.FF..."] },
   bear: { split: 8, nat: ["#8A5A3C", "#653E27", "#B3825E", "#C99B76"], nose: "#2A1E2E", act: ["15,10,M;16,9,M;16,8,D", "15,10,M;15,9,M;15,8,D"], play: [0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1],
     rows: ["..................", "..................", "........FF...FF...", "........FFFFFFF...", ".......FFFFFFFFF..", ".......FFFFFEFFF..", ".......FFFFFFCCCN.", "........FFFFFCCC..", "........FFFFFFF...", "......FFFFFFFMM...", ".....FFFFFFFMMM...", "....FFFFFFFFMMM...", ".....FFFFFFDMMD...", ".....FFFFFDD.DD..."] },
   rabbit: { split: 9, nat: ["#EDE6E1", "#C4B5B0", "#FFFFFF", "#FFFFFF"], nose: "#E58A9A", act: ["9,1,.;10,1,.;9,2,.;10,2,.;11,2,.;9,4,F;8,4,F;8,5,F;7,5,F", "15,7,.;15,6,N"], play: [0,0,0,0,0,0,0,0,1,-1,1,-1,1,-1],
@@ -647,8 +647,8 @@ const animalPX = (() => {
         const ax = Math.floor(x / S), ay = Math.floor(y / S), ch = rows[ay][ax];
         if (ch === '.') continue;
         let color;
-        if (ch === 'R') { // 늘어진 귀: 털 색과 따로, 아래쪽만 살짝 어둡게
-          const e = rgb(art.ear || D), dk = ay > 5 && BAYER[(y % 4) * 4 + x % 4] > 0;
+        if (ch === 'R') { // 늘어진 귀: 털 색보다 어둡게(기본색은 갈색), 아래쪽만 살짝 더 어둡게
+          const e = colKey === 'natural' && art.ear ? rgb(art.ear) : rgb(D).map(v => v * .8), dk = ay > 5 && BAYER[(y % 4) * 4 + x % 4] > 0;
           color = dk ? e.map(v => v * .82) : e;
         } else if (ch === 'E' || ch === 'N') {
           color = ch === 'N' ? nose : blink ? ramp[0] : eye;
@@ -1749,8 +1749,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(1600)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1792985185"></script>
-<script src="firebase-live.js?v=1792985185"></script>
+<script src="firebase-config.js?v=1792985313"></script>
+<script src="firebase-live.js?v=1792985313"></script>
 
 </body>
 </html>
