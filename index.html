@@ -241,11 +241,20 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 .dt-meta { display: flex; justify-content: space-between; gap: 16px; padding: 4vh 0 1.4vh; }
 .dt-title { font-family: var(--font-title); font-weight: normal; font-synthesis: none; font-size: clamp(56px, 10.5vw, 188px); line-height: .9; letter-spacing: 0; margin: 0 0 clamp(28px, 6vh, 72px); }
 .dt-title sup { font-family: var(--font-display); font-size: max(12px, .12em); letter-spacing: 0; vertical-align: top; position: relative; top: .5em; margin-left: .3em; color: var(--color-text-muted); }
-.dt-media { grid-column: 1 / span 9; }
+.dt-pair { align-items: center; }
+.dt-pair + .dt-pair { margin-top: clamp(64px, 14vh, 160px); }
+.dt-pair-a .dt-media { grid-column: 7 / -1; grid-row: 1; }
+.dt-pair-a .dt-side { grid-column: 1 / 7; grid-row: 1; justify-self: end; }
+.dt-pair-b .dt-media { grid-column: 1 / span 9; }
+.dt-pair-b .dt-side { grid-column: 10 / -1; justify-self: end; }
+.dt-side { display: flex; align-items: baseline; gap: clamp(16px, 2.4vw, 40px); }
+.dt-side b { font-family: var(--font-display); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0; }
+.dt-pair-b .dt-side { flex-direction: row-reverse; }
+.dt-media { will-change: transform; }
 .dt-media .thumb { border-radius: 0; }
-.dt-cap { grid-column: 1 / span 9; display: grid; grid-template-columns: 1fr auto 1fr; align-items: baseline; gap: 16px; padding-top: 12px; }
-.dt-cap b { font-family: var(--font-display); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0; }
-.dt-cap .mono:last-child { justify-self: end; }
+.dt-media.dt-up { transition: opacity 1s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0s); }
+.dt-media.dt-up .thumb { clip-path: inset(18% 0 0 0); transition: clip-path 1.2s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0s); }
+.dt-media.dt-up.in .thumb { clip-path: inset(0 0 0 0); }
 .dt-sec { margin-top: clamp(72px, 16vh, 180px); align-items: start; }
 .dt-sec > .dt-k { grid-column: 1 / span 3; padding-top: .55em; }
 .dt-desc { grid-column: 5 / span 7; margin: 0; font-family: var(--font-display); font-weight: 400; font-size: clamp(20px, 2vw, 30px); line-height: 1.45; white-space: pre-line; text-wrap: pretty; }
@@ -271,12 +280,12 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 .dt-up { opacity: 0; transform: translateY(36px); transition: opacity 1s cubic-bezier(.2,.7,.2,1), transform 1s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0s); }
 .dt-up.in { opacity: 1; transform: none; }
 @media (max-width: 760px) {
-  .dt-media, .dt-cap { grid-column: 1 / -1; }
+  .dt-pair .dt-media, .dt-pair .dt-side { grid-column: 1 / -1; grid-row: auto; justify-self: stretch; }
+  .dt-pair .dt-side { flex-direction: row; justify-content: space-between; padding-top: 12px; }
+  .dt-pair-a .dt-side { order: 2; }
   .dt-sec > .dt-k, .dt-next .dt-k { grid-column: 1 / -1; margin-bottom: 14px; }
   .dt-desc, .dt-rows { grid-column: 1 / -1; }
   .dt-next .dt-back { grid-column: 1 / -1; justify-self: start; margin-top: 6px; }
-  .dt-cap { grid-template-columns: 1fr auto; }
-  .dt-cap .mono:nth-child(2) { display: none; }
 }
 
 /* ---------- 404 ---------- */
@@ -1457,9 +1466,13 @@ function Detail(r) {
     <div class="wrap dt">
       <div class="dt-meta mono dt-up"><span>work ${pad(i + 1)} / ${pad(WORKS.length)}</span><span>/${w.year}</span></div>
       <h1 class="dt-title dt-up" style="--d:.08s"><span></span><sup>${pad(i + 1)}</sup></h1>
-      <div class="dt-grid">
-        <div class="dt-media dt-up" style="--d:.18s"><div class="thumb" id="big"></div></div>
-        <div class="dt-cap dt-up" style="--d:.26s"><b></b><span class="mono" id="tags"></span><span class="mono">/${w.year}</span></div>
+      ${w.card ? `<div class="dt-grid dt-pair dt-pair-a">
+        <div class="dt-side dt-up" style="--d:.3s"><b></b><span class="mono">preview</span><span class="mono">/${w.year}</span></div>
+        <div class="dt-media dt-up" style="--d:.18s"><div class="thumb" id="loop"></div></div>
+      </div>` : ''}
+      <div class="dt-grid dt-pair dt-pair-b">
+        <div class="dt-media dt-up"><div class="thumb" id="big"></div></div>
+        <div class="dt-side dt-up" style="--d:.12s"><b></b><span class="mono" id="tags"></span><span class="mono">/${w.year}</span></div>
       </div>
       ${w.description ? `<div class="dt-grid dt-sec"><p class="dt-k dt-up">[01. 소개]</p><p class="dt-desc ko dt-up" id="desc" style="--d:.08s"></p></div>` : ''}
       <div class="dt-grid dt-sec"><p class="dt-k dt-up">[${w.description ? '02' : '01'}. 정보]</p>
@@ -1473,7 +1486,7 @@ function Detail(r) {
         <a class="big" href="#${next.slug}"><span></span><i>→</i></a></nav>` : ''}
     </div></section>`);
   $('.dt-title span', s).textContent = w.title;
-  $('.dt-cap b', s).textContent = w.title;
+  $$('.dt-side b', s).forEach(b => b.textContent = w.title);
   $('#tags', s).textContent = w.tools.map(t => '#' + t).join(' ');
   $('#tools', s).textContent = w.tools.join(', ');
   if (w.description) $('#desc', s).textContent = w.description;
@@ -1484,6 +1497,11 @@ function Detail(r) {
   if (w.siteUrl) { const a = el('<a class="dt-link" target="_blank" rel="noopener">open site <i>↗</i></a>'); a.href = w.siteUrl; cta.appendChild(a); }
   else cta.appendChild(el('<p class="unpublished ko">지금은 공개되지 않은 작업이에요.</p>'));
   const th = makeThumb(w.thumb, w.thumbnailAlt, w.video); th.playing = true; thumbs.add(th); $('#big', s).appendChild(th.el);
+  if (w.card) { const tl = makeThumb(w.card.poster, w.title + ' 썸네일 움직임', w.card.video); tl.playing = true; thumbs.add(tl); $('#loop', s).appendChild(tl.el); }
+  // 영상은 글자보다 조금 느리게 움직임 (깊이감)
+  const media = $$('.dt-media', s);
+  const drift = () => { const H = innerHeight; media.forEach(m => { const r = m.getBoundingClientRect(); m.style.transform = `translateY(${((r.top + r.height / 2 - H / 2) * -.06).toFixed(1)}px)`; }); };
+  s.addEventListener('scroll', () => requestAnimationFrame(drift), { passive: true }); requestAnimationFrame(drift);
   // 화면에 들어오면 아래에서 떠오름 (한 번만)
   const io = typeof IntersectionObserver === 'function' ? new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } }), { root: s, rootMargin: '0px 0px -6% 0px', threshold: .1 }) : null;
   requestAnimationFrame(() => $$('.dt-up', s).forEach(n => io ? io.observe(n) : n.classList.add('in')));
@@ -2254,8 +2272,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
 })();
 
 </script>
-<script src="firebase-config.js?v=1793139082"></script>
-<script src="firebase-live.js?v=1793139082"></script>
+<script src="firebase-config.js?v=1793139331"></script>
+<script src="firebase-live.js?v=1793139331"></script>
 
 </body>
 </html>
