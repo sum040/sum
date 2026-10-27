@@ -994,7 +994,10 @@ void main(){
  col+=vec3(1.,.93,.88)*st*uStars;
  col+=pal(.6)*exp(-pow(length((q-vec2(.3*asp,.3))*vec2(.8,1.)),2.)*4.)*.05*uStars;
  if(uLight>0.){float m=max(max(acc.r,acc.g),acc.b)*uFlower;vec3 hue=acc*uFlower/max(m,.001);
-  vec3 c=mix(hue,min(acc*uFlower,1.),smoothstep(.6,1.2,m));float al=smoothstep(0.,.75,m);
+  vec3 c=mix(hue,min(acc*uFlower*1.08,1.),smoothstep(.55,1.08,m));float al=smoothstep(0.,.75,m);
+  // 꽃이 겹치는 곳: 밝은 빛 테두리와 색 갈라짐을 조금 더 또렷하게(유리 굴절 느낌)
+  float ov=smoothstep(.92,1.02,m)*(1.-smoothstep(1.02,1.35,m));c=mix(c,vec3(1.),ov*.38);
+  c+=(hue-vec3(dot(hue,vec3(.333))))*smoothstep(1.,1.6,m)*.22;
   col=mix(col,mix(vec3(.969,.953,.941),c,al),uLight);}
   gl_FragColor=vec4(col,1.);}`;
   const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
@@ -2120,8 +2123,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1793079081"></script>
-<script src="firebase-live.js?v=1793079081"></script>
+<script src="firebase-config.js?v=1793079248"></script>
+<script src="firebase-live.js?v=1793079248"></script>
 
 </body>
 </html>
