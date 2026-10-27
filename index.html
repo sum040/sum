@@ -404,6 +404,19 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 
 /* ---------- 화면 크기별 ---------- */
 .topbar { transition: background-color .3s; }
+/* 마우스 포인터: 작은 점이 부드럽게 따라오고, 작업물 위에서는 "view site" 원, 링크·버튼 위에서는 고리 (마우스 있는 기기만) */
+html.cc, html.cc * { cursor: none !important; }
+html.cc :is(input, textarea, [contenteditable]) { cursor: text !important; }
+#cursor { position: fixed; left: 0; top: 0; z-index: 9999; pointer-events: none; width: 0; height: 0; opacity: 0; transition: opacity .25s; }
+#cursor.on { opacity: 1; }
+#cursor .cc-dot { position: absolute; left: 0; top: 0; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: var(--color-text); display: grid; place-items: center; color: var(--color-text); font: 500 13px/1.15 var(--font-body); text-align: center; letter-spacing: .01em;
+  transition: width .35s cubic-bezier(.2,.7,.2,1), height .35s cubic-bezier(.2,.7,.2,1), margin .35s cubic-bezier(.2,.7,.2,1), background .25s, border-color .25s; border: 0 solid var(--color-text); }
+#cursor .cc-dot span { opacity: 0; transition: opacity .2s; white-space: nowrap; }
+#cursor.link .cc-dot { width: 34px; height: 34px; margin: -17px 0 0 -17px; background: transparent; border-width: 1.5px; }
+#cursor.view .cc-dot { width: 76px; height: 76px; margin: -38px 0 0 -38px; background: var(--color-surface); border-width: 3px; }
+#cursor.view .cc-dot span { opacity: 1; transition-delay: .12s; }
+#cursor.text { opacity: 0; }
+#cursor.down .cc-dot { transform: scale(.85); }
 /* 흰 배경 시안: 주소 뒤에 ?theme=white 를 붙이면 보임 */
 :root[data-theme="white"] body .panel { background: rgba(255,255,255,.88); border-left-color: rgba(30,18,22,.1); }
 :root[data-theme="white"] body .gbtn { background: #FFFFFF; }
@@ -2121,9 +2134,30 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   const fontsReady = document.fonts ? Promise.race([document.fonts.ready, wait(LOADER.max)]) : wait(300);
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
+/* 마우스 포인터 (영상 참고: 점 → 작업물 위 "view site" 원) */
+(function customCursor() {
+  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  document.documentElement.classList.add('cc');
+  const c = document.createElement('div'); c.id = 'cursor'; c.setAttribute('aria-hidden', 'true');
+  c.innerHTML = '<div class="cc-dot"><span>view<br>site</span></div>'; document.body.appendChild(c);
+  const dot = c.firstChild; let x = -100, y = -100, tx = -100, ty = -100, shown = false;
+  addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse') return;
+    tx = e.clientX; ty = e.clientY; if (!shown) { x = tx; y = ty; shown = true; c.classList.add('on'); }
+    const t = e.target instanceof Element ? e.target : null;
+    const view = t && t.closest('.work-card');
+    const text = t && t.closest('input, textarea, [contenteditable]');
+    const link = !view && t && t.closest('a, button, [role="button"], label, select, .sp, summary');
+    c.classList.toggle('view', !!view); c.classList.toggle('link', !!link); c.classList.toggle('text', !!text);
+  }, { passive: true });
+  document.addEventListener('pointerleave', () => { shown = false; c.classList.remove('on'); });
+  addEventListener('pointerdown', () => c.classList.add('down')); addEventListener('pointerup', () => c.classList.remove('down'));
+  (function loop() { x += (tx - x) * .28; y += (ty - y) * .28; dot.style.translate = `${x}px ${y}px`; requestAnimationFrame(loop); })();
+})();
+
 </script>
-<script src="firebase-config.js?v=1793079336"></script>
-<script src="firebase-live.js?v=1793079336"></script>
+<script src="firebase-config.js?v=1793079546"></script>
+<script src="firebase-live.js?v=1793079546"></script>
 
 </body>
 </html>
