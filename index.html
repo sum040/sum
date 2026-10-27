@@ -178,6 +178,17 @@ body .page-head h1 { font-family: var(--font-title); font-weight: normal; font-s
 .page-head h1 { font-family: var(--font-display); font-weight: 200; font-size: clamp(40px, 5vw, 72px); margin: 0; letter-spacing: 0; line-height: 1; }
 .page-head p { margin: 0; color: var(--color-text-muted); font-size: 14px; }
 .works-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(20px, 3vw, 48px); }
+/* 작업물 꽃밭: 꽃은 배경 셰이더가 그리고, 여기 동그란 칸은 누르는 자리와 이름표만 */
+.garden { position: relative; min-height: 360px; margin-top: clamp(8px, 2vh, 24px); }
+.wf { position: absolute; border-radius: 50%; color: var(--color-text); text-decoration: none; }
+.wf:focus-visible { outline-offset: 6px; border-radius: 50%; }
+.wf-name { position: absolute; left: 50%; top: 100%; transform: translate(-50%, 6px); display: grid; justify-items: center; gap: 2px; white-space: nowrap; opacity: 0; transition: opacity .45s ease, transform .45s cubic-bezier(.2,.7,.2,1); pointer-events: none; }
+.wf-name b { font-family: var(--font-title); font-weight: normal; font-synthesis: none; font-size: clamp(22px, 2.2vw, 34px); line-height: 1.1; }
+.wf-name small { font-size: 13px; color: var(--color-text-muted); }
+.wf:hover .wf-name, .wf:focus-visible .wf-name { opacity: 1; transform: translate(-50%, 16px); }
+body.no-gl .wf { background: rgba(245,183,163,.45); }
+@media (hover: none) { .wf-name { opacity: 1; transform: translate(-50%, 12px); } }
+.main.garden-open .wrap > :not(.garden), .main.garden-open .garden .wf-name, .main.garden-open .topbar { opacity: 0; transition: opacity .4s ease; }
 @media (max-width: 760px) { .works-grid { grid-template-columns: 1fr; } }
 .work-card { display: grid; gap: 16px; text-decoration: none; color: inherit; }
 .thumb { position: relative; aspect-ratio: 16 / 9; max-width: 100%; border-radius: 6px; overflow: hidden; background: var(--color-surface); border: 1px solid rgba(111,103,112,.4); }
@@ -989,6 +1000,8 @@ const bg = (() => {
   const gl = canvas.getContext('webgl', { antialias: false, premultipliedAlpha: false });
   const target = { flower: 0, stars: 0, mask: 1, inhale: 0 }, cur = { flower: 0, stars: 0, mask: 1, inhale: 0 };
   const mouse = { x: .72, y: .5, tx: .72, ty: .5 };
+  // 작업물 꽃밭: 작업물 칸(.garden)이 화면에 들어오면 앞쪽 꽃 N송이가 작업물 자리(.wf)로 날아가 크게 피고, 나머지 꽃은 작아져 사라짐
+  const garden = { box: null, els: [], hover: -1, open: -1, k: 0, op: 0, hv: [] };
   if (!gl) { document.body.classList.add('no-gl'); return { set() {}, inhale() {}, ok: false }; }
   const vs = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
   const fs = `precision highp float;
@@ -1046,8 +1059,18 @@ void main(){
   addEventListener('pointermove', e => { mouse.tx = e.clientX / innerWidth; mouse.ty = 1 - e.clientY / innerHeight; }, { passive: true });
   function frame(now) {
     const dt = now - last; last = now;
+    const fr = a => 1 - Math.pow(1 - a, Math.min(dt, 100) / 16.7); // 프레임 속도와 상관없이 같은 빠르기
     if (dt > 45 && scale > .6) { if (++slowFrames > 40) { scale *= .75; slowFrames = 0; resize(); } } else slowFrames = Math.max(0, slowFrames - 1); // 느린 컴퓨터면 해상도를 낮춤
     for (const k in cur) cur[k] += (target[k] - cur[k]) * (k === 'inhale' ? .06 : .035);
+    let gt = 0; // 꽃밭이 얼마나 보이는지(0~1)
+    if (garden.box && garden.box.isConnected) {
+      const r = garden.box.getBoundingClientRect(), H = innerHeight, cl = v => Math.max(0, Math.min(1, v));
+      gt = cl((H * .92 - r.top) / (H * .5)) * cl((r.bottom - H * .12) / (H * .35));
+    } else garden.els = [];
+    if (garden.open >= 0) { gt = garden.box && garden.box.isConnected ? 1 : 0; garden.op += (1 - garden.op) * fr(.06); }
+    garden.k += (gt - garden.k) * fr(gt > garden.k ? .05 : .04);
+    if (garden.open >= 0 && garden.k < .02 && !(garden.box && garden.box.isConnected)) { garden.open = -1; garden.op = 0; }
+    const gk = garden.k;
     mouse.x += (mouse.tx - mouse.x) * .06; mouse.y += (mouse.ty - mouse.y) * .06;
     const time = (now - t0) / 1000, asp = canvas.width / canvas.height; // 움직임 줄이기 설정에서도 휴대폰과 같은 속도로 둥실거림(숨님 요청)
     // 꽃 자리: 화면 안쪽으로 모아 둠 (x는 화면 너비 비율, y는 아래에서부터 높이 비율, 크기, 흐림)
@@ -1057,7 +1080,17 @@ void main(){
       const dx = x - mx, dy = y - my, d = Math.hypot(dx, dy) || 1e-4, push = .08 * Math.exp(-d * d * 10);
       x += dx / d * push; y += dy / d * push;
       x += (.5 * asp - x) * cur.inhale * .92; y += (.5 - y) * cur.inhale * .92;
-      const size = fs * (1 + .07 * Math.sin(time * .45 + i)) * (1 - cur.inhale * .55);
+      let size = fs * (1 + .07 * Math.sin(time * .45 + i)) * (1 - cur.inhale * .55);
+      if (gk > .001) { // 꽃밭 자리로 옮김
+        const e = garden.els[i];
+        if (e) {
+          const rc = e.getBoundingClientRect(), H = innerHeight;
+          garden.hv[i] = (garden.hv[i] || 0) + ((garden.hover === i ? 1 : 0) - (garden.hv[i] || 0)) * .12;
+          let gx = (rc.left + rc.width / 2) / H, gy = 1 - (rc.top + rc.height / 2) / H, gs = rc.width / 2 / H * (1 + .05 * Math.sin(time * .5 + i * 1.3)) * (1 + .14 * garden.hv[i]);
+          if (garden.open === i) { const e2 = 1 - Math.pow(1 - garden.op, 3); gx += (.5 * asp - gx) * e2; gy += (.5 - gy) * e2; gs += (Math.max(asp, 1) * 1.25 - gs) * e2; }
+          x += (gx - x) * gk; y += (gy - y) * gk; size += (gs - size) * gk;
+        } else size *= Math.max(0, 1 - gk * 1.4);
+      }
       flBuf.set([x, y, size, fb], i * 4);
       // 꽃에 마우스가 닿는 순간 링크와 같은 효과음
       const hit = onHome && cur.flower > .6 && d < size * .6;
@@ -1066,7 +1099,7 @@ void main(){
     });
     gl.uniform4fv(uFl, flBuf); gl.uniform1f(uPix, light > .5 ? 1 : Math.max(2, Math.round(4 * scale))); // 흰 배경 시안은 픽셀 없이
     gl.uniform2f(u.res, canvas.width, canvas.height); gl.uniform1f(u.time, time);
-    gl.uniform2f(u.mouse, mouse.x, mouse.y); gl.uniform1f(u.flower, cur.flower); gl.uniform1f(u.stars, cur.stars); gl.uniform1f(u.inhale, cur.inhale); gl.uniform1f(u.mask, cur.mask);
+    gl.uniform2f(u.mouse, mouse.x, mouse.y); gl.uniform1f(u.flower, Math.max(cur.flower, garden.k)); gl.uniform1f(u.stars, cur.stars); gl.uniform1f(u.inhale, cur.inhale); gl.uniform1f(u.mask, cur.mask);
     light += ((WHITE ? 1 : 0) - light) * .06; gl.uniform1f(u.light, light);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     requestAnimationFrame(frame);
@@ -1075,6 +1108,7 @@ void main(){
   return {
     ok: true,
     set(o) { Object.assign(target, o); },
+    garden,
     inhale() { target.inhale = 1; setTimeout(() => { target.inhale = 0; }, 900); },
   };
 })();
@@ -1263,18 +1297,37 @@ function Main(r) {
   s.addEventListener('pointermove', e => { moved += Math.abs(e.movementX) + Math.abs(e.movementY); if (moved > 900) hint.classList.add('fade'); });
   $$('.home-links a', s).forEach(a => a.addEventListener('pointerenter', () => sound.play('spark')));
   if (!WORKS.length) grid.replaceWith(el('<p class="ko">작업물을 준비하고 있어요. <a href="#guestbook">guestbook</a></p>'));
-  WORKS.forEach((w, i) => {
-    const a = el(`<a class="work-card rv" href="#${w.slug}" style="--d:${(i % 2) * .14}s">
-      <div class="thumb"></div>
-      <div class="work-meta"><h2></h2><span class="year">${w.year}</span>${w.summary ? '<p class="ko"></p>' : ''}<div class="chips"></div></div></a>`);
-    $('h2', a).textContent = w.title; if (w.summary) $('p', a).textContent = w.summary;
-    w.tools.forEach(t => { const c = el('<span class="chip"></span>'); c.textContent = t; $('.chips', a).appendChild(c); });
-    const th = w.card ? makeThumb(w.card.poster, w.thumbnailAlt, w.card.video, w.card.rest) : makeThumb(w.thumb, w.thumbnailAlt, w.video); thumbs.add(th); $('.thumb', a).appendChild(th.el);
-    a.addEventListener('pointerenter', () => { th.playing = true; sound.play('spark'); });
-    a.addEventListener('pointerleave', () => { th.playing = false; });
-    a.addEventListener('focus', () => th.playing = true); a.addEventListener('blur', () => th.playing = false);
-    grid.appendChild(a);
+  // 작업물 = 꽃 한 송이씩 (숨님 2026-10-27). 다가가면 이름이 뜨고, 누르면 꽃이 화면 가득 커지며 상세로 들어감
+  grid.className = 'garden'; grid.setAttribute('aria-label', '작업물');
+  const flowers = WORKS.slice(0, 13).map((w, i) => {
+    const a = el(`<a class="wf" href="#${w.slug}"><span class="wf-name"><b></b><small>${w.year}</small></span></a>`);
+    $('b', a).textContent = w.title; a.setAttribute('aria-label', `${w.title}, ${w.year}${w.summary ? ', ' + w.summary : ''}`);
+    a.addEventListener('pointerenter', () => { bg.garden && (bg.garden.hover = i); sound.play('spark'); });
+    a.addEventListener('pointerleave', () => { if (bg.garden && bg.garden.hover === i) bg.garden.hover = -1; });
+    a.addEventListener('focus', () => { bg.garden && (bg.garden.hover = i); });
+    a.addEventListener('blur', () => { if (bg.garden && bg.garden.hover === i) bg.garden.hover = -1; });
+    a.addEventListener('click', e => {
+      if (!bg.ok) return; // 배경을 못 그리는 컴퓨터는 바로 상세로
+      e.preventDefault(); const G = bg.garden; if (G.open >= 0) return;
+      G.open = i; G.op = 0; G.hover = -1; s.classList.add('garden-open'); sound.play('spark');
+      setTimeout(() => { location.hash = w.slug; }, 750);
+    });
+    grid.appendChild(a); return a;
   });
+  // 꽃 자리: 칸을 나눠 놓고 조금씩 어긋나게(자연스럽게), 꽃 크기는 칸에 맞춤
+  const layoutGarden = () => {
+    const n = flowers.length; if (!n) return;
+    const W = grid.clientWidth, narrow = W < 700, cols = Math.min(n, narrow ? (n > 3 ? 2 : 1) : n <= 4 ? n : Math.ceil(n / Math.ceil(n / 4))), rows = Math.ceil(n / cols);
+    const cw = W / cols, ch = Math.min(cw * (narrow ? .95 : .9), innerHeight * .72); grid.style.height = rows * ch + 'px';
+    flowers.forEach((a, i) => {
+      const c = i % cols, r = Math.floor(i / cols), j = Math.sin(i * 12.9898) * 43758.5453 % 1;
+      const rad = Math.min(cw, ch) * (.34 + .05 * Math.abs(j)) ;
+      const x = cw * (c + .5) + cw * .1 * j, y = ch * (r + .5) + ch * (c % 2 ? .08 : -.06);
+      Object.assign(a.style, { left: x - rad + 'px', top: y - rad + 'px', width: rad * 2 + 'px', height: rad * 2 + 'px' });
+    });
+  };
+  if (bg.garden) { bg.garden.box = grid; bg.garden.els = flowers; bg.garden.open = -1; bg.garden.op = 0; }
+  requestAnimationFrame(layoutGarden); addEventListener('resize', () => { if (s.isConnected) layoutGarden(); });
   $('.outro', s).appendChild(contactFooter());
   const says = $$('.say span', s), corners = $$('.corner', s), stage = $('.stage', s), sub = $('.subline', s);
   // 첫 화면 SUMin이 옮겨 갈 자리(아래 가운데, 크게)를 미리 재 둠
@@ -2166,8 +2219,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
 })();
 
 </script>
-<script src="firebase-config.js?v=1793136067"></script>
-<script src="firebase-live.js?v=1793136067"></script>
+<script src="firebase-config.js?v=1793137432"></script>
+<script src="firebase-live.js?v=1793137432"></script>
 
 </body>
 </html>
