@@ -404,7 +404,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 
 /* ---------- 화면 크기별 ---------- */
 .topbar { transition: background-color .3s; }
-/* 마우스 포인터: 작은 점이 부드럽게 따라오고, 작업물 위에서는 "view site" 원, 링크·버튼 위에서는 고리 (마우스 있는 기기만) */
+/* 마우스 포인터: 작은 점이 마우스를 바로 따라가고, 작업물 위에서는 "view site" 원, 링크·버튼 위에서는 고리 (마우스 있는 기기만) */
 html.cc, html.cc * { cursor: none !important; }
 html.cc :is(input, textarea, [contenteditable]) { cursor: text !important; }
 #cursor { position: fixed; left: 0; top: 0; z-index: 9999; pointer-events: none; width: 0; height: 0; opacity: 0; transition: opacity .25s; }
@@ -2152,12 +2152,12 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   }, { passive: true });
   document.addEventListener('pointerleave', () => { shown = false; c.classList.remove('on'); });
   addEventListener('pointerdown', () => c.classList.add('down')); addEventListener('pointerup', () => c.classList.remove('down'));
-  (function loop() { x += (tx - x) * .28; y += (ty - y) * .28; dot.style.translate = `${x}px ${y}px`; requestAnimationFrame(loop); })();
+  (function loop() { x = tx; y = ty; dot.style.translate = `${x}px ${y}px`; requestAnimationFrame(loop); })(); // 마우스와 똑같이(늦게 따라오지 않게, 숨님 요청)
 })();
 
 </script>
-<script src="firebase-config.js?v=1793079546"></script>
-<script src="firebase-live.js?v=1793079546"></script>
+<script src="firebase-config.js?v=1793079668"></script>
+<script src="firebase-live.js?v=1793079668"></script>
 
 </body>
 </html>
