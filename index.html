@@ -259,6 +259,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 .sp { position: absolute; left: 0; top: 0; width: var(--size); height: var(--size); transform: translate(-50%, -50%); border: 0; padding: 0; background: none; cursor: pointer; border-radius: 50%; opacity: var(--o, 1); } /* 자리는 공전(orbit)이 매 장면 transform으로 정함 */
 .sp { transition: width .8s cubic-bezier(.45,0,.2,1), height .8s cubic-bezier(.45,0,.2,1), opacity .45s; }
 .sp.focus { z-index: 1000 !important; --o: 1; } /* 보거나 편집하는 행성은 맨 앞 */
+.gb-body.editing-in .sp:not(.focus) { opacity: 0 !important; pointer-events: none; transition: opacity .6s; } /* 내 행성을 편집할 때도 앞에 겹친 행성이 가리지 않게 */
 .gb-body.viewing .sp:not(.focus) { opacity: 0 !important; pointer-events: none; transition: opacity .6s; } /* 보는 중에는 다른 행성은 사라짐 */
 .space { touch-action: none; cursor: grab; }
 .space.dragging, .space.dragging .sp { cursor: grabbing; }
@@ -1616,6 +1617,7 @@ function renderSpace() {
     $('button', m).onclick = loadPlanets; wrap.appendChild(m); return;
   }
   const uid = auth.user && auth.user.uid, inPlace = editInPlace();
+  const body = gb.root && gb.root.querySelector('#gbBody'); if (body) body.classList.toggle('editing-in', inPlace); // 내 행성 편집 중에는 다른 행성을 숨김
   const shown = gb.planets.filter(p => !(gb.mode === 'edit' && !gb.collapsed && p.id === uid && !inPlace));
   const space = $('#space', gb.root);
   // 행성 크기는 우주 칸 크기에 맞춰 줄이고 키움 (1000x640 기준이 1배)
@@ -2118,8 +2120,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1793078994"></script>
-<script src="firebase-live.js?v=1793078994"></script>
+<script src="firebase-config.js?v=1793079081"></script>
+<script src="firebase-live.js?v=1793079081"></script>
 
 </body>
 </html>
