@@ -252,8 +252,9 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 .dt-pair-b .dt-side { flex-direction: row-reverse; }
 .dt-media { will-change: transform; }
 .dt-media .thumb { border-radius: 0; }
-.dt-go { display: block; transition: filter .35s; }
-.dt-go:hover { filter: brightness(1.06); }
+.dt-go { display: block; }
+.dt-media.dt-up.in .dt-go { transition: clip-path 1.2s cubic-bezier(.2,.7,.2,1), transform 1.4s cubic-bezier(.37,0,.2,1); transition-delay: 0s; } /* 숨을 들이마시듯 천천히 살짝 커짐 */
+.dt-media.dt-up.in .dt-go:hover { transform: scale(1.04); }
 .dt-media.dt-up { transition: opacity 1s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0s); }
 .dt-media.dt-up .thumb { clip-path: inset(18% 0 0 0); transition: clip-path 1.2s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0s); }
 .dt-media.dt-up.in .thumb { clip-path: inset(0 0 0 0); }
@@ -2291,8 +2292,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
 })();
 
 </script>
-<script src="firebase-config.js?v=1793140331"></script>
-<script src="firebase-live.js?v=1793140331"></script>
+<script src="firebase-config.js?v=1793140541"></script>
+<script src="firebase-live.js?v=1793140541"></script>
 
 </body>
 </html>
