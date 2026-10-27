@@ -404,15 +404,15 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 
 /* ---------- 화면 크기별 ---------- */
 .topbar { transition: background-color .3s; }
-/* 마우스 포인터: 기기 커서 자체를 작은 점으로 바꿈(늦게 따라오지 않음), 누를 수 있는 곳 위에서는 고리. 입력칸은 기본 커서 */
+/* 마우스 포인터: 기기 커서 자체를 작은 점으로(늦게 따라오지 않음). 누를 수 있는 곳 위에서는 점 둘레에 고리가 부드럽게 커지며 나타남(#ring). 입력칸은 기본 커서 */
 @media (hover: hover) and (pointer: fine) {
   html, html * { cursor: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='12'%20height='12'%20viewBox='0%200%2012%2012'%3E%3Ccircle%20cx='6'%20cy='6'%20r='4'%20fill='%231E1216'/%3E%3C/svg%3E") 6 6, auto !important; }
-  html :is(a, button, [role="button"], label, select, summary, .sp, .opt), html :is(a, button, [role="button"], label, select, summary, .sp, .opt) * { cursor: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='34'%20height='34'%20viewBox='0%200%2034%2034'%3E%3Ccircle%20cx='17'%20cy='17'%20r='15.5'%20fill='none'%20stroke='%231E1216'%20stroke-width='1.5'/%3E%3C/svg%3E") 17 17, pointer !important; }
   html :is(input, textarea, [contenteditable]) { cursor: text !important; }
   html:not([data-theme="white"]), html:not([data-theme="white"]) * { cursor: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='12'%20height='12'%20viewBox='0%200%2012%2012'%3E%3Ccircle%20cx='6'%20cy='6'%20r='4'%20fill='%23F6F1EE'/%3E%3C/svg%3E") 6 6, auto !important; }
-  html:not([data-theme="white"]) :is(a, button, [role="button"], label, select, summary, .sp, .opt), html:not([data-theme="white"]) :is(a, button, [role="button"], label, select, summary, .sp, .opt) * { cursor: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='34'%20height='34'%20viewBox='0%200%2034%2034'%3E%3Ccircle%20cx='17'%20cy='17'%20r='15.5'%20fill='none'%20stroke='%23F6F1EE'%20stroke-width='1.5'/%3E%3C/svg%3E") 17 17, pointer !important; }
   html:not([data-theme="white"]) :is(input, textarea, [contenteditable]) { cursor: text !important; }
 }
+#ring { position: fixed; left: 0; top: 0; z-index: 9999; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; border: 1.5px solid var(--color-text); pointer-events: none; opacity: 0; scale: .25; transition: opacity .25s ease, scale .35s cubic-bezier(.2,.7,.2,1); }
+#ring.on { opacity: 1; scale: 1; }
 /* 흰 배경 시안: 주소 뒤에 ?theme=white 를 붙이면 보임 */
 :root[data-theme="white"] body .panel { background: rgba(255,255,255,.88); border-left-color: rgba(30,18,22,.1); }
 :root[data-theme="white"] body .gbtn { background: #FFFFFF; }
@@ -2131,9 +2131,23 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 
+/* 누를 수 있는 곳 위에서 점 둘레에 고리가 부드럽게 나타남. 위치는 마우스 이벤트에서 바로 옮김 */
+(function hoverRing() {
+  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  const r = document.createElement('div'); r.id = 'ring'; r.setAttribute('aria-hidden', 'true'); document.body.appendChild(r);
+  const CLICK = 'a, button, [role="button"], label, select, summary, .sp, .opt';
+  addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse') return;
+    r.style.translate = `${e.clientX}px ${e.clientY}px`;
+    const t = e.target instanceof Element ? e.target : null;
+    r.classList.toggle('on', !!(t && t.closest(CLICK) && !t.closest('input, textarea, [contenteditable]')));
+  }, { passive: true });
+  document.addEventListener('pointerleave', () => r.classList.remove('on'));
+})();
+
 </script>
-<script src="firebase-config.js?v=1793079850"></script>
-<script src="firebase-live.js?v=1793079850"></script>
+<script src="firebase-config.js?v=1793079954"></script>
+<script src="firebase-live.js?v=1793079954"></script>
 
 </body>
 </html>
