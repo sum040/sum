@@ -279,7 +279,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 .pl-halo { position: absolute; left: 17%; top: 34.5%; width: 66%; height: 66%; border-radius: 50%; background: var(--c); opacity: .3; filter: blur(14px); }
 /* 픽셀 행성: 작은 캔버스에 공 모양으로 그린 뒤 픽셀 그대로 키움 */
 .pl-ball { position: absolute; left: 21%; top: 38.5%; width: 58%; height: 58%; image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
-:root[data-theme="white"] .pl-ball { image-rendering: auto; } /* 흰 배경 시안: 행성을 부드럽게 */
+:root[data-soft] .pl-ball { image-rendering: auto; } /* 흰 배경 시안: 행성을 부드럽게 */
 /* 캐릭터: 머리·모자·옷 150가지 조합을 미리 만든 그림에서 한 줄을 골라 4장씩 넘김 */
 .ch { position: absolute; left: 25%; top: 3%; width: 50%; aspect-ratio: 18 / 14; pointer-events: none; animation: chfloat 3.4s ease-in-out infinite; animation-delay: calc(var(--delay, 0s) * .6); } /* 행성과 박자가 다르게 살짝 떠오름 */
 /* 동물: 18x14 픽셀 캔버스를 그대로 키움. 숨쉬기, 눈 깜빡임, 동물별 동작은 animalPX가 그림 */
@@ -288,7 +288,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 .opt canvas { width: 80%; height: 80%; image-rendering: pixelated; }
 .opt { overflow: hidden; }
 .opt .ani-thumb { width: 100%; height: auto; aspect-ratio: 18 / 14; image-rendering: pixelated; image-rendering: crisp-edges; }
-:root[data-theme="white"] .ani-thumb, :root[data-theme="white"] .ch-px { image-rendering: auto; }
+:root[data-soft] .ani-thumb, :root[data-soft] .ch-px { image-rendering: auto; }
 .opts.seven { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
 .opts.seven .opt { padding: 2px; border-radius: 8px; }
 .swatches.fur { gap: 10px; flex-wrap: wrap; }
@@ -462,8 +462,10 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
-const WHITE = new URLSearchParams(location.search).get('theme') === 'white'; // 흰 배경 시안
+const WHITE = new URLSearchParams(location.search).get('theme') !== 'dark'; // 2026-10-27부터 흰 배경이 기본(숨님 결정). ?theme=dark 를 붙이면 예전 어두운 화면
 if (WHITE) document.documentElement.dataset.theme = 'white';
+const SOFT_PX = false; // true면 흰 배경에서 행성(유리구슬)과 동물(둥근 그림)도 픽셀 없이. 숨님 결정(2026-10-27): 픽셀 그대로
+if (WHITE && SOFT_PX) document.documentElement.dataset.soft = '1';
 /* =====================================================================
    1. 데이터 계층 (DATA LAYER)
    지금은 브라우저 localStorage로 흉내 냅니다.
@@ -650,7 +652,7 @@ const ANIMAL_EYE = '#2A1E2E';
 function charHTML(p) { return `<div class="ch"><canvas class="ch-px" data-animal="${animalOf(p)}" data-col="${animalColorOf(p)}" data-off="${hashStr(p.id || 'draft') % 70}"></canvas></div>`; }
 /* 동물 그리기: 숨 두 번 → 눈 깜빡 → 동물별 동작, 70칸(7초) 반복. 동물마다 시작이 어긋나게 data-off */
 const animalPX = (() => {
-  const W = 18, H = 14, N = 70, S = WHITE ? 12 : 2; // 흰 배경 시안은 12배로 그려서 둥글고 부드럽게
+  const W = 18, H = 14, N = 70, S = WHITE && SOFT_PX ? 12 : 2; // 흰 배경 시안은 12배로 그려서 둥글고 부드럽게
   const frames = new Map();
   const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(v => v / 16 - .5);
   const L = [-.55, .6, .58], ln = Math.hypot(...L); L.forEach((v, i) => L[i] = v / ln);
@@ -687,7 +689,7 @@ const animalPX = (() => {
         return [top, bottom];
       });
       let glinted = false;
-      if (WHITE) { smooth(ctx, img, rows, art, ramp, eye, nose, blink, colKey, tops, solid, rgb, D); frames.set(key, frame); }
+      if (S > 2) { smooth(ctx, img, rows, art, ramp, eye, nose, blink, colKey, tops, solid, rgb, D); frames.set(key, frame); }
       else for (let y = 0; y < H * S; y++) for (let x = 0; x < W * S; x++) {
         const ax = Math.floor(x / S), ay = Math.floor(y / S), ch = rows[ay][ax];
         if (ch === '.') continue;
@@ -719,7 +721,7 @@ const animalPX = (() => {
         const i = (y * frame.width + x) * 4;
         img.data[i] = color[0]; img.data[i + 1] = color[1]; img.data[i + 2] = color[2]; img.data[i + 3] = 255;
       }
-      if (!WHITE) { ctx.putImageData(img, 0, 0); frames.set(key, frame); }
+      if (S === 2) { ctx.putImageData(img, 0, 0); frames.set(key, frame); }
     }
     if (cv.width !== W * S) { cv.width = W * S; cv.height = H * S; }
     const ctx = cv.getContext('2d'); ctx.clearRect(0, 0, cv.width, cv.height); ctx.drawImage(frame, 0, 0);
@@ -812,7 +814,7 @@ const planetGL = (() => {
     return t;
   }
   // 흰 배경 시안(WHITE): 4배 해상도로 부드러운 명암과 매끈한 테두리, 겉면 그림은 이웃 칸을 섞어 읽음
-  const SMOOTH = WHITE, UP = 4;
+  const SMOOTH = WHITE && SOFT_PX, UP = 4;
   function mapSmooth(D) {
     if (maps['s' + D]) return maps['s' + D];
     const L = [-.55, .6, .58], ln = Math.hypot(...L); L.forEach((v, i) => L[i] = v / ln);
@@ -2115,8 +2117,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1793078161"></script>
-<script src="firebase-live.js?v=1793078161"></script>
+<script src="firebase-config.js?v=1793078324"></script>
+<script src="firebase-live.js?v=1793078324"></script>
 
 </body>
 </html>
