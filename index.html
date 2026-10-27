@@ -17,6 +17,7 @@
 @font-face { font-family: 'Pyeojin Gothic'; font-weight: 600 749; font-style: normal; font-display: swap; src: url('assets/fonts/PyeojinGothic-Bold.woff2') format('woff2'); }
 @font-face { font-family: 'Pyeojin Gothic'; font-weight: 750 950; font-style: normal; font-display: swap; src: url('assets/fonts/PyeojinGothic-Extrabold.woff2') format('woff2'); }
 @font-face { font-family: 'Pretendard Variable'; font-weight: 45 920; font-style: normal; font-display: swap; src: url('assets/fonts/PretendardVariable.woff2') format('woff2-variations'), url('assets/fonts/PretendardVariable.woff2') format('woff2'); }
+@font-face { font-family: 'Bebas Neue'; font-weight: normal; font-style: normal; font-display: swap; src: url('assets/fonts/BebasNeue-Regular.ttf') format('truetype'); } /* 2026-10-27 밤: inhale, take one more breath, works 제목 (OFL) */
 @font-face { font-family: 'tondu'; font-weight: normal; font-style: normal; font-display: block; src: url('assets/fonts/TonduBeta-title.woff2') format('woff2'); } /* 2026-10-27 밤 숨님 결정: 제목 SUMin은 Tondu Beta (S U M i n 글자만 남긴 파일) */
 @font-face { font-family: 'desire-pro'; font-weight: normal; font-style: normal; font-display: block; src: url('assets/fonts/DesirePro-title-v2.woff2') format('woff2'); ascent-override: 76%; descent-override: 24%; line-gap-override: 0%; } /* 2026-10-27 숨님 결정: 제목 SUMin은 Desire Pro (S U M i n 글자만 남긴 파일). 윈도우에서 글자가 아래로 내려가 inhale에 붙던 문제: 윈도우용 높이 값(win 1710/526)을 다른 값(756/244)과 맞춤 */
 @font-face { font-family: 'MyoeunHeullim'; font-weight: normal; font-style: normal; font-display: swap; src: url('assets/fonts/MyoeunHeullim.woff2') format('woff2'); } /* 2026-10-27 숨님 결정: 제목 SUMin은 노스탤직 묘은흘림 */
@@ -36,6 +37,7 @@
   --font-display: 'Pyeojin Gothic', 'Pretendard Variable', Pretendard, system-ui, sans-serif;
   --font-body: 'Pyeojin Gothic', 'Pretendard Variable', Pretendard, system-ui, sans-serif;
   --font-ko: 'Pyeojin Gothic', 'Pretendard Variable', Pretendard, system-ui, sans-serif;
+  --font-accent: 'Bebas Neue', 'Pyeojin Gothic', sans-serif;
   --font-title: 'tondu', 'MyoeunHeullim', 'Pretendard Variable', Pretendard, system-ui, sans-serif;
   --gutter-l: max(16px, env(safe-area-inset-left, 0px));
   --gutter-r: max(16px, env(safe-area-inset-right, 0px));
@@ -118,6 +120,10 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 .wordmark .in, .subline .in { font-weight: 200; color: var(--color-text); }
 .subline { font-family: var(--font-display); font-weight: 200; font-size: clamp(22px, 2.6vw, 40px); letter-spacing: .28em; margin: 14px 0 0 .1em; }
 .subline .hale { color: var(--color-text-muted); }
+/* 2026-10-27 밤 숨님 요청: inhale, 스크롤 문장 세 줄, works 큰 제목은 Bebas Neue (굵기 1개라 가짜 굵게 막음) */
+body .subline, body .subline .in, body .say, body .page-head h1 { font-family: var(--font-accent); font-weight: normal; font-synthesis: none; }
+body .say { letter-spacing: 0; }
+
 .home-links { position: absolute; left: calc(max(var(--side), var(--gutter-l)) - 2px); bottom: max(5vh, 28px); display: flex; gap: 52px; font-family: var(--font-display); font-weight: 300; font-size: 19px; letter-spacing: 0; }
 .home-links a { text-decoration: none; position: relative; padding: 6px 2px; transition: text-shadow .3s, color .3s; }
 .home-links a::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--color-primary); transform: scaleX(0); transform-origin: left; transition: transform .35s; }
@@ -2156,8 +2162,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
 })();
 
 </script>
-<script src="firebase-config.js?v=1793133494"></script>
-<script src="firebase-live.js?v=1793133494"></script>
+<script src="firebase-config.js?v=1793133857"></script>
+<script src="firebase-live.js?v=1793133857"></script>
 
 </body>
 </html>
