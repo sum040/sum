@@ -279,6 +279,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 .pl-halo { position: absolute; left: 17%; top: 34.5%; width: 66%; height: 66%; border-radius: 50%; background: var(--c); opacity: .3; filter: blur(14px); }
 /* 픽셀 행성: 작은 캔버스에 공 모양으로 그린 뒤 픽셀 그대로 키움 */
 .pl-ball { position: absolute; left: 21%; top: 38.5%; width: 58%; height: 58%; image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+:root[data-theme="white"] .pl-ball { image-rendering: auto; } /* 흰 배경 시안: 행성을 부드럽게 */
 /* 캐릭터: 머리·모자·옷 150가지 조합을 미리 만든 그림에서 한 줄을 골라 4장씩 넘김 */
 .ch { position: absolute; left: 25%; top: 3%; width: 50%; aspect-ratio: 18 / 14; pointer-events: none; animation: chfloat 3.4s ease-in-out infinite; animation-delay: calc(var(--delay, 0s) * .6); } /* 행성과 박자가 다르게 살짝 떠오름 */
 /* 동물: 18x14 픽셀 캔버스를 그대로 키움. 숨쉬기, 눈 깜빡임, 동물별 동작은 animalPX가 그림 */
@@ -765,6 +766,23 @@ const planetGL = (() => {
     img.src = `${ASSET}tex/${name}.png`;
     return t;
   }
+  // 흰 배경 시안(WHITE): 4배 해상도로 부드러운 명암과 매끈한 테두리, 겉면 그림은 이웃 칸을 섞어 읽음
+  const SMOOTH = WHITE, UP = 4;
+  function mapSmooth(D) {
+    if (maps['s' + D]) return maps['s' + D];
+    const L = [-.55, .6, .58], ln = Math.hypot(...L); L.forEach((v, i) => L[i] = v / ln);
+    const pts = [];
+    for (let y = 0; y < D; y++) for (let x = 0; x < D; x++) {
+      const nx = (x + .5) / D * 2 - 1, ny = 1 - (y + .5) / D * 2, r = Math.hypot(nx, ny);
+      if (r > 1) continue;
+      const r2 = Math.min(1, r * r), nz = Math.sqrt(1 - r2), dot = Math.max(0, nx * L[0] + ny * L[1] + nz * L[2]);
+      const lon = Math.atan2(nx, nz) / (Math.PI * 2), lat = Math.asin(Math.max(-1, Math.min(1, ny))) / Math.PI + .5;
+      const light = .62 + .62 * dot + .16 * Math.pow(r2, 3);  // 부드러운 명암 + 가장자리 빛
+      const spec = Math.pow(dot, 26) * .75, a = Math.min(1, (1 - r) * D * .5);
+      pts.push({ i: (y * D + x) * 4, lon, v: 1 - lat, light, spec, a });
+    }
+    return maps['s' + D] = pts;
+  }
   function map(D) {
     if (maps[D]) return maps[D];
     const L = [-.55, .6, .58], ln = Math.hypot(...L); L.forEach((v, i) => L[i] = v / ln);
@@ -789,10 +807,25 @@ const planetGL = (() => {
     if (now - last < 33 || document.hidden) return; last = now;   // 30fps면 충분
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     document.querySelectorAll('canvas.pl-ball').forEach(cv => {
-      const D = +cv.dataset.d, t = tex(cv.dataset.tex); if (!t.ready) return;
+      const D = +cv.dataset.d * (SMOOTH ? UP : 1), t = tex(cv.dataset.tex); if (!t.ready) return;
       if (cv.width !== D) { cv.width = cv.height = D; cv._img = cv.getContext('2d').createImageData(D, D); }
       const rot = now / 1000 / +cv.dataset.spd + +cv.dataset.off;
       const out = cv._img.data, src = t.data, tick = Math.floor(now / 140);
+      if (SMOOTH) {
+        for (const p of mapSmooth(D)) {
+          let fu = ((p.lon + rot) % 1 + 1) % 1 * t.w - .5, fv = Math.min(t.h - 1, Math.max(0, p.v * t.h - .5));
+          const u0 = Math.floor(fu), v0 = Math.floor(fv), du = fu - u0, dv = fv - v0;
+          const ua = (u0 + t.w) % t.w, ub = (u0 + 1) % t.w, va = v0, vb = Math.min(t.h - 1, v0 + 1);
+          const i00 = (va * t.w + ua) * 4, i10 = (va * t.w + ub) * 4, i01 = (vb * t.w + ua) * 4, i11 = (vb * t.w + ub) * 4;
+          for (let ch = 0; ch < 3; ch++) {
+            const c = (src[i00 + ch] * (1 - du) + src[i10 + ch] * du) * (1 - dv) + (src[i01 + ch] * (1 - du) + src[i11 + ch] * du) * dv;
+            out[p.i + ch] = c * p.light + (255 - c * p.light) * p.spec;
+          }
+          out[p.i + 3] = 255 * p.a;
+        }
+        cv.getContext('2d').putImageData(cv._img, 0, 0);
+        return;
+      }
       for (const p of map(D)) {
         let u = (p.lon + rot) % 1; if (u < 0) u += 1;
         const si = ((Math.min(t.h - 1, (p.v * t.h) | 0) * t.w) + ((u * t.w) | 0)) * 4;
@@ -2023,8 +2056,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1793077491"></script>
-<script src="firebase-live.js?v=1793077491"></script>
+<script src="firebase-config.js?v=1793077734"></script>
+<script src="firebase-live.js?v=1793077734"></script>
 
 </body>
 </html>
