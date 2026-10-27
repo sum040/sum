@@ -234,22 +234,50 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 .intro-facts a { color: var(--color-primary); }
 
 /* ---------- work detail ---------- */
-.detail { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 64px); align-items: start; margin-top: 3vh; }
-@media (max-width: 900px) { .detail { grid-template-columns: 1fr; } }
-.detail h1 { font-family: var(--font-display); font-weight: 300; font-size: clamp(40px, 4.4vw, 64px); line-height: 1.02; margin: 0 0 20px; text-wrap: balance; }
-.facts { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 10px 24px; margin: 0 0 24px; padding: 18px 0; border-block: 1px solid rgba(111,103,112,.5); }
-.facts dt { color: var(--color-text-muted); font-size: 13px; letter-spacing: 0; font-family: var(--font-display); text-transform: uppercase; padding-top: 2px; }
-.facts dd { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; font-variant-numeric: tabular-nums; }
-.chip { font-size: 13px; padding: 2px 12px; border: 1px solid var(--color-border); border-radius: 999px; }
-.desc { margin: 0 0 28px; max-width: 60ch; white-space: pre-line; }
-.unpublished { color: var(--color-text-muted); margin: 0 0 8px; }
-.detail-foot { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 56px; padding-top: 22px; border-top: 1px solid rgba(111,103,112,.5); font-family: var(--font-display); }
-.detail-foot a { text-decoration: none; color: var(--color-text-muted); }
-.detail-foot a:hover { color: var(--color-text); }
-.detail-foot .nx { display: grid; gap: 2px; }
-.detail-foot .nx small { font-size: 12px; letter-spacing: 0; text-transform: uppercase; }
-.detail-foot .nx span { font-size: 20px; color: var(--color-text); }
-.detail-foot .right { text-align: right; }
+/* grid9 참고: 12칸 격자, 작은 고정폭 글자로 정보, 큰 제목, 넓은 여백 */
+.dt { --mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'Pyeojin Gothic', monospace; padding-bottom: 8vh; }
+.dt .mono, .dt-k { font-family: var(--mono); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--color-text-muted); }
+.dt-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: clamp(12px, 1.6vw, 24px); }
+.dt-meta { display: flex; justify-content: space-between; gap: 16px; padding: 4vh 0 1.4vh; }
+.dt-title { font-family: var(--font-title); font-weight: normal; font-synthesis: none; font-size: clamp(56px, 10.5vw, 188px); line-height: .9; letter-spacing: -.01em; margin: 0 0 clamp(28px, 6vh, 72px); }
+.dt-title sup { font-family: var(--mono); font-size: max(12px, .12em); letter-spacing: 0; vertical-align: top; position: relative; top: .5em; margin-left: .3em; color: var(--color-text-muted); }
+.dt-media { grid-column: 1 / span 9; }
+.dt-media .thumb { border-radius: 0; }
+.dt-cap { grid-column: 1 / span 9; display: grid; grid-template-columns: 1fr auto 1fr; align-items: baseline; gap: 16px; padding-top: 12px; }
+.dt-cap b { font-family: var(--font-display); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .02em; }
+.dt-cap .mono:last-child { justify-self: end; }
+.dt-sec { margin-top: clamp(72px, 16vh, 180px); align-items: start; }
+.dt-sec > .dt-k { grid-column: 1 / span 3; padding-top: .55em; }
+.dt-desc { grid-column: 5 / span 7; margin: 0; font-family: var(--font-display); font-weight: 400; font-size: clamp(20px, 2vw, 30px); line-height: 1.45; white-space: pre-line; text-wrap: pretty; }
+.dt-rows { grid-column: 5 / span 8; margin: 0; }
+.dt-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 16px; align-items: baseline; padding: 18px 0; border-top: 1px solid rgba(85,64,74,.18); }
+.dt-row:last-child { border-bottom: 1px solid rgba(85,64,74,.18); }
+.dt-row dt { font-family: var(--font-display); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .02em; }
+.dt-row dd { margin: 0; font-family: var(--font-display); font-size: 17px; }
+.dt-link { display: inline-flex; gap: 10px; align-items: baseline; color: var(--color-text); text-decoration: none; font-family: var(--font-display); font-weight: 500; text-transform: uppercase; font-size: 15px; letter-spacing: .02em; }
+.dt-link i { font-style: normal; display: inline-block; transition: transform .35s cubic-bezier(.2,.7,.2,1); }
+.dt-link:hover i { transform: translate(3px, -3px); }
+.dt-next { margin-top: clamp(96px, 20vh, 220px); padding-top: 18px; border-top: 1px solid rgba(85,64,74,.18); }
+.dt-next .dt-k { grid-column: 1 / span 3; }
+.dt-next .dt-back { grid-column: 10 / span 3; justify-self: end; }
+.dt-next a.big { grid-column: 1 / -1; display: flex; align-items: baseline; justify-content: space-between; gap: 24px; margin-top: 3vh; color: var(--color-text); text-decoration: none; font-family: var(--font-title); font-size: clamp(44px, 7vw, 120px); line-height: .95; }
+.dt-next a.big i { font-style: normal; font-family: var(--font-display); font-size: .4em; color: var(--color-text-muted); transition: transform .45s cubic-bezier(.2,.7,.2,1), color .3s; }
+.dt-next a.big:hover i { transform: translateX(10px); color: var(--color-primary); }
+.dt-next a.big span { transition: color .3s; }
+.dt-next a.big:hover span { color: var(--color-primary); }
+.dt-back { color: var(--color-text-muted); text-decoration: none; }
+.dt-back:hover { color: var(--color-text); }
+.dt .unpublished { color: var(--color-text-muted); margin: 0; }
+.dt-up { opacity: 0; transform: translateY(36px); transition: opacity 1s cubic-bezier(.2,.7,.2,1), transform 1s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0s); }
+.dt-up.in { opacity: 1; transform: none; }
+@media (max-width: 760px) {
+  .dt-media, .dt-cap { grid-column: 1 / -1; }
+  .dt-sec > .dt-k, .dt-next .dt-k { grid-column: 1 / -1; margin-bottom: 14px; }
+  .dt-desc, .dt-rows { grid-column: 1 / -1; }
+  .dt-next .dt-back { grid-column: 1 / -1; justify-self: start; margin-top: 6px; }
+  .dt-cap { grid-template-columns: 1fr auto; }
+  .dt-cap .mono:nth-child(2) { display: none; }
+}
 
 /* ---------- 404 ---------- */
 .lost { height: 100%; display: grid; place-items: center; text-align: center; padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
@@ -1424,35 +1452,41 @@ function contactFooter() {
 
 /* ---- S3 작업물 상세 ---- */
 function Detail(r) {
-  const w = r.work, i = WORKS.indexOf(w), prev = WORKS[i - 1], next = WORKS[i + 1];
+  const w = r.work, i = WORKS.indexOf(w), next = WORKS[(i + 1) % WORKS.length], pad = n => String(n).padStart(2, '0');
   const s = el(`<section class="screen page" aria-label="작업물 상세">${topbar('works')}
-    <div class="wrap">
-      <div class="detail">
-        <div class="thumb" id="big"></div>
-        <div>
-          <h1></h1>
-          <dl class="facts"><dt>year</dt><dd>${w.year}</dd><dt>tools</dt><dd id="tools"></dd>${w.result ? '<dt>result</dt><dd id="result" class="ko"></dd>' : ''}</dl>
-          ${w.description ? '<p class="desc ko" id="desc"></p>' : ''}
-          <div id="cta"></div>
-        </div>
+    <div class="wrap dt">
+      <div class="dt-meta mono dt-up"><span>work ${pad(i + 1)} / ${pad(WORKS.length)}</span><span>/${w.year}</span></div>
+      <h1 class="dt-title dt-up" style="--d:.08s"><span></span><sup>${pad(i + 1)}</sup></h1>
+      <div class="dt-grid">
+        <div class="dt-media dt-up" style="--d:.18s"><div class="thumb" id="big"></div></div>
+        <div class="dt-cap dt-up" style="--d:.26s"><b></b><span class="mono" id="tags"></span><span class="mono">/${w.year}</span></div>
       </div>
-      <nav class="detail-foot" aria-label="작업물 이동">
-        <div>${prev ? `<a class="nx" href="#${prev.slug}"><small>← 이전 작업물</small><span></span></a>` : ''}</div>
-        <a href="#works" class="ko">목록으로</a>
-        <div class="right">${next ? `<a class="nx" href="#${next.slug}"><small>다음 작업물 →</small><span></span></a>` : ''}</div>
-      </nav>
+      ${w.description ? `<div class="dt-grid dt-sec"><p class="dt-k dt-up">[01. 소개]</p><p class="dt-desc ko dt-up" id="desc" style="--d:.08s"></p></div>` : ''}
+      <div class="dt-grid dt-sec"><p class="dt-k dt-up">[${w.description ? '02' : '01'}. 정보]</p>
+        <dl class="dt-rows dt-up" style="--d:.08s">
+          <div class="dt-row"><dt>year</dt><dd>${w.year}</dd></div>
+          <div class="dt-row"><dt>tools</dt><dd id="tools"></dd></div>
+          ${w.result ? '<div class="dt-row"><dt>result</dt><dd id="result" class="ko"></dd></div>' : ''}
+          <div class="dt-row"><dt>site</dt><dd id="cta"></dd></div>
+        </dl></div>
+      ${WORKS.length > 1 ? `<nav class="dt-grid dt-next dt-up" aria-label="다음 작업물"><p class="dt-k">[next work]</p><a href="#works" class="dt-back mono">← all works</a>
+        <a class="big" href="#${next.slug}"><span></span><i>→</i></a></nav>` : ''}
     </div></section>`);
-  $('h1', s).textContent = w.title;
-  w.tools.forEach(t => { const c = el('<span class="chip"></span>'); c.textContent = t; $('#tools', s).appendChild(c); });
+  $('.dt-title span', s).textContent = w.title;
+  $('.dt-cap b', s).textContent = w.title;
+  $('#tags', s).textContent = w.tools.map(t => '#' + t).join(' ');
+  $('#tools', s).textContent = w.tools.join(', ');
   if (w.description) $('#desc', s).textContent = w.description;
   if (w.result) $('#result', s).textContent = w.result;
+  if (WORKS.length > 1) $('.dt-next .big span', s).textContent = next.title;
   $('.wrap', s).appendChild(contactFooter());
   const cta = $('#cta', s);
-  if (w.siteUrl) { const a = el('<a class="btn" target="_blank" rel="noopener">사이트 열기 ↗</a>'); a.href = w.siteUrl; cta.appendChild(a); }
+  if (w.siteUrl) { const a = el('<a class="dt-link" target="_blank" rel="noopener">open site <i>↗</i></a>'); a.href = w.siteUrl; cta.appendChild(a); }
   else cta.appendChild(el('<p class="unpublished ko">지금은 공개되지 않은 작업이에요.</p>'));
-  if (prev) $('.detail-foot div:first-child span', s).textContent = prev.title;
-  if (next) $('.detail-foot .right span', s).textContent = next.title;
   const th = makeThumb(w.thumb, w.thumbnailAlt, w.video); th.playing = true; thumbs.add(th); $('#big', s).appendChild(th.el);
+  // 화면에 들어오면 아래에서 떠오름 (한 번만)
+  const io = typeof IntersectionObserver === 'function' ? new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } }), { root: s, rootMargin: '0px 0px -6% 0px', threshold: .1 }) : null;
+  requestAnimationFrame(() => $$('.dt-up', s).forEach(n => io ? io.observe(n) : n.classList.add('in')));
   return s;
 }
 
@@ -2220,8 +2254,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
 })();
 
 </script>
-<script src="firebase-config.js?v=1793137737"></script>
-<script src="firebase-live.js?v=1793137737"></script>
+<script src="firebase-config.js?v=1793138772"></script>
+<script src="firebase-live.js?v=1793138772"></script>
 
 </body>
 </html>
