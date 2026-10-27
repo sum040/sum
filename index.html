@@ -11,6 +11,7 @@
 <style>
 /* Pretendard (OFL) 는 함께 올린 파일. 제목 묘은흘림(눈누)과 예전 가나초콜릿체는 영문만 남겨 줄인 것 */
 @font-face { font-family: 'Pretendard Variable'; font-weight: 45 920; font-style: normal; font-display: swap; src: url('assets/fonts/PretendardVariable.woff2') format('woff2-variations'), url('assets/fonts/PretendardVariable.woff2') format('woff2'); }
+@font-face { font-family: 'desire-pro'; font-weight: normal; font-style: normal; font-display: block; src: url('assets/fonts/DesirePro-title.woff2') format('woff2'); } /* 2026-10-27 숨님 결정: 제목 SUMin은 Desire Pro (S U M i n 글자만 남긴 파일) */
 @font-face { font-family: 'MyoeunHeullim'; font-weight: normal; font-style: normal; font-display: swap; src: url('assets/fonts/MyoeunHeullim.woff2') format('woff2'); } /* 2026-10-27 숨님 결정: 제목 SUMin은 노스탤직 묘은흘림 */
 @font-face { font-family: 'GanaChocolate'; font-weight: normal; font-style: normal; font-display: swap; src: local('GanaChocolate'), local('가나초콜릿'), url('assets/fonts/GanaChocolate.woff2') format('woff2'); }
 /* Layout: one dark world. Shader canvas behind everything, screens swap on top (home / works / work detail / guestbook / 404). PC first. */
@@ -28,7 +29,7 @@
   --font-display: 'Pretendard Variable', Pretendard, system-ui, sans-serif;
   --font-body: 'Pretendard Variable', Pretendard, system-ui, sans-serif;
   --font-ko: 'Pretendard Variable', Pretendard, system-ui, sans-serif;
-  --font-title: 'MyoeunHeullim', 'Pretendard Variable', Pretendard, system-ui, sans-serif;
+  --font-title: 'desire-pro', 'MyoeunHeullim', 'Pretendard Variable', Pretendard, system-ui, sans-serif;
   --gutter-l: max(16px, env(safe-area-inset-left, 0px));
   --gutter-r: max(16px, env(safe-area-inset-right, 0px));
   --side: clamp(18px, 4.5vw, 96px); /* 모든 화면의 왼쪽·오른쪽 기준선 (메뉴, SUMin, works·guestbook, 본문이 같은 선에 맞음) */
@@ -105,7 +106,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 /* ---------- S1 home ---------- */
 .home { display: grid; height: 100%; padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
 .home-title { position: absolute; left: max(var(--side), var(--gutter-l)); top: 50%; transform: translateY(-58%); margin: 0; }
-.wordmark { font-family: var(--font-title); font-size: clamp(64px, 10.5vw, 168px); line-height: .9; margin: 0; letter-spacing: -.01em; display: flex; align-items: baseline; }
+.wordmark { font-family: var(--font-title); font-synthesis: none; font-size: clamp(64px, 10.5vw, 168px); line-height: .9; margin: 0; letter-spacing: -.01em; display: flex; align-items: baseline; }
 .wordmark .sum { font-weight: 800; color: var(--color-primary); }
 .wordmark .in, .subline .in { font-weight: 200; color: var(--color-text); }
 .subline { font-family: var(--font-display); font-weight: 200; font-size: clamp(22px, 2.6vw, 40px); letter-spacing: .28em; margin: 14px 0 0 .1em; }
@@ -143,7 +144,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 .main { overflow-x: hidden; } /* 옆에서 밀려 들어오는 글자 때문에 화면이 가로로 넓어지지 않게 */
 
 .main > .wrap { position: relative; z-index: 1; }
-.corner { position: fixed; bottom: max(2vh, 12px); z-index: 0; margin: 0; font-family: var(--font-title); font-size: clamp(56px, 10vw, 160px); line-height: .8; color: rgba(246,241,238,.07); pointer-events: none; opacity: 0; user-select: none; }
+.corner { position: fixed; bottom: max(2vh, 12px); z-index: 0; margin: 0; font-family: var(--font-title); font-synthesis: none; font-size: clamp(56px, 10vw, 160px); line-height: .8; color: rgba(246,241,238,.07); pointer-events: none; opacity: 0; user-select: none; }
 .corner.l { left: var(--side); } .corner.r { right: var(--side); }
 .outro { margin-top: 22vh; }
 .outro .contact { margin: 0; padding: 0; border: 0; order: -1; }
@@ -184,7 +185,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 .intro .proto-note { justify-self: start; }
 .intro-hi { margin: 0; font-family: var(--font-display); font-weight: 200; font-size: 22px; letter-spacing: .12em; color: var(--color-text-muted); }
 .intro-hi b { font-weight: 800; color: var(--color-primary); }
-.intro-nm { font-family: var(--font-title); font-size: 1.35em; letter-spacing: .02em; color: var(--color-text); } /* 홈 제목과 같은 글씨체 */
+.intro-nm { font-family: var(--font-title); font-synthesis: none; font-size: 1.35em; letter-spacing: .02em; color: var(--color-text); } /* 홈 제목과 같은 글씨체 */
 .intro-nm b { font-weight: normal; }
 .intro-lead { margin: 0; font-weight: 400; font-size: clamp(30px, 3.6vw, 64px); line-height: 1.35; text-wrap: balance; }
 .intro-body { margin: 0; max-width: 62ch; color: var(--color-text-muted); font-size: clamp(16px, 1.1vw, 19px); line-height: 1.75; }
@@ -321,7 +322,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 .open-panel { position: absolute; left: 50%; bottom: max(7%, 40px); transform: translateX(-50%); z-index: 3; padding: 14px 34px; font-size: 16px; box-shadow: 0 0 0 6px rgba(245,183,163,.12); }
 .open-panel:hover { transform: translateX(-50%) translateY(-1px); }
 .panel-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
-.logo-name { font-family: var(--font-title); }
+.logo-name { font-family: var(--font-title); font-synthesis: none; }
 
 /* panel */
 .panel { min-width: 0; overflow: auto; border-left: 1px solid rgba(111,103,112,.45); background: rgba(22,20,26,.86); padding: 26px 28px 40px; padding-right: max(28px, env(safe-area-inset-right, 0px)); display: grid; align-content: start; gap: 22px; }
@@ -2147,8 +2148,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
 })();
 
 </script>
-<script src="firebase-config.js?v=1793085063"></script>
-<script src="firebase-live.js?v=1793085063"></script>
+<script src="firebase-config.js?v=1793112825"></script>
+<script src="firebase-live.js?v=1793112825"></script>
 
 </body>
 </html>
