@@ -188,6 +188,15 @@ body .page-head h1 { font-family: var(--font-title); font-weight: normal; font-s
 .wf:hover .wf-name, .wf:focus-visible .wf-name { opacity: 1; transform: translate(-50%, 16px); }
 body.no-gl .wf { background: rgba(245,183,163,.45); }
 @media (hover: none) { .wf-name { opacity: 1; transform: translate(-50%, 12px); } }
+.door { position: relative; display: grid; justify-items: center; gap: 10px; padding: 18vh 0 12vh; text-align: center; --t: 0; }
+.door-go { display: block; border-radius: 50%; text-decoration: none; }
+.door-pl { display: block; width: 220px; height: 220px; transform-origin: 50% 50%; opacity: var(--t); translate: 0 calc((1 - var(--t)) * 90px); scale: calc(.55 + .45 * var(--t)); transition: transform .9s cubic-bezier(.45,0,.2,1); }
+.door-pl .bob { display: block; width: 100%; height: 100%; animation: bob 7s ease-in-out infinite; }
+.door-go:hover .door-pl .bob, .door-go:focus-visible .door-pl .bob { filter: brightness(1.06); }
+.door-k { margin: 0; font-family: var(--font-title); font-weight: normal; font-synthesis: none; font-size: clamp(30px, 3vw, 44px); line-height: 1; opacity: var(--t); transition: opacity .4s; }
+.door-t { margin: 0; color: var(--color-text-muted); font-size: 14px; opacity: var(--t); transition: opacity .4s; }
+.door.going .door-k, .door.going .door-t { opacity: 0; }
+.main.door-open .wrap > :not(.door), .main.door-open .topbar, .main.door-open .corner { opacity: 0 !important; transition: opacity .5s ease; }
 .main.garden-open .wrap > :not(.garden), .main.garden-open .garden .wf-name, .main.garden-open .topbar { opacity: 0; transition: opacity .4s ease; }
 @media (max-width: 760px) { .works-grid { grid-template-columns: 1fr; } }
 .work-card { display: grid; gap: 16px; text-decoration: none; color: inherit; }
@@ -1330,6 +1339,10 @@ function Main(r) {
       <div class="page-head rv" id="works-list"><h1>works</h1></div>
       <div class="works-grid" id="grid"></div>
       <section class="outro" aria-label="마무리"></section>
+      <section class="door" aria-label="방명록으로">
+        <a class="door-go" href="#guestbook" aria-label="방명록으로 가기"><span class="door-pl"><span class="bob"></span></span></a>
+        <p class="door-k">guestbook</p><p class="door-t">a little space for you</p>
+      </section>
       <div class="mark-foot"><span>© 2026 SUMin</span><span>inhale</span></div>
     </div>
     <p class="corner l" aria-hidden="true">SUM</p><p class="corner r" aria-hidden="true">in</p></section>`);
@@ -1370,6 +1383,24 @@ function Main(r) {
   if (bg.garden) { bg.garden.box = grid; bg.garden.els = flowers; bg.garden.open = -1; bg.garden.op = 0; }
   requestAnimationFrame(layoutGarden); addEventListener('resize', () => { if (s.isConnected) layoutGarden(); });
   $('.outro', s).appendChild(contactFooter());
+  // 맨 아래: 방명록의 숨 행성이 떠오르고, 누르면 그 행성이 방명록 가운데 자리로 다가가며 넘어감
+  const door = $('.door', s), doorGo = $('.door-go', s), doorPl = $('.door-pl', s);
+  const doorLook = p => { $('.bob', doorPl).innerHTML = planetHTML(p, { d: 52 }); };
+  doorLook({ id: adminId(), planetColor: 'color_1', cover: 'flower_1', animal: 'cat', animalColor: 'natural' });
+  let doorAsked = false; // 숨 행성 모습은 맨 아래 가까이 왔을 때 한 번만 불러옴
+  const doorTick = () => { const t = Math.max(0, Math.min(1, (s.scrollTop + s.clientHeight - door.offsetTop) / (door.offsetHeight * .85))), e = t * t * (3 - 2 * t);
+    if (t > 0 && !doorAsked) { doorAsked = true; db.getPlanet(adminId()).then(p => { if (p && s.isConnected) doorLook(p); }).catch(() => {}); }
+    if (!door.classList.contains('going')) door.style.setProperty('--t', e.toFixed(3)); };
+  s.addEventListener('scroll', doorTick, { passive: true }); requestAnimationFrame(doorTick);
+  doorGo.addEventListener('click', e => {
+    e.preventDefault(); if (door.classList.contains('going')) return;
+    const r = doorPl.getBoundingClientRect(), W = innerWidth, H = innerHeight;
+    const k = Math.max(.5, Math.min(1.35, W / 1000, (H - 70) / 640)); // 방명록 우주 칸과 같은 배율(추측치: 메뉴 높이 약 70px)
+    const sc = 220 * k / r.width, dx = W / 2 - (r.left + r.width / 2), dy = 70 + (H - 70) / 2 - (r.top + r.height / 2);
+    door.classList.add('going'); s.classList.add('door-open'); sound.play('spark');
+    doorPl.style.transform = `translate(${dx}px, ${dy}px) scale(${sc})`;
+    setTimeout(() => { location.hash = 'guestbook'; }, 900);
+  });
   const says = $$('.say span', s), corners = $$('.corner', s), stage = $('.stage', s), sub = $('.subline', s);
   // 첫 화면 SUMin이 옮겨 갈 자리(아래 가운데, 크게)를 미리 재 둠
   const BIG = 1.75; // CSS에서 SUMin을 키워 둔 배율
@@ -2292,8 +2323,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
 })();
 
 </script>
-<script src="firebase-config.js?v=1793140541"></script>
-<script src="firebase-live.js?v=1793140541"></script>
+<script src="firebase-config.js?v=1793140995"></script>
+<script src="firebase-live.js?v=1793140995"></script>
 
 </body>
 </html>
