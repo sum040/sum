@@ -235,14 +235,14 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 
 /* ---------- work detail ---------- */
 /* grid9 참고: 12칸 격자, 작은 고정폭 글자로 정보, 큰 제목, 넓은 여백 */
-.dt { padding-bottom: 8vh; }
+.dt { padding-bottom: 9.6vh; }
 .dt .mono, .dt-k { font-family: var(--font-display); font-size: 12px; letter-spacing: 0; text-transform: uppercase; color: var(--color-text-muted); }
 .dt-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: clamp(12px, 1.6vw, 24px); }
-.dt-meta { display: flex; justify-content: space-between; gap: 16px; padding: 4vh 0 1.4vh; }
-.dt-title { font-family: var(--font-title); font-weight: normal; font-synthesis: none; font-size: clamp(56px, 10.5vw, 188px); line-height: .9; letter-spacing: 0; margin: 0 0 clamp(28px, 6vh, 72px); }
+.dt-meta { display: flex; justify-content: space-between; gap: 16px; padding: 4.8vh 0 1.7vh; }
+.dt-title { font-family: var(--font-title); font-weight: normal; font-synthesis: none; font-size: clamp(56px, 10.5vw, 188px); line-height: .9; letter-spacing: 0; margin: 0 0 clamp(34px, 7.2vh, 86px); }
 .dt-title sup { font-family: var(--font-display); font-size: max(12px, .12em); letter-spacing: 0; vertical-align: top; position: relative; top: .5em; margin-left: .3em; color: var(--color-text-muted); }
 .dt-pair { align-items: center; }
-.dt-pair + .dt-pair { margin-top: clamp(64px, 14vh, 160px); }
+.dt-pair + .dt-pair { margin-top: clamp(77px, 16.8vh, 192px); }
 .dt-pair-a .dt-media { grid-column: 7 / -1; grid-row: 1; }
 .dt-pair-a .dt-side { grid-column: 1 / 7; grid-row: 1; justify-self: end; }
 .dt-pair-b .dt-media { grid-column: 1 / span 9; }
@@ -255,7 +255,7 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 .dt-media.dt-up { transition: opacity 1s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0s); }
 .dt-media.dt-up .thumb { clip-path: inset(18% 0 0 0); transition: clip-path 1.2s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0s); }
 .dt-media.dt-up.in .thumb { clip-path: inset(0 0 0 0); }
-.dt-sec { margin-top: clamp(72px, 16vh, 180px); align-items: start; }
+.dt-sec { margin-top: clamp(86px, 19.2vh, 216px); align-items: start; }
 .dt-sec > .dt-k { grid-column: 1 / span 3; padding-top: .55em; }
 .dt-desc { grid-column: 5 / span 7; margin: 0; font-family: var(--font-display); font-weight: 400; font-size: clamp(20px, 2vw, 30px); line-height: 1.45; white-space: pre-line; text-wrap: pretty; }
 .dt-rows { grid-column: 5 / span 8; margin: 0; }
@@ -266,7 +266,7 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 .dt-link { display: inline-flex; gap: 10px; align-items: baseline; color: var(--color-text); text-decoration: none; font-family: var(--font-display); font-weight: 500; text-transform: uppercase; font-size: 15px; letter-spacing: 0; }
 .dt-link i { font-style: normal; display: inline-block; transition: transform .35s cubic-bezier(.2,.7,.2,1); }
 .dt-link:hover i { transform: translate(3px, -3px); }
-.dt-next { margin-top: clamp(96px, 20vh, 220px); padding-top: 18px; border-top: 1px solid rgba(85,64,74,.18); }
+.dt-next { margin-top: clamp(115px, 24vh, 264px); padding-top: 18px; border-top: 1px solid rgba(85,64,74,.18); }
 .dt-next .dt-k { grid-column: 1 / span 3; }
 .dt-next .dt-back { grid-column: 10 / span 3; justify-self: end; }
 .dt-next a.big { grid-column: 1 / -1; display: flex; align-items: baseline; justify-content: space-between; gap: 24px; margin-top: 3vh; color: var(--color-text); text-decoration: none; font-family: var(--font-title); font-size: clamp(44px, 7vw, 120px); line-height: .95; }
@@ -2288,8 +2288,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
 })();
 
 </script>
-<script src="firebase-config.js?v=1793139678"></script>
-<script src="firebase-live.js?v=1793139678"></script>
+<script src="firebase-config.js?v=1793139778"></script>
+<script src="firebase-live.js?v=1793139778"></script>
 
 </body>
 </html>
