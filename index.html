@@ -288,6 +288,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 .opt canvas { width: 80%; height: 80%; image-rendering: pixelated; }
 .opt { overflow: hidden; }
 .opt .ani-thumb { width: 100%; height: auto; aspect-ratio: 18 / 14; image-rendering: pixelated; image-rendering: crisp-edges; }
+:root[data-theme="white"] .ani-thumb, :root[data-theme="white"] .ch-px { image-rendering: auto; }
 .opts.seven { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
 .opts.seven .opt { padding: 2px; border-radius: 8px; }
 .swatches.fur { gap: 10px; flex-wrap: wrap; }
@@ -649,7 +650,7 @@ const ANIMAL_EYE = '#2A1E2E';
 function charHTML(p) { return `<div class="ch"><canvas class="ch-px" data-animal="${animalOf(p)}" data-col="${animalColorOf(p)}" data-off="${hashStr(p.id || 'draft') % 70}"></canvas></div>`; }
 /* 동물 그리기: 숨 두 번 → 눈 깜빡 → 동물별 동작, 70칸(7초) 반복. 동물마다 시작이 어긋나게 data-off */
 const animalPX = (() => {
-  const W = 18, H = 14, N = 70, S = 2;
+  const W = 18, H = 14, N = 70, S = WHITE ? 12 : 2; // 흰 배경 시안은 12배로 그려서 둥글고 부드럽게
   const frames = new Map();
   const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(v => v / 16 - .5);
   const L = [-.55, .6, .58], ln = Math.hypot(...L); L.forEach((v, i) => L[i] = v / ln);
@@ -686,7 +687,8 @@ const animalPX = (() => {
         return [top, bottom];
       });
       let glinted = false;
-      for (let y = 0; y < H * S; y++) for (let x = 0; x < W * S; x++) {
+      if (WHITE) { smooth(ctx, img, rows, art, ramp, eye, nose, blink, colKey, tops, solid, rgb, D); frames.set(key, frame); }
+      else for (let y = 0; y < H * S; y++) for (let x = 0; x < W * S; x++) {
         const ax = Math.floor(x / S), ay = Math.floor(y / S), ch = rows[ay][ax];
         if (ch === '.') continue;
         let color;
@@ -717,10 +719,53 @@ const animalPX = (() => {
         const i = (y * frame.width + x) * 4;
         img.data[i] = color[0]; img.data[i + 1] = color[1]; img.data[i + 2] = color[2]; img.data[i + 3] = 255;
       }
-      ctx.putImageData(img, 0, 0); frames.set(key, frame);
+      if (!WHITE) { ctx.putImageData(img, 0, 0); frames.set(key, frame); }
     }
     if (cv.width !== W * S) { cv.width = W * S; cv.height = H * S; }
     const ctx = cv.getContext('2d'); ctx.clearRect(0, 0, cv.width, cv.height); ctx.drawImage(frame, 0, 0);
+  }
+  // 흰 배경 시안: 칸 대신 둥근 모양(칸을 흐리게 섞어 0.5 경계로 자름), 계단 없는 명암, 동그란 눈과 코
+  function smooth(ctx, img, rows, art, ramp, eye, nose, blink, colKey, tops, solid, rgb, D) {
+    const SG = .62, mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+    const tone = t => { t = Math.max(0, Math.min(3, t)); const i = Math.min(2, Math.floor(t)); return mix(ramp[i], ramp[i + 1], t - i); };
+    const earCol = colKey === 'natural' && art.ear ? rgb(art.ear) : rgb(D).map(v => v * .8);
+    const dots = [];
+    for (let y = 0; y < H * S; y++) for (let x = 0; x < W * S; x++) {
+      const fx = (x + .5) / S, fy = (y + .5) / S, cx = Math.floor(fx), cy = Math.floor(fy);
+      let occ = 0, wsum = 0, ts = 0, es = 0, ls = 0;
+      for (let j = cy - 2; j <= cy + 2; j++) for (let i = cx - 2; i <= cx + 2; i++) {
+        const d2 = (fx - i - .5) ** 2 + (fy - j - .5) ** 2, w = Math.exp(-d2 / (2 * SG * SG));
+        wsum += w; if (!solid(i, j)) continue;
+        occ += w;
+        // 이웃 칸마다 그 칸 기준의 명암을 구해 무게대로 섞음 → 칸 경계가 보이지 않음
+        let ch = rows[j][i]; if (ch === 'E' || ch === 'N') ch = 'F';
+        const [top, bottom] = tops[j < art.split ? 0 : 1];
+        let left = i, right = i + 1;
+        while (solid(left - 1, j)) left--;
+        while (solid(right, j)) right++;
+        let nx = (fx - (left + right) / 2) / Math.max(2, (right - left) / 2), ny = ((top + bottom) / 2 - fy) / Math.max(2, (bottom - top) / 2);
+        const r = Math.hypot(nx, ny); if (r > .98) { nx *= .98 / r; ny *= .98 / r; }
+        const nz = Math.sqrt(1 - nx * nx - ny * ny), light = Math.max(0, nx * L[0] + ny * L[1] + nz * L[2]);
+        if (ch === 'R') { es += w; ls += w * light; continue; }
+        const t = (light - .22) * 3 + ({ F: 0, D: -1, M: .65, C: 1.25 }[ch] || 0);
+        ts += w * (ch === 'C' ? Math.max(t, 2) : t);
+      }
+      occ /= wsum; if (occ < .36) continue;
+      const a = Math.min(1, (occ - .36) / .1), tw = occ * wsum;
+      let color = tone(ts / Math.max(1e-6, tw - es));
+      if (es > 0) color = mix(color, earCol.map(v => v * (.86 + .2 * ls / es)), Math.min(1, es / tw * 1.2));
+      const i = (y * W * S + x) * 4;
+      img.data[i] = color[0]; img.data[i + 1] = color[1]; img.data[i + 2] = color[2]; img.data[i + 3] = 255 * a;
+    }
+    ctx.putImageData(img, 0, 0);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const ch = rows[y][x]; if (ch !== 'E' && ch !== 'N') continue;
+      const px = (x + .5) * S, py = (y + .5) * S;
+      ctx.fillStyle = `rgb(${(ch === 'N' ? nose : eye).join(',')})`;
+      if (ch === 'E' && blink) { ctx.fillRect(px - S * .45, py - S * .08, S * .9, S * .16); continue; }
+      ctx.beginPath(); ctx.ellipse(px, py, S * (ch === 'E' ? .46 : .42), S * (ch === 'E' ? .52 : .36), 0, 0, Math.PI * 2); ctx.fill();
+      if (ch === 'E') { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(px - S * .16, py - S * .2, S * .15, 0, Math.PI * 2); ctx.fill(); }
+    }
   }
   function paint(cv, tick) {
     const k = ANIMALS[cv.dataset.animal] ? cv.dataset.animal : 'cat', c = ANIMAL_COLORS[cv.dataset.col] ? cv.dataset.col : 'natural';
@@ -2070,8 +2115,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1793077917"></script>
-<script src="firebase-live.js?v=1793077917"></script>
+<script src="firebase-config.js?v=1793078161"></script>
+<script src="firebase-live.js?v=1793078161"></script>
 
 </body>
 </html>
