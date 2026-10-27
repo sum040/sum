@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="icon" type="image/png" href="assets/favicon-flower.png">
 </head>
 <body>
 <title>SUMin inhale</title>
@@ -1502,6 +1502,22 @@ function Detail(r) {
   const media = $$('.dt-media', s);
   const drift = () => { const H = innerHeight; media.forEach(m => { const r = m.getBoundingClientRect(); m.style.transform = `translateY(${((r.top + r.height / 2 - H / 2) * -.06).toFixed(1)}px)`; }); };
   s.addEventListener('scroll', () => requestAnimationFrame(drift), { passive: true }); requestAnimationFrame(drift);
+  // 휠 스크롤은 홈처럼 관성 있게 부드럽게 (터치와 키보드는 원래대로)
+  let target = 0, pos = 0, running = false;
+  const clampY = y => Math.max(0, Math.min(s.scrollHeight - s.clientHeight, y));
+  const step = () => {
+    pos += (target - pos) * .085;
+    if (Math.abs(target - pos) < .5) { pos = target; running = false; }
+    s.scrollTop = pos;
+    if (running && s.isConnected) requestAnimationFrame(step); else running = false;
+  };
+  s.addEventListener('wheel', e => {
+    if (e.ctrlKey) return;
+    e.preventDefault();
+    target = clampY(target + (e.deltaMode === 1 ? e.deltaY * 32 : e.deltaMode === 2 ? e.deltaY * s.clientHeight : e.deltaY));
+    if (!running) { pos = s.scrollTop; running = true; requestAnimationFrame(step); }
+  }, { passive: false });
+  s.addEventListener('scroll', () => { if (!running) target = pos = s.scrollTop; }, { passive: true });
   // 화면에 들어오면 아래에서 떠오름 (한 번만)
   const io = typeof IntersectionObserver === 'function' ? new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } }), { root: s, rootMargin: '0px 0px -6% 0px', threshold: .1 }) : null;
   requestAnimationFrame(() => $$('.dt-up', s).forEach(n => io ? io.observe(n) : n.classList.add('in')));
@@ -2272,8 +2288,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
 })();
 
 </script>
-<script src="firebase-config.js?v=1793139331"></script>
-<script src="firebase-live.js?v=1793139331"></script>
+<script src="firebase-config.js?v=1793139678"></script>
+<script src="firebase-live.js?v=1793139678"></script>
 
 </body>
 </html>

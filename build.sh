@@ -7,7 +7,7 @@ DEST="$(dirname "$0")"
 cp -r "$SRC/assets" "$DEST/"
 cp "$SRC/firebase-config.js" "$SRC/firebase-live.js" "$SRC/firestore.rules" "$DEST/"
 {
-  printf '<!doctype html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n<link rel="icon" type="image/png" href="assets/favicon.png">\n</head>\n<body>\n'
+  printf '<!doctype html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n<link rel="icon" type="image/png" href="assets/favicon-flower.png">\n</head>\n<body>\n'
   cat "$SRC/index.html"
   printf '\n</body>\n</html>\n'
 } | sed "s/src=\"\(firebase-[a-z]*\.js\)\"/src=\"\1?v=$(date +%s)\"/" > "$DEST/index.html"
