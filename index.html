@@ -9,8 +9,9 @@
 <title>SUMin inhale</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
-/* Pretendard (OFL) 는 함께 올린 파일, 가나초콜릿체는 숨님이 준 파일을 영문만 남겨 줄인 것 */
+/* Pretendard (OFL) 는 함께 올린 파일. 제목 묘은흘림(눈누)과 예전 가나초콜릿체는 영문만 남겨 줄인 것 */
 @font-face { font-family: 'Pretendard Variable'; font-weight: 45 920; font-style: normal; font-display: swap; src: url('assets/fonts/PretendardVariable.woff2') format('woff2-variations'), url('assets/fonts/PretendardVariable.woff2') format('woff2'); }
+@font-face { font-family: 'MyoeunHeullim'; font-weight: normal; font-style: normal; font-display: swap; src: url('assets/fonts/MyoeunHeullim.woff2') format('woff2'); } /* 2026-10-27 숨님 결정: 제목 SUMin은 노스탤직 묘은흘림 */
 @font-face { font-family: 'GanaChocolate'; font-weight: normal; font-style: normal; font-display: swap; src: local('GanaChocolate'), local('가나초콜릿'), url('assets/fonts/GanaChocolate.woff2') format('woff2'); }
 /* Layout: one dark world. Shader canvas behind everything, screens swap on top (home / works / work detail / guestbook / 404). PC first. */
 :root {
@@ -27,7 +28,7 @@
   --font-display: 'Pretendard Variable', Pretendard, system-ui, sans-serif;
   --font-body: 'Pretendard Variable', Pretendard, system-ui, sans-serif;
   --font-ko: 'Pretendard Variable', Pretendard, system-ui, sans-serif;
-  --font-title: 'GanaChocolate', 'Pretendard Variable', Pretendard, system-ui, sans-serif;
+  --font-title: 'MyoeunHeullim', 'Pretendard Variable', Pretendard, system-ui, sans-serif;
   --gutter-l: max(16px, env(safe-area-inset-left, 0px));
   --gutter-r: max(16px, env(safe-area-inset-right, 0px));
   --side: clamp(16px, 4vw, 64px);
@@ -2117,8 +2118,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1793078324"></script>
-<script src="firebase-live.js?v=1793078324"></script>
+<script src="firebase-config.js?v=1793078994"></script>
+<script src="firebase-live.js?v=1793078994"></script>
 
 </body>
 </html>
