@@ -359,8 +359,6 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 @keyframes frontIn { from { opacity: 0; transform: translate(-50%, -40%) scale(.85); } }
 .sp .bob { width: 100%; height: 100%; animation: bob 7s ease-in-out infinite; animation-delay: var(--delay); transition: transform .7s cubic-bezier(.22,1,.36,1), filter .7s ease; }
 .sp:hover .bob, .sp:focus-visible .bob { transform: scale(1.16); filter: brightness(1.12); }
-.sp.landing .bob { transform: none !important; filter: none !important; }
-.sp.landing .bubble { opacity: 0 !important; }
 .sp svg, .front svg, .mini svg { width: 100%; height: 100%; display: block; overflow: visible; }
 /* 행성: 겉면 그림이 옆으로 흘러 도는 것처럼 보임 + 빛, 그림자, 반짝이 */
 .pl { position: relative; width: 100%; height: 100%; }
@@ -1413,25 +1411,35 @@ function Main(r) {
       ghost.querySelectorAll('canvas').forEach(c => { c.width = 0; }); // 복사한 캔버스는 다시 그리게 비움
       document.body.appendChild(ghost);
       { const da = $('.bob', doorPl).getAnimations && $('.bob', doorPl).getAnimations().find(x => x.animationName === 'bob'), ga = $('.bob', ghost).getAnimations && $('.bob', ghost).getAnimations().find(x => x.animationName === 'bob'); if (da && ga) ga.currentTime = da.currentTime; } // 둥실 박자 이어받기
+      // 방명록의 진짜 숨 행성은 바꿔 끼울 때까지 숨김(목록이 새로 와서 행성이 다시 만들어져도 숨겨지게 CSS로)
+      const sel = `.gb .sp[data-id="${CSS.escape(adminId())}"]`, html = document.documentElement;
+      let st = document.getElementById('handoffCss'); if (!st) { st = document.createElement('style'); st.id = 'handoffCss'; document.head.appendChild(st); }
+      st.textContent = `html.handoff ${sel} { visibility: hidden !important; } html.handoff-calm ${sel} .bob { transform: none !important; filter: none !important; } html.handoff-calm ${sel} .bubble { opacity: 0 !important; }`;
+      html.classList.add('handoff', 'handoff-calm');
       location.hash = 'guestbook';
-      const t0 = performance.now(); // 복사본의 둥실 움직임은 이때 처음부터 시작
-      const land = () => {
-        const n = document.querySelector(`.gb .sp[data-id="${CSS.escape(adminId())}"]`);
-        if (!n && performance.now() - t0 < 2500) return setTimeout(land, 80);
-        if (!n) { ghost.classList.add('out'); setTimeout(() => ghost.remove(), 700); return; }
-        // 진짜 행성은 잠깐 숨겨 두고(겹쳐 보이지 않게), 복사본이 그 자리에 닿으면 둥실 박자를 맞춰 한 번에 바꿔 끼움
-        n.style.visibility = 'hidden'; n.classList.add('landing'); // 마우스가 그 위에 있어도 처음엔 커지지 않게(크기가 튀지 않게)
-        const b = n.getBoundingClientRect(); Object.assign(ghost.style, { left: b.left + 'px', top: b.top + 'px', width: b.width + 'px', height: b.height + 'px' });
-        setTimeout(() => {
+      const t0 = performance.now();
+      const finish = () => {
+        const n = document.querySelector(sel);
+        if (n) {
+          n.classList.remove('enter', 'arrive');
           const bob = $('.bob', n), gbob = $('.bob', ghost);
-          if (bob && gbob && bob.getAnimations) {
+          if (bob && gbob && bob.getAnimations) { // 둥실 박자를 복사본과 똑같이 맞춤
             bob.style.animationDelay = '0s';
             const ga = gbob.getAnimations().find(x => x.animationName === 'bob'), ra = bob.getAnimations().find(x => x.animationName === 'bob');
             if (ga && ra) ra.currentTime = ga.currentTime;
           }
-          n.style.visibility = ''; ghost.remove();
-          const off = () => n.classList.remove('landing'); addEventListener('pointermove', off, { once: true });
-        }, 650);
+        }
+        html.classList.remove('handoff'); ghost.remove();
+        addEventListener('pointermove', () => html.classList.remove('handoff-calm'), { once: true }); // 마우스를 움직이면 다시 호버로 커짐
+      };
+      let last = null;
+      const land = () => {
+        const n = document.querySelector(sel), late = performance.now() - t0 > 2600;
+        if (!n) { if (!late) return setTimeout(land, 80); ghost.classList.add('out'); setTimeout(() => { ghost.remove(); html.classList.remove('handoff', 'handoff-calm'); }, 700); return; }
+        const b = n.getBoundingClientRect(), key = [b.left, b.top, b.width].map(v => Math.round(v)).join();
+        if (key !== last && !late) { last = key; return setTimeout(land, 90); } // 크기·자리가 멈출 때까지 기다림
+        Object.assign(ghost.style, { left: b.left + 'px', top: b.top + 'px', width: b.width + 'px', height: b.height + 'px' });
+        setTimeout(finish, 650);
       };
       setTimeout(land, 250);
     }, 900);
@@ -2358,8 +2366,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
 })();
 
 </script>
-<script src="firebase-config.js?v=1793141754"></script>
-<script src="firebase-live.js?v=1793141754"></script>
+<script src="firebase-config.js?v=1793142089"></script>
+<script src="firebase-live.js?v=1793142089"></script>
 
 </body>
 </html>
