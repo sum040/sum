@@ -776,10 +776,20 @@ const planetGL = (() => {
       const nx = (x + .5) / D * 2 - 1, ny = 1 - (y + .5) / D * 2, r = Math.hypot(nx, ny);
       if (r > 1) continue;
       const r2 = Math.min(1, r * r), nz = Math.sqrt(1 - r2), dot = Math.max(0, nx * L[0] + ny * L[1] + nz * L[2]);
-      const lon = Math.atan2(nx, nz) / (Math.PI * 2), lat = Math.asin(Math.max(-1, Math.min(1, ny))) / Math.PI + .5;
-      const light = .62 + .62 * dot + .16 * Math.pow(r2, 3);  // 부드러운 명암 + 가장자리 빛
-      const spec = Math.pow(dot, 26) * .75, a = Math.min(1, (1 - r) * D * .5);
-      pts.push({ i: (y * D + x) * 4, lon, v: 1 - lat, light, spec, a });
+      // 유리구슬: 안쪽 무늬가 렌즈처럼 살짝 커 보이게(굴절), 가장자리는 하얗게(프레넬), 오른쪽 아래로 빛이 모임
+      const bx = nx * .72, by = ny * .72, bz = Math.sqrt(Math.max(0, 1 - bx * bx - by * by));
+      const lon = Math.atan2(bx, bz) / (Math.PI * 2), lat = Math.asin(by) / Math.PI + .5;
+      const fres = Math.pow(r, 4), edge = Math.min(1, (1 - r) * D * .5);
+      const light = .62 + .5 * dot - .12 * Math.pow(r, 6);
+      const caustic = Math.exp(-((nx - .3) ** 2 + (ny + .42) ** 2) * 7) * .7;
+      const sm = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+      const ew = Math.hypot((nx + .36) / .26, (ny - .44) / .14);                      // 창문 모양 큰 반사(또렷한 테두리)
+      const win = sm(1, .82, ew) * (.75 + .25 * sm(1, 0, ew));
+      const dotH = sm(1, .6, Math.hypot((nx + .08) / .05, (ny - .62) / .05));          // 옆의 작은 점 반사
+      const arc = sm(.035, 0, Math.abs(r - .9)) * sm(.1, .55, -(nx * .6 + ny * .8));   // 오른쪽 아래 가장자리 빛 띠
+      const spec = Math.min(1, win + dotH * .9 + Math.pow(dot, 90) * .5);
+      const spec2 = arc * .7;
+      pts.push({ i: (y * D + x) * 4, lon, v: 1 - lat, light, spec, spec2, caustic, fres, a: edge * (.8 + .2 * fres) });
     }
     return maps['s' + D] = pts;
   }
@@ -812,6 +822,7 @@ const planetGL = (() => {
       const rot = now / 1000 / +cv.dataset.spd + +cv.dataset.off;
       const out = cv._img.data, src = t.data, tick = Math.floor(now / 140);
       if (SMOOTH) {
+        const tw = .8 + .2 * Math.sin(now / 520 + +cv.dataset.off * 40);   // 반사가 천천히 반짝임
         for (const p of mapSmooth(D)) {
           let fu = ((p.lon + rot) % 1 + 1) % 1 * t.w - .5, fv = Math.min(t.h - 1, Math.max(0, p.v * t.h - .5));
           const u0 = Math.floor(fu), v0 = Math.floor(fv), du = fu - u0, dv = fv - v0;
@@ -819,7 +830,10 @@ const planetGL = (() => {
           const i00 = (va * t.w + ua) * 4, i10 = (va * t.w + ub) * 4, i01 = (vb * t.w + ua) * 4, i11 = (vb * t.w + ub) * 4;
           for (let ch = 0; ch < 3; ch++) {
             const c = (src[i00 + ch] * (1 - du) + src[i10 + ch] * du) * (1 - dv) + (src[i01 + ch] * (1 - du) + src[i11 + ch] * du) * dv;
-            out[p.i + ch] = c * p.light + (255 - c * p.light) * p.spec;
+            let v = c * p.light;
+            v += (255 - v) * Math.min(1, p.fres * .5 + p.caustic * .55);      // 가장자리와 빛 모이는 곳은 밝고 투명하게
+            v += (255 - v) * Math.min(1, p.spec * tw + p.spec2);    // 반사
+            out[p.i + ch] = v;
           }
           out[p.i + 3] = 255 * p.a;
         }
@@ -2056,8 +2070,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1793077734"></script>
-<script src="firebase-live.js?v=1793077734"></script>
+<script src="firebase-config.js?v=1793077917"></script>
+<script src="firebase-live.js?v=1793077917"></script>
 
 </body>
 </html>
