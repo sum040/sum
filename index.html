@@ -592,7 +592,7 @@ function rulesCheck(d) {
    2. 작업물 (코드 안 데이터 파일). 지금은 자리표시 내용입니다.
    ===================================================================== */
 const WORKS = [
-  { slug: 'find-bananas', order: 1, title: 'Find Bananas', summary: '명화 속에 숨은 진짜 바나나를 찾는 게임', description: '바나나 괴물이 유명 화가의 그림을 훔쳐 갔어요.\n그림을 돌려받으려면 그림 속으로 들어가 진짜 바나나를 찾아야 해요.', year: 2026, tools: ['Claude'], siteUrl: 'https://sum040.github.io/find-bananas/', thumb: 'assets/works/find-bananas.jpg', thumbnailAlt: 'Find Bananas 첫 화면. 크림색 배경에 큰 제목과 게임 시작 버튼, 노란 바나나 하나가 떠 있음' },
+  { slug: 'find-bananas', order: 1, title: 'Find Bananas', summary: '명화 속에 숨은 진짜 바나나를 찾는 게임', description: '바나나 괴물이 유명 화가의 그림을 훔쳐 갔어요.\n그림을 돌려받으려면 그림 속으로 들어가 진짜 바나나를 찾아야 해요.', year: 2026, tools: ['Claude'], siteUrl: 'https://sum040.github.io/find-bananas/', thumb: 'assets/works/find-bananas-thumb.jpg', video: 'assets/works/find-bananas.mp4', card: { video: 'assets/works/find-bananas-card.mp4', poster: 'assets/works/find-bananas-card-rest.jpg', rest: 0 }, thumbnailAlt: 'Find Bananas 첫 화면. 크림색 배경에 큰 제목과 게임 시작 버튼, 노란 바나나 하나가 떠 있음' },
   { slug: 'lingo-loop', order: 2, title: 'Lingo Loop', summary: 'UX/UI·AI 영어 용어를 치며 익히는 타자 연습', description: '주니어 디자이너가 UX/UI, AI 개발, 프롬프트에 쓰이는 영어 용어를 직접 타이핑하며 타자 속도를 높이고 용어도 함께 익히는 사이트예요.\n게임 페이지에서는 혼자서도, 친구와도 용어 타이핑 게임을 할 수 있어요.', year: 2026, tools: ['Claude'], siteUrl: 'https://sum040.github.io/lingo-loop/', thumb: 'assets/works/lingo-loop-thumb.jpg', video: 'assets/works/lingo-loop.mp4', card: { video: 'assets/works/lingo-loop-card.mp4', poster: 'assets/works/lingo-loop-card-rest.jpg', rest: 2.82 }, thumbnailAlt: 'Lingo Loop 소개 화면. 노란 배경에 큰 제목과 타자 연습 화면, 픽셀 캐릭터들' },
 ].sort((a, b) => a.order - b.order);
 
@@ -1081,14 +1081,14 @@ function makeThumb(kind, alt, video, rest) {
     let atRest = true, raf = 0;
     v.addEventListener('loadedmetadata', () => { if (atRest) v.currentTime = rest; }, { once: true });
     const settle = () => { v.pause(); v.currentTime = rest; atRest = true; still.classList.remove('off'); };
-    const waitRest = () => { cancelAnimationFrame(raf); const tick = () => { if (on) return; if (v.currentTime >= rest) { settle(); return; } raf = requestAnimationFrame(tick); }; raf = requestAnimationFrame(tick); };
+    const waitRest = () => { cancelAnimationFrame(raf); let last = v.currentTime; const tick = () => { if (on) return; const t = v.currentTime; if (rest > 0 ? t >= rest : t < last) { settle(); return; } last = t; raf = requestAnimationFrame(tick); }; raf = requestAnimationFrame(tick); };
     return { el: box, t: 0, draw() {}, get playing() { return on; }, set playing(x) {
       if (x === on) return; on = x; cancelAnimationFrame(raf);
       if (x) {
         if (atRest) { atRest = false; v.currentTime = 0; }
         still.classList.add('off');
         play();
-      } else if (!atRest && v.currentTime < rest && !v.paused) waitRest();
+      } else if (!atRest && !v.paused && (rest === 0 || v.currentTime < rest)) waitRest(); // rest 0: 반복이 한 바퀴 끝나 처음으로 돌아올 때 멈춤
       else { still.classList.remove('off'); setTimeout(() => { if (!on) settle(); }, 500); }
     } };
   }
@@ -2147,8 +2147,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
 })();
 
 </script>
-<script src="firebase-config.js?v=1793081052"></script>
-<script src="firebase-live.js?v=1793081052"></script>
+<script src="firebase-config.js?v=1793081461"></script>
+<script src="firebase-live.js?v=1793081461"></script>
 
 </body>
 </html>
