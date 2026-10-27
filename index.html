@@ -400,13 +400,17 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 
 /* ---------- 화면 크기별 ---------- */
 .topbar { transition: background-color .3s; }
-/* 흰 배경 시안: 주소 뒤에 ?theme=white 를 붙이면 보임 (방명록은 어두운 그대로) */
-:root[data-theme="white"] body:not([data-route="guestbook"]) { --color-bg: #F7F3F0; --color-surface: #FFFFFF; --color-text: #1E1216; --color-text-muted: #6F6770; --color-border: #CFC6C9; --color-primary: #E08E74; --color-on-primary: #FFFFFF; --color-focus: #E08E74; color-scheme: light; }
-:root[data-theme="white"] body:not([data-route="guestbook"]) { background: var(--color-bg); color: var(--color-text); }
-:root[data-theme="white"] body:not([data-route="guestbook"]) .stage .say { text-shadow: none; }
-:root[data-theme="white"] body:not([data-route="guestbook"]) .thumb { border-color: rgba(30,18,22,.12); }
-:root[data-theme="white"] body:not([data-route="guestbook"]) .work-card:hover .thumb { box-shadow: 0 18px 50px rgba(30,18,22,.16); }
-:root[data-theme="white"] body:not([data-route="guestbook"]) .topbar.scrolled { background: rgba(247,243,240,.85); }
+/* 흰 배경 시안: 주소 뒤에 ?theme=white 를 붙이면 보임 */
+:root[data-theme="white"] body .panel { background: rgba(255,255,255,.88); border-left-color: rgba(30,18,22,.1); }
+:root[data-theme="white"] body .gbtn { background: #FFFFFF; }
+:root[data-theme="white"] body .name-tag { background: rgba(255,255,255,.75); }
+:root[data-theme="white"] body #proto > button { background: rgba(255,255,255,.8); }
+:root[data-theme="white"] body { --color-bg: #F7F3F0; --color-surface: #FFFFFF; --color-text: #1E1216; --color-text-muted: #6F6770; --color-border: #CFC6C9; --color-primary: #E08E74; --color-on-primary: #FFFFFF; --color-focus: #E08E74; color-scheme: light; }
+:root[data-theme="white"] body { background: var(--color-bg); color: var(--color-text); }
+:root[data-theme="white"] body .stage .say { text-shadow: none; }
+:root[data-theme="white"] body .thumb { border-color: rgba(30,18,22,.12); }
+:root[data-theme="white"] body .work-card:hover .thumb { box-shadow: 0 18px 50px rgba(30,18,22,.16); }
+:root[data-theme="white"] body .topbar.scrolled { background: rgba(247,243,240,.85); }
 :root[data-theme="white"] #loader { background: #F7F3F0; }
 .topbar.scrolled { background: rgba(11,10,13,.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); } /* 내용이 메뉴 밑으로 지나갈 때 글자가 겹치지 않게 */
 .sp.edge-l .bubble { left: 0; transform: translate(0, 6px); }
@@ -935,7 +939,7 @@ void main(){
     gl.uniform4fv(uFl, flBuf); gl.uniform1f(uPix, light > .5 ? 1 : Math.max(2, Math.round(4 * scale))); // 흰 배경 시안은 픽셀 없이
     gl.uniform2f(u.res, canvas.width, canvas.height); gl.uniform1f(u.time, time);
     gl.uniform2f(u.mouse, mouse.x, mouse.y); gl.uniform1f(u.flower, cur.flower); gl.uniform1f(u.stars, cur.stars); gl.uniform1f(u.inhale, cur.inhale); gl.uniform1f(u.mask, cur.mask);
-    light += ((WHITE && document.body.dataset.route !== 'guestbook' ? 1 : 0) - light) * .06; gl.uniform1f(u.light, light);
+    light += ((WHITE ? 1 : 0) - light) * .06; gl.uniform1f(u.light, light);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     requestAnimationFrame(frame);
   }
@@ -2019,8 +2023,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1793077224"></script>
-<script src="firebase-live.js?v=1793077224"></script>
+<script src="firebase-config.js?v=1793077491"></script>
+<script src="firebase-live.js?v=1793077491"></script>
 
 </body>
 </html>
