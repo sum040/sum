@@ -194,7 +194,7 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 .door-pl .bob { display: block; width: 100%; height: 100%; animation: bob 7s ease-in-out infinite; }
 .door-go { margin-bottom: clamp(20px, 4vh, 44px); transition: transform 1.4s cubic-bezier(.37,0,.2,1); } /* 숨을 들이마시듯 천천히 살짝 커짐 */
 .door-go:hover, .door-go:focus-visible { transform: scale(1.07); }
-.door-ghost { position: fixed; z-index: 60; pointer-events: none; display: block; transition: left .6s cubic-bezier(.45,0,.2,1), top .6s cubic-bezier(.45,0,.2,1), width .6s cubic-bezier(.45,0,.2,1), height .6s cubic-bezier(.45,0,.2,1), opacity .6s ease; }
+.door-ghost { position: fixed; z-index: 60; pointer-events: none; display: block; transition: opacity .6s ease; }
 .door-ghost .bob { display: block; width: 100%; height: 100%; animation: bob 7s ease-in-out infinite; }
 .door-ghost.out { opacity: 0; }
 .door-k { margin: 0; font-family: var(--font-title); font-weight: normal; font-synthesis: none; font-size: clamp(30px, 3vw, 44px); line-height: 1; opacity: var(--t); transition: opacity .4s; }
@@ -1398,51 +1398,50 @@ function Main(r) {
   s.addEventListener('scroll', doorTick, { passive: true }); requestAnimationFrame(doorTick);
   doorGo.addEventListener('click', e => {
     e.preventDefault(); if (door.classList.contains('going')) return;
-    const r = doorPl.getBoundingClientRect(), W = innerWidth, H = innerHeight;
-    const k = Math.max(.5, Math.min(1.35, W / 1000, (H - 70) / 640)); // 방명록 우주 칸과 같은 배율(추측치: 메뉴 높이 약 70px)
-    const sc = 220 * k / r.width, dx = W / 2 - (r.left + r.width / 2), dy = 70 + (H - 70) / 2 - (r.top + r.height / 2);
-    doorGo.style.transition = 'none'; doorGo.style.transform = getComputedStyle(doorGo).transform; // 호버로 커진 크기 그대로 멈춤
     door.classList.add('going'); s.classList.add('door-open'); sound.play('spark');
-    doorPl.style.transform = `translate(${dx}px, ${dy}px) scale(${sc})`;
-    setTimeout(() => {
-      // 화면이 바뀌는 동안 끊기지 않게: 같은 행성을 화면 위에 띄워 두었다가, 방명록의 숨 행성 자리로 옮기고 서서히 넘겨줌
-      const fr = doorPl.getBoundingClientRect(), ghost = doorPl.cloneNode(true);
-      ghost.className = 'door-ghost'; ghost.style.cssText = `left:${fr.left}px;top:${fr.top}px;width:${fr.width}px;height:${fr.height}px`;
-      ghost.querySelectorAll('canvas').forEach(c => { c.width = 0; }); // 복사한 캔버스는 다시 그리게 비움
-      document.body.appendChild(ghost);
-      { const da = $('.bob', doorPl).getAnimations && $('.bob', doorPl).getAnimations().find(x => x.animationName === 'bob'), ga = $('.bob', ghost).getAnimations && $('.bob', ghost).getAnimations().find(x => x.animationName === 'bob'); if (da && ga) ga.currentTime = da.currentTime; } // 둥실 박자 이어받기
-      // 방명록의 진짜 숨 행성은 바꿔 끼울 때까지 숨김(목록이 새로 와서 행성이 다시 만들어져도 숨겨지게 CSS로)
-      const sel = `.gb .sp[data-id="${CSS.escape(adminId())}"]`, html = document.documentElement;
-      let st = document.getElementById('handoffCss'); if (!st) { st = document.createElement('style'); st.id = 'handoffCss'; document.head.appendChild(st); }
-      st.textContent = `html.handoff ${sel} { visibility: hidden !important; } html.handoff-calm ${sel} .bob { transform: none !important; filter: none !important; } html.handoff-calm ${sel} .bubble { opacity: 0 !important; }`;
-      html.classList.add('handoff', 'handoff-calm');
-      location.hash = 'guestbook';
-      const t0 = performance.now();
-      const finish = () => {
-        const n = document.querySelector(sel);
-        if (n) {
-          n.classList.remove('enter', 'arrive');
-          const bob = $('.bob', n), gbob = $('.bob', ghost);
-          if (bob && gbob && bob.getAnimations) { // 둥실 박자를 복사본과 똑같이 맞춤
-            bob.style.animationDelay = '0s';
-            const ga = gbob.getAnimations().find(x => x.animationName === 'bob'), ra = bob.getAnimations().find(x => x.animationName === 'bob');
-            if (ga && ra) ra.currentTime = ga.currentTime;
-          }
+    // 같은 행성을 화면 위에 띄워(복사본) 한 번의 부드러운 움직임으로 방명록의 숨 행성 자리까지 데려가고, 닿으면 진짜와 바꿔 끼움
+    const fr = doorPl.getBoundingClientRect(), ghost = doorPl.cloneNode(true);
+    ghost.className = 'door-ghost'; ghost.removeAttribute('style');
+    ghost.querySelectorAll('canvas').forEach(c => { c.width = 0; }); // 복사한 캔버스는 다시 그리게 비움
+    document.body.appendChild(ghost);
+    { const da = $('.bob', doorPl).getAnimations && $('.bob', doorPl).getAnimations().find(x => x.animationName === 'bob'), ga = $('.bob', ghost).getAnimations && $('.bob', ghost).getAnimations().find(x => x.animationName === 'bob'); if (da && ga) ga.currentTime = da.currentTime; } // 둥실 박자 이어받기
+    doorPl.style.visibility = 'hidden';
+    // 방명록의 진짜 숨 행성은 바꿔 끼울 때까지 숨김(목록이 새로 와서 행성이 다시 만들어져도 숨겨지게 CSS로)
+    const sel = `.gb .sp[data-id="${CSS.escape(adminId())}"]`, html = document.documentElement;
+    let st = document.getElementById('handoffCss'); if (!st) { st = document.createElement('style'); st.id = 'handoffCss'; document.head.appendChild(st); }
+    st.textContent = `html.handoff ${sel} { visibility: hidden !important; } html.handoff-calm ${sel} .bob { transform: none !important; filter: none !important; } html.handoff-calm ${sel} .bubble { opacity: 0 !important; }`;
+    html.classList.add('handoff', 'handoff-calm');
+    setTimeout(() => { location.hash = 'guestbook'; }, 450); // 홈 글자가 사라진 뒤 화면을 바꿈
+    // 자리(가운데 x, y)와 크기를 용수철처럼 따라감: 목표가 중간에 바뀌어도 멈추지 않고 이어서 움직임
+    const cur = [fr.left + fr.width / 2, fr.top + fr.height / 2, fr.width], vel = [0, 0, 0], t0 = performance.now();
+    const guess = () => { const W = innerWidth, H = innerHeight, k = Math.max(.5, Math.min(1.35, W / 1000, (H - 70) / 640)); return [W / 2, 70 + (H - 70) / 2, 220 * k]; }; // 진짜 자리를 알기 전 짐작(메뉴 높이 약 70px)
+    const finish = n => {
+      if (n) {
+        n.classList.remove('enter', 'arrive');
+        const bob = $('.bob', n), gbob = $('.bob', ghost);
+        if (bob && gbob && bob.getAnimations) { // 둥실 박자를 복사본과 똑같이 맞춤
+          bob.style.animationDelay = '0s';
+          const ga = gbob.getAnimations().find(x => x.animationName === 'bob'), ra = bob.getAnimations().find(x => x.animationName === 'bob');
+          if (ga && ra) ra.currentTime = ga.currentTime;
         }
         html.classList.remove('handoff'); ghost.remove();
-        addEventListener('pointermove', () => html.classList.remove('handoff-calm'), { once: true }); // 마우스를 움직이면 다시 호버로 커짐
-      };
-      let last = null;
-      const land = () => {
-        const n = document.querySelector(sel), late = performance.now() - t0 > 2600;
-        if (!n) { if (!late) return setTimeout(land, 80); ghost.classList.add('out'); setTimeout(() => { ghost.remove(); html.classList.remove('handoff', 'handoff-calm'); }, 700); return; }
-        const b = n.getBoundingClientRect(), key = [b.left, b.top, b.width].map(v => Math.round(v)).join();
-        if (key !== last && !late) { last = key; return setTimeout(land, 90); } // 크기·자리가 멈출 때까지 기다림
-        Object.assign(ghost.style, { left: b.left + 'px', top: b.top + 'px', width: b.width + 'px', height: b.height + 'px' });
-        setTimeout(finish, 650);
-      };
-      setTimeout(land, 250);
-    }, 900);
+      } else { ghost.classList.add('out'); setTimeout(() => { ghost.remove(); html.classList.remove('handoff'); }, 600); }
+      addEventListener('pointermove', () => html.classList.remove('handoff-calm'), { once: true }); // 마우스를 움직이면 다시 호버로 커짐
+    };
+    let lastT = t0;
+    const fly = now => {
+      const dt = Math.min(.05, (now - lastT) / 1000); lastT = now;
+      const n = document.querySelector(sel), b = n && n.getBoundingClientRect();
+      const tg = b && b.width ? [b.left + b.width / 2, b.top + b.height / 2, b.width] : guess();
+      let far = 0;
+      for (let i = 0; i < 3; i++) { vel[i] += ((tg[i] - cur[i]) * 30 - vel[i] * 11) * dt; cur[i] += vel[i] * dt; far = Math.max(far, Math.abs(tg[i] - cur[i]), Math.abs(vel[i]) * .05); }
+      Object.assign(ghost.style, { left: cur[0] - cur[2] / 2 + 'px', top: cur[1] - cur[2] / 2 + 'px', width: cur[2] + 'px', height: cur[2] + 'px' });
+      const age = now - t0;
+      if (n && b.width && far < .6 && age > 700) { Object.assign(ghost.style, { left: b.left + 'px', top: b.top + 'px', width: b.width + 'px', height: b.height + 'px' }); return finish(n); }
+      if (age > 4500) return finish(n && b.width ? n : null);
+      requestAnimationFrame(fly);
+    };
+    requestAnimationFrame(fly);
   });
   const says = $$('.say span', s), corners = $$('.corner', s), stage = $('.stage', s), sub = $('.subline', s);
   // 첫 화면 SUMin이 옮겨 갈 자리(아래 가운데, 크게)를 미리 재 둠
@@ -2377,8 +2376,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
 })();
 
 </script>
-<script src="firebase-config.js?v=1793142784"></script>
-<script src="firebase-live.js?v=1793142784"></script>
+<script src="firebase-config.js?v=1793143289"></script>
+<script src="firebase-live.js?v=1793143289"></script>
 
 </body>
 </html>
