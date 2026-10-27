@@ -252,6 +252,8 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 .dt-pair-b .dt-side { flex-direction: row-reverse; }
 .dt-media { will-change: transform; }
 .dt-media .thumb { border-radius: 0; }
+.dt-go { display: block; transition: filter .35s; }
+.dt-go:hover { filter: brightness(1.06); }
 .dt-media.dt-up { transition: opacity 1s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0s); }
 .dt-media.dt-up .thumb { clip-path: inset(18% 0 0 0); transition: clip-path 1.2s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0s); }
 .dt-media.dt-up.in .thumb { clip-path: inset(0 0 0 0); }
@@ -1468,7 +1470,7 @@ function Detail(r) {
       <h1 class="dt-title dt-up" style="--d:.08s"><span></span><sup>${pad(i + 1)}</sup></h1>
       ${w.card ? `<div class="dt-grid dt-pair dt-pair-a">
         <div class="dt-side dt-up" style="--d:.3s"><b></b><span class="mono">preview</span><span class="mono">/${w.year}</span></div>
-        <div class="dt-media dt-up" style="--d:.18s"><div class="thumb" id="loop"></div></div>
+        <div class="dt-media dt-up" style="--d:.18s">${w.siteUrl ? '<a class="thumb dt-go" id="loop" target="_blank" rel="noopener"></a>' : '<div class="thumb" id="loop"></div>'}</div>
       </div>` : ''}
       <div class="dt-grid dt-pair dt-pair-b">
         <div class="dt-media dt-up"><div class="thumb" id="big"></div></div>
@@ -1497,6 +1499,7 @@ function Detail(r) {
   if (w.siteUrl) { const a = el('<a class="dt-link" target="_blank" rel="noopener">open site <i>↗</i></a>'); a.href = w.siteUrl; cta.appendChild(a); }
   else cta.appendChild(el('<p class="unpublished ko">지금은 공개되지 않은 작업이에요.</p>'));
   const th = makeThumb(w.thumb, w.thumbnailAlt, w.video); th.playing = true; thumbs.add(th); $('#big', s).appendChild(th.el);
+  if (w.card && w.siteUrl) { const g = $('#loop', s); g.href = w.siteUrl; g.setAttribute('aria-label', w.title + ' 사이트 열기 (새 창)'); }
   if (w.card) { const tl = makeThumb(w.card.poster, w.title + ' 썸네일 움직임', w.card.video); tl.playing = true; thumbs.add(tl); $('#loop', s).appendChild(tl.el); }
   // 영상은 글자보다 조금 느리게 움직임 (깊이감)
   const media = $$('.dt-media', s);
@@ -2288,8 +2291,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
 })();
 
 </script>
-<script src="firebase-config.js?v=1793140216"></script>
-<script src="firebase-live.js?v=1793140216"></script>
+<script src="firebase-config.js?v=1793140331"></script>
+<script src="firebase-live.js?v=1793140331"></script>
 
 </body>
 </html>
