@@ -125,6 +125,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 /* 2026-10-27 밤 숨님 요청: inhale, 스크롤 문장 세 줄, works 큰 제목은 Bebas Neue (굵기 1개라 가짜 굵게 막음) */
 body .subline, body .subline .in, body .say { font-family: var(--font-accent); font-weight: normal; font-synthesis: none; }
 body .say { letter-spacing: 0; }
+body .contact-mail #mail { font-family: var(--font-accent); font-weight: normal; font-synthesis: none; letter-spacing: 0; } /* 2026-10-27 숨님: 큰 이메일 주소도 Bebas Neue */
 body .intro-lead, body .dt-desc { font-family: 'Allimjang', var(--font-ko); }
 body .page-head h1 { font-family: var(--font-title); font-weight: normal; font-synthesis: none; } /* works 제목은 SUMin과 같은 Tondu (숨님 요청) */
 
@@ -2376,8 +2377,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
 })();
 
 </script>
-<script src="firebase-config.js?v=1793143289"></script>
-<script src="firebase-live.js?v=1793143289"></script>
+<script src="firebase-config.js?v=1793143730"></script>
+<script src="firebase-live.js?v=1793143730"></script>
 
 </body>
 </html>
