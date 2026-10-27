@@ -404,19 +404,15 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 
 /* ---------- 화면 크기별 ---------- */
 .topbar { transition: background-color .3s; }
-/* 마우스 포인터: 작은 점이 마우스를 바로 따라가고, 작업물 위에서는 "view site" 원, 링크·버튼 위에서는 고리 (마우스 있는 기기만) */
-html.cc, html.cc * { cursor: none !important; }
-html.cc :is(input, textarea, [contenteditable]) { cursor: text !important; }
-#cursor { position: fixed; left: 0; top: 0; z-index: 9999; pointer-events: none; width: 0; height: 0; opacity: 0; transition: opacity .25s; }
-#cursor.on { opacity: 1; }
-#cursor .cc-dot { position: absolute; left: 0; top: 0; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: var(--color-text); display: grid; place-items: center; color: var(--color-text); font: 500 13px/1.15 var(--font-body); text-align: center; letter-spacing: .01em;
-  transition: width .35s cubic-bezier(.2,.7,.2,1), height .35s cubic-bezier(.2,.7,.2,1), margin .35s cubic-bezier(.2,.7,.2,1), background .25s, border-color .25s; border: 0 solid var(--color-text); }
-#cursor .cc-dot span { opacity: 0; transition: opacity .2s; white-space: nowrap; }
-#cursor.link .cc-dot { width: 34px; height: 34px; margin: -17px 0 0 -17px; background: transparent; border-width: 1.5px; }
-#cursor.view .cc-dot { width: 76px; height: 76px; margin: -38px 0 0 -38px; background: var(--color-surface); border-width: 3px; }
-#cursor.view .cc-dot span { opacity: 1; transition-delay: .12s; }
-#cursor.text { opacity: 0; }
-#cursor.down .cc-dot { transform: scale(.85); }
+/* 마우스 포인터: 기기 커서 자체를 작은 점으로 바꿈(늦게 따라오지 않음), 누를 수 있는 곳 위에서는 고리. 입력칸은 기본 커서 */
+@media (hover: hover) and (pointer: fine) {
+  html, html * { cursor: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='12'%20height='12'%20viewBox='0%200%2012%2012'%3E%3Ccircle%20cx='6'%20cy='6'%20r='4'%20fill='%231E1216'/%3E%3C/svg%3E") 6 6, auto !important; }
+  html :is(a, button, [role="button"], label, select, summary, .sp, .opt), html :is(a, button, [role="button"], label, select, summary, .sp, .opt) * { cursor: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='34'%20height='34'%20viewBox='0%200%2034%2034'%3E%3Ccircle%20cx='17'%20cy='17'%20r='15.5'%20fill='none'%20stroke='%231E1216'%20stroke-width='1.5'/%3E%3C/svg%3E") 17 17, pointer !important; }
+  html :is(input, textarea, [contenteditable]) { cursor: text !important; }
+  html:not([data-theme="white"]), html:not([data-theme="white"]) * { cursor: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='12'%20height='12'%20viewBox='0%200%2012%2012'%3E%3Ccircle%20cx='6'%20cy='6'%20r='4'%20fill='%23F6F1EE'/%3E%3C/svg%3E") 6 6, auto !important; }
+  html:not([data-theme="white"]) :is(a, button, [role="button"], label, select, summary, .sp, .opt), html:not([data-theme="white"]) :is(a, button, [role="button"], label, select, summary, .sp, .opt) * { cursor: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='34'%20height='34'%20viewBox='0%200%2034%2034'%3E%3Ccircle%20cx='17'%20cy='17'%20r='15.5'%20fill='none'%20stroke='%23F6F1EE'%20stroke-width='1.5'/%3E%3C/svg%3E") 17 17, pointer !important; }
+  html:not([data-theme="white"]) :is(input, textarea, [contenteditable]) { cursor: text !important; }
+}
 /* 흰 배경 시안: 주소 뒤에 ?theme=white 를 붙이면 보임 */
 :root[data-theme="white"] body .panel { background: rgba(255,255,255,.88); border-left-color: rgba(30,18,22,.1); }
 :root[data-theme="white"] body .gbtn { background: #FFFFFF; }
@@ -2134,30 +2130,10 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   const fontsReady = document.fonts ? Promise.race([document.fonts.ready, wait(LOADER.max)]) : wait(300);
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
-/* 마우스 포인터 (영상 참고: 점 → 작업물 위 "view site" 원) */
-(function customCursor() {
-  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-  document.documentElement.classList.add('cc');
-  const c = document.createElement('div'); c.id = 'cursor'; c.setAttribute('aria-hidden', 'true');
-  c.innerHTML = '<div class="cc-dot"><span>view<br>site</span></div>'; document.body.appendChild(c);
-  const dot = c.firstChild; let x = -100, y = -100, tx = -100, ty = -100, shown = false;
-  addEventListener('pointermove', e => {
-    if (e.pointerType !== 'mouse') return;
-    tx = e.clientX; ty = e.clientY; if (!shown) { x = tx; y = ty; shown = true; c.classList.add('on'); }
-    const t = e.target instanceof Element ? e.target : null;
-    const view = t && t.closest('.work-card');
-    const text = t && t.closest('input, textarea, [contenteditable]');
-    const link = !view && t && t.closest('a, button, [role="button"], label, select, .sp, summary');
-    c.classList.toggle('view', !!view); c.classList.toggle('link', !!link); c.classList.toggle('text', !!text);
-  }, { passive: true });
-  document.addEventListener('pointerleave', () => { shown = false; c.classList.remove('on'); });
-  addEventListener('pointerdown', () => c.classList.add('down')); addEventListener('pointerup', () => c.classList.remove('down'));
-  (function loop() { x = tx; y = ty; dot.style.translate = `${x}px ${y}px`; requestAnimationFrame(loop); })(); // 마우스와 똑같이(늦게 따라오지 않게, 숨님 요청)
-})();
 
 </script>
-<script src="firebase-config.js?v=1793079668"></script>
-<script src="firebase-live.js?v=1793079668"></script>
+<script src="firebase-config.js?v=1793079850"></script>
+<script src="firebase-live.js?v=1793079850"></script>
 
 </body>
 </html>
