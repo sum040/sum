@@ -400,6 +400,14 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 
 /* ---------- 화면 크기별 ---------- */
 .topbar { transition: background-color .3s; }
+/* 흰 배경 시안: 주소 뒤에 ?theme=white 를 붙이면 보임 (방명록은 어두운 그대로) */
+:root[data-theme="white"] body:not([data-route="guestbook"]) { --color-bg: #F7F3F0; --color-surface: #FFFFFF; --color-text: #1E1216; --color-text-muted: #6F6770; --color-border: #CFC6C9; --color-primary: #E08E74; --color-on-primary: #FFFFFF; --color-focus: #E08E74; color-scheme: light; }
+:root[data-theme="white"] body:not([data-route="guestbook"]) { background: var(--color-bg); color: var(--color-text); }
+:root[data-theme="white"] body:not([data-route="guestbook"]) .stage .say { text-shadow: none; }
+:root[data-theme="white"] body:not([data-route="guestbook"]) .thumb { border-color: rgba(30,18,22,.12); }
+:root[data-theme="white"] body:not([data-route="guestbook"]) .work-card:hover .thumb { box-shadow: 0 18px 50px rgba(30,18,22,.16); }
+:root[data-theme="white"] body:not([data-route="guestbook"]) .topbar.scrolled { background: rgba(247,243,240,.85); }
+:root[data-theme="white"] #loader { background: #F7F3F0; }
 .topbar.scrolled { background: rgba(11,10,13,.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); } /* 내용이 메뉴 밑으로 지나갈 때 글자가 겹치지 않게 */
 .sp.edge-l .bubble { left: 0; transform: translate(0, 6px); }
 .sp.edge-r .bubble { left: auto; right: 0; transform: translate(0, 6px); }
@@ -448,6 +456,8 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
+const WHITE = new URLSearchParams(location.search).get('theme') === 'white'; // 흰 배경 시안
+if (WHITE) document.documentElement.dataset.theme = 'white';
 /* =====================================================================
    1. 데이터 계층 (DATA LAYER)
    지금은 브라우저 localStorage로 흉내 냅니다.
@@ -852,7 +862,7 @@ const bg = (() => {
   if (!gl) { document.body.classList.add('no-gl'); return { set() {}, inhale() {}, ok: false }; }
   const vs = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
   const fs = `precision highp float;
-uniform vec4 uFl[13];uniform float uPix;uniform vec2 uRes;uniform float uTime;uniform vec2 uMouse;uniform float uFlower;uniform float uStars;uniform float uInhale;uniform float uMask;
+uniform vec4 uFl[13];uniform float uPix;uniform vec2 uRes;uniform float uTime;uniform vec2 uMouse;uniform float uFlower;uniform float uStars;uniform float uInhale;uniform float uMask;uniform float uLight;
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 vec3 pal(float t){vec3 a=vec3(1.,.50,.38),b=vec3(1.,.55,.76),c=vec3(.66,.54,1.),d=vec3(.36,.78,1.);t=fract(t)*4.;
  if(t<1.)return mix(a,b,t);if(t<2.)return mix(b,c,t-1.);if(t<3.)return mix(c,d,t-2.);return mix(d,a,t-3.);}
@@ -883,6 +893,9 @@ void main(){
  float st=step(.975,h)*smoothstep(.09,0.,length(f))*(.55+.45*sin(t*1.4+h*60.));
  col+=vec3(1.,.93,.88)*st*uStars;
  col+=pal(.6)*exp(-pow(length((q-vec2(.3*asp,.3))*vec2(.8,1.)),2.)*4.)*.05*uStars;
+ if(uLight>0.){float m=max(max(acc.r,acc.g),acc.b)*uFlower;vec3 hue=acc*uFlower/max(m,.001);
+  vec3 c=mix(hue,min(acc*uFlower,1.),smoothstep(.6,1.2,m));float al=smoothstep(0.,.75,m);
+  col=mix(col,mix(vec3(.969,.953,.941),c,al),uLight);}
   gl_FragColor=vec4(col,1.);}`;
   const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
   let prog;
@@ -893,7 +906,8 @@ void main(){
   const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const U = n => gl.getUniformLocation(prog, n);
   const uPix = U('uPix'), uFl = U('uFl'), flBuf = new Float32Array(52), inside = new Array(13).fill(false); // 꽃 13송이
-  const u = { res: U('uRes'), time: U('uTime'), mouse: U('uMouse'), flower: U('uFlower'), stars: U('uStars'), inhale: U('uInhale'), mask: U('uMask') };
+  const u = { res: U('uRes'), time: U('uTime'), mouse: U('uMouse'), flower: U('uFlower'), stars: U('uStars'), inhale: U('uInhale'), mask: U('uMask'), light: U('uLight') };
+  let light = WHITE ? 1 : 0;
   let scale = Math.min(devicePixelRatio || 1, 1.5), slowFrames = 0, last = performance.now(), t0 = performance.now();
   function resize() { canvas.width = Math.round(innerWidth * scale); canvas.height = Math.round(innerHeight * scale); gl.viewport(0, 0, canvas.width, canvas.height); }
   addEventListener('resize', resize); resize();
@@ -921,6 +935,7 @@ void main(){
     gl.uniform4fv(uFl, flBuf); gl.uniform1f(uPix, Math.max(2, Math.round(4 * scale)));
     gl.uniform2f(u.res, canvas.width, canvas.height); gl.uniform1f(u.time, time);
     gl.uniform2f(u.mouse, mouse.x, mouse.y); gl.uniform1f(u.flower, cur.flower); gl.uniform1f(u.stars, cur.stars); gl.uniform1f(u.inhale, cur.inhale); gl.uniform1f(u.mask, cur.mask);
+    light += ((WHITE && document.body.dataset.route !== 'guestbook' ? 1 : 0) - light) * .06; gl.uniform1f(u.light, light);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     requestAnimationFrame(frame);
   }
@@ -2004,8 +2019,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1793038324"></script>
-<script src="firebase-live.js?v=1793038324"></script>
+<script src="firebase-config.js?v=1793077018"></script>
+<script src="firebase-live.js?v=1793077018"></script>
 
 </body>
 </html>
