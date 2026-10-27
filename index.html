@@ -887,7 +887,7 @@ void main(){
  vec2 lp=vec2(.13*asp,.06);float lm=smoothstep(.02,.2,length((q-lp)*vec2(.55,1.6)));
  acc*=mix(1.,mix(.16,1.,tm)*mix(.3,1.,lm),uMask);
  acc*=1.+uInhale*1.2;
- acc=floor(acc*6.+bay4(cell)*.9)/6.;
+ acc=mix(floor(acc*6.+bay4(cell)*.9)/6.,acc,uLight); // 흰 배경 시안은 계단 없이 부드럽게
  vec3 col=vec3(.043,.039,.051)+acc*uFlower;
  vec2 g=floor(q*70.);float h=hash(g);vec2 f=fract(q*70.)-.5-.3*vec2(hash(g+3.)-.5,hash(g+7.)-.5);
  float st=step(.975,h)*smoothstep(.09,0.,length(f))*(.55+.45*sin(t*1.4+h*60.));
@@ -932,7 +932,7 @@ void main(){
       if (hit && !inside[i]) sound.play('spark');
       inside[i] = hit;
     });
-    gl.uniform4fv(uFl, flBuf); gl.uniform1f(uPix, Math.max(2, Math.round(4 * scale)));
+    gl.uniform4fv(uFl, flBuf); gl.uniform1f(uPix, light > .5 ? 1 : Math.max(2, Math.round(4 * scale))); // 흰 배경 시안은 픽셀 없이
     gl.uniform2f(u.res, canvas.width, canvas.height); gl.uniform1f(u.time, time);
     gl.uniform2f(u.mouse, mouse.x, mouse.y); gl.uniform1f(u.flower, cur.flower); gl.uniform1f(u.stars, cur.stars); gl.uniform1f(u.inhale, cur.inhale); gl.uniform1f(u.mask, cur.mask);
     light += ((WHITE && document.body.dataset.route !== 'guestbook' ? 1 : 0) - light) * .06; gl.uniform1f(u.light, light);
@@ -2019,8 +2019,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 </script>
-<script src="firebase-config.js?v=1793077018"></script>
-<script src="firebase-live.js?v=1793077018"></script>
+<script src="firebase-config.js?v=1793077224"></script>
+<script src="firebase-live.js?v=1793077224"></script>
 
 </body>
 </html>
