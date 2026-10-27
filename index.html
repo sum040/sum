@@ -359,6 +359,8 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 @keyframes frontIn { from { opacity: 0; transform: translate(-50%, -40%) scale(.85); } }
 .sp .bob { width: 100%; height: 100%; animation: bob 7s ease-in-out infinite; animation-delay: var(--delay); transition: transform .7s cubic-bezier(.22,1,.36,1), filter .7s ease; }
 .sp:hover .bob, .sp:focus-visible .bob { transform: scale(1.16); filter: brightness(1.12); }
+.sp.landing .bob { transform: none !important; filter: none !important; }
+.sp.landing .bubble { opacity: 0 !important; }
 .sp svg, .front svg, .mini svg { width: 100%; height: 100%; display: block; overflow: visible; }
 /* 행성: 겉면 그림이 옆으로 흘러 도는 것처럼 보임 + 빛, 그림자, 반짝이 */
 .pl { position: relative; width: 100%; height: 100%; }
@@ -1389,7 +1391,7 @@ function Main(r) {
   $('.outro', s).appendChild(contactFooter());
   // 맨 아래: 방명록의 숨 행성이 떠오르고, 누르면 그 행성이 방명록 가운데 자리로 다가가며 넘어감
   const door = $('.door', s), doorGo = $('.door-go', s), doorPl = $('.door-pl', s);
-  const doorLook = p => { $('.bob', doorPl).innerHTML = planetHTML(p, { d: 52 }); };
+  const doorLook = p => { $('.bob', doorPl).innerHTML = planetHTML(p); };
   doorLook({ id: adminId(), planetColor: 'color_1', cover: 'flower_1', animal: 'cat', animalColor: 'natural' });
   let doorAsked = false; // 숨 행성 모습은 맨 아래 가까이 왔을 때 한 번만 불러옴
   const doorTick = () => { const t = Math.max(0, Math.min(1, (s.scrollTop + s.clientHeight - door.offsetTop) / (door.offsetHeight * .85))), e = t * t * (3 - 2 * t);
@@ -1410,13 +1412,26 @@ function Main(r) {
       ghost.className = 'door-ghost'; ghost.style.cssText = `left:${fr.left}px;top:${fr.top}px;width:${fr.width}px;height:${fr.height}px`;
       ghost.querySelectorAll('canvas').forEach(c => { c.width = 0; }); // 복사한 캔버스는 다시 그리게 비움
       document.body.appendChild(ghost);
+      { const da = $('.bob', doorPl).getAnimations && $('.bob', doorPl).getAnimations().find(x => x.animationName === 'bob'), ga = $('.bob', ghost).getAnimations && $('.bob', ghost).getAnimations().find(x => x.animationName === 'bob'); if (da && ga) ga.currentTime = da.currentTime; } // 둥실 박자 이어받기
       location.hash = 'guestbook';
-      const t0 = performance.now();
+      const t0 = performance.now(); // 복사본의 둥실 움직임은 이때 처음부터 시작
       const land = () => {
         const n = document.querySelector(`.gb .sp[data-id="${CSS.escape(adminId())}"]`);
         if (!n && performance.now() - t0 < 2500) return setTimeout(land, 80);
-        if (n) { const b = n.getBoundingClientRect(); Object.assign(ghost.style, { left: b.left + 'px', top: b.top + 'px', width: b.width + 'px', height: b.height + 'px' }); }
-        setTimeout(() => { ghost.classList.add('out'); setTimeout(() => ghost.remove(), 700); }, n ? 650 : 0);
+        if (!n) { ghost.classList.add('out'); setTimeout(() => ghost.remove(), 700); return; }
+        // 진짜 행성은 잠깐 숨겨 두고(겹쳐 보이지 않게), 복사본이 그 자리에 닿으면 둥실 박자를 맞춰 한 번에 바꿔 끼움
+        n.style.visibility = 'hidden'; n.classList.add('landing'); // 마우스가 그 위에 있어도 처음엔 커지지 않게(크기가 튀지 않게)
+        const b = n.getBoundingClientRect(); Object.assign(ghost.style, { left: b.left + 'px', top: b.top + 'px', width: b.width + 'px', height: b.height + 'px' });
+        setTimeout(() => {
+          const bob = $('.bob', n), gbob = $('.bob', ghost);
+          if (bob && gbob && bob.getAnimations) {
+            bob.style.animationDelay = '0s';
+            const ga = gbob.getAnimations().find(x => x.animationName === 'bob'), ra = bob.getAnimations().find(x => x.animationName === 'bob');
+            if (ga && ra) ra.currentTime = ga.currentTime;
+          }
+          n.style.visibility = ''; ghost.remove();
+          const off = () => n.classList.remove('landing'); addEventListener('pointermove', off, { once: true });
+        }, 650);
       };
       setTimeout(land, 250);
     }, 900);
@@ -2343,8 +2358,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
 })();
 
 </script>
-<script src="firebase-config.js?v=1793141359"></script>
-<script src="firebase-live.js?v=1793141359"></script>
+<script src="firebase-config.js?v=1793141754"></script>
+<script src="firebase-live.js?v=1793141754"></script>
 
 </body>
 </html>
