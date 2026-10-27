@@ -31,7 +31,7 @@
   --font-title: 'MyoeunHeullim', 'Pretendard Variable', Pretendard, system-ui, sans-serif;
   --gutter-l: max(16px, env(safe-area-inset-left, 0px));
   --gutter-r: max(16px, env(safe-area-inset-right, 0px));
-  --side: clamp(16px, 4vw, 64px);
+  --side: clamp(18px, 4.5vw, 96px); /* 모든 화면의 왼쪽·오른쪽 기준선 (메뉴, SUMin, works·guestbook, 본문이 같은 선에 맞음) */
   color-scheme: dark;
 }
 html, body { height: 100%; margin: 0; }
@@ -104,18 +104,18 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 
 /* ---------- S1 home ---------- */
 .home { display: grid; height: 100%; padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
-.home-title { position: absolute; left: max(10vw, var(--gutter-l)); top: 50%; transform: translateY(-58%); margin: 0; }
+.home-title { position: absolute; left: max(var(--side), var(--gutter-l)); top: 50%; transform: translateY(-58%); margin: 0; }
 .wordmark { font-family: var(--font-title); font-size: clamp(64px, 10.5vw, 168px); line-height: .9; margin: 0; letter-spacing: -.01em; display: flex; align-items: baseline; }
 .wordmark .sum { font-weight: 800; color: var(--color-primary); }
 .wordmark .in, .subline .in { font-weight: 200; color: var(--color-text); }
 .subline { font-family: var(--font-display); font-weight: 200; font-size: clamp(22px, 2.6vw, 40px); letter-spacing: .28em; margin: 14px 0 0 .1em; }
 .subline .hale { color: var(--color-text-muted); }
-.home-links { position: absolute; left: max(4.5vw, var(--gutter-l)); bottom: max(5vh, 28px); display: flex; gap: 52px; font-family: var(--font-display); font-weight: 300; font-size: 19px; letter-spacing: .04em; }
+.home-links { position: absolute; left: calc(max(var(--side), var(--gutter-l)) - 2px); bottom: max(5vh, 28px); display: flex; gap: 52px; font-family: var(--font-display); font-weight: 300; font-size: 19px; letter-spacing: .04em; }
 .home-links a { text-decoration: none; position: relative; padding: 6px 2px; transition: text-shadow .3s, color .3s; }
 .home-links a::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--color-primary); transform: scaleX(0); transform-origin: left; transition: transform .35s; }
 .home-links a:hover, .home-links a:focus-visible { color: var(--color-primary); text-shadow: 0 0 18px rgba(245,183,163,.8); }
 .home-links a:hover::after { transform: scaleX(1); }
-.hint { position: absolute; right: max(calc(4.5vw + 64px), calc(var(--gutter-r) + 64px)); bottom: max(5vh, 28px); margin: 0; padding: 8px 0; font-family: var(--font-display); font-weight: 300; font-size: 13px; letter-spacing: .18em; color: var(--color-text-muted); transition: opacity 1.2s; }
+.hint { position: absolute; right: max(var(--side), var(--gutter-r)); bottom: max(5vh, 28px); margin: 0; padding: 8px 0; font-family: var(--font-display); font-weight: 300; font-size: 13px; letter-spacing: .18em; color: var(--color-text-muted); transition: opacity 1.2s; }
 .hint.fade { opacity: 0; }
 
 
@@ -155,7 +155,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 
 /* ---------- works list ---------- */
 .page { min-height: 100%; display: flex; flex-direction: column; }
-.wrap { padding-left: max(var(--side), env(safe-area-inset-left, 0px)); padding-right: max(var(--side), env(safe-area-inset-right, 0px)); padding-block: 24px 96px; width: 100%; max-width: 1480px; margin: 0 auto; }
+.wrap { padding-left: max(var(--side), env(safe-area-inset-left, 0px)); padding-right: max(var(--side), env(safe-area-inset-right, 0px)); padding-block: 24px 96px; width: 100%; max-width: none; margin: 0 auto; } /* 넓은 화면도 양옆 기준선까지 씀 */
 .page-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 6vh 0 36px; scroll-margin-top: 90px; }
 .page-head h1 { font-family: var(--font-display); font-weight: 200; font-size: clamp(40px, 5vw, 72px); margin: 0; letter-spacing: .02em; line-height: 1; }
 .page-head p { margin: 0; color: var(--color-text-muted); font-size: 14px; }
@@ -180,12 +180,12 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 .work-meta p { margin: 0; color: var(--color-text-muted); grid-column: 1 / -1; }
 
 /* ---------- intro (works 위 소개) ---------- */
-.intro { min-height: calc(100vh - 110px); display: grid; align-content: center; gap: 22px; max-width: 760px; padding-block: 4vh 6vh; }
+.intro { min-height: calc(100vh - 110px); display: grid; align-content: center; gap: 24px; max-width: min(1180px, 100%); padding-block: 4vh 6vh; }
 .intro .proto-note { justify-self: start; }
 .intro-hi { margin: 0; font-family: var(--font-display); font-weight: 200; font-size: 22px; letter-spacing: .12em; color: var(--color-text-muted); }
 .intro-hi b { font-weight: 800; color: var(--color-primary); }
-.intro-lead { margin: 0; font-weight: 400; font-size: clamp(30px, 3.4vw, 48px); line-height: 1.35; text-wrap: balance; }
-.intro-body { margin: 0; max-width: 56ch; color: var(--color-text-muted); font-size: 17px; line-height: 1.75; }
+.intro-lead { margin: 0; font-weight: 400; font-size: clamp(30px, 3.6vw, 64px); line-height: 1.35; text-wrap: balance; }
+.intro-body { margin: 0; max-width: 62ch; color: var(--color-text-muted); font-size: clamp(16px, 1.1vw, 19px); line-height: 1.75; }
 .intro-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 32px; margin: 12px 0 0; padding-top: 22px; border-top: 1px solid rgba(111,103,112,.5); }
 @media (max-width: 760px) { .intro-facts { grid-template-columns: 1fr; } }
 .intro-facts dt { font-size: 13px; color: var(--color-text-muted); }
@@ -2146,8 +2146,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
 })();
 
 </script>
-<script src="firebase-config.js?v=1793079954"></script>
-<script src="firebase-live.js?v=1793079954"></script>
+<script src="firebase-config.js?v=1793080321"></script>
+<script src="firebase-live.js?v=1793080321"></script>
 
 </body>
 </html>
