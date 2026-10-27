@@ -17,8 +17,8 @@
 @font-face { font-family: 'Pyeojin Gothic'; font-weight: 600 749; font-style: normal; font-display: swap; src: url('assets/fonts/PyeojinGothic-Bold.woff2') format('woff2'); }
 @font-face { font-family: 'Pyeojin Gothic'; font-weight: 750 950; font-style: normal; font-display: swap; src: url('assets/fonts/PyeojinGothic-Extrabold.woff2') format('woff2'); }
 @font-face { font-family: 'Pretendard Variable'; font-weight: 45 920; font-style: normal; font-display: swap; src: url('assets/fonts/PretendardVariable.woff2') format('woff2-variations'), url('assets/fonts/PretendardVariable.woff2') format('woff2'); }
-@font-face { font-family: 'Allimjang'; font-weight: 100 599; font-style: normal; font-display: swap; src: url('assets/fonts/Allimjang-lead-R.woff2') format('woff2'); }
-@font-face { font-family: 'Allimjang'; font-weight: 600 900; font-style: normal; font-display: swap; src: url('assets/fonts/Allimjang-lead-B.woff2') format('woff2'); } /* 2026-10-27 밤: 소개 큰 문장만 학교안심 알림장(KERIS). 그 문장 글자만 남김 → 문장 바꾸면 파일 다시 만들기 */
+@font-face { font-family: 'Allimjang'; font-weight: 100 599; font-style: normal; font-display: swap; src: url('assets/fonts/Allimjang-v2-R.woff2') format('woff2'); }
+@font-face { font-family: 'Allimjang'; font-weight: 600 900; font-style: normal; font-display: swap; src: url('assets/fonts/Allimjang-v2-B.woff2') format('woff2'); } /* 2026-10-27 밤: 소개 큰 문장만 학교안심 알림장(KERIS). 그 문장 글자만 남김 → 문장 바꾸면 파일 다시 만들기 */
 @font-face { font-family: 'Bebas Neue'; font-weight: normal; font-style: normal; font-display: swap; src: url('assets/fonts/BebasNeue-Regular.ttf') format('truetype'); } /* 2026-10-27 밤: inhale, take one more breath, works 제목 (OFL) */
 @font-face { font-family: 'tondu'; font-weight: normal; font-style: normal; font-display: block; src: url('assets/fonts/TonduBeta-title-v2.woff2') format('woff2'); } /* 2026-10-27 밤 숨님 결정: 제목 SUMin은 Tondu Beta (영문·숫자 남긴 파일, works 제목에도 씀) */
 @font-face { font-family: 'desire-pro'; font-weight: normal; font-style: normal; font-display: block; src: url('assets/fonts/DesirePro-title-v2.woff2') format('woff2'); ascent-override: 76%; descent-override: 24%; line-gap-override: 0%; } /* 2026-10-27 숨님 결정: 제목 SUMin은 Desire Pro (S U M i n 글자만 남긴 파일). 윈도우에서 글자가 아래로 내려가 inhale에 붙던 문제: 윈도우용 높이 값(win 1710/526)을 다른 값(756/244)과 맞춤 */
@@ -125,7 +125,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 /* 2026-10-27 밤 숨님 요청: inhale, 스크롤 문장 세 줄, works 큰 제목은 Bebas Neue (굵기 1개라 가짜 굵게 막음) */
 body .subline, body .subline .in, body .say { font-family: var(--font-accent); font-weight: normal; font-synthesis: none; }
 body .say { letter-spacing: 0; }
-body .intro-lead { font-family: 'Allimjang', var(--font-ko); }
+body .intro-lead, body .dt-desc { font-family: 'Allimjang', var(--font-ko); }
 body .page-head h1 { font-family: var(--font-title); font-weight: normal; font-synthesis: none; } /* works 제목은 SUMin과 같은 Tondu (숨님 요청) */
 
 .home-links { position: absolute; left: calc(max(var(--side), var(--gutter-l)) - 2px); bottom: max(5vh, 28px); display: flex; gap: 52px; font-family: var(--font-display); font-weight: 300; font-size: 19px; letter-spacing: 0; }
@@ -2288,8 +2288,8 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
 })();
 
 </script>
-<script src="firebase-config.js?v=1793139778"></script>
-<script src="firebase-live.js?v=1793139778"></script>
+<script src="firebase-config.js?v=1793140216"></script>
+<script src="firebase-live.js?v=1793140216"></script>
 
 </body>
 </html>
