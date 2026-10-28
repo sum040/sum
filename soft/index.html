@@ -1084,7 +1084,7 @@ void main(){
  float t=uTime;vec2 ctr=vec2(.5*asp,.5);vec3 acc=vec3(0.);
  for(int i=0;i<13;i++){float fi=float(i);
   vec4 F=uFl[i];
-  acc+=uFa[i]*flower(q,F.xy,max(F.z,.001),t*.04*(mod(fi,2.)*2.-1.)+fi,.11*fi+t*.012,F.w*.33);}
+  acc+=uFa[i]*flower(q,F.xy,max(F.z,.001),t*.04*(mod(fi,2.)*2.-1.)+fi,.11*fi+t*.012,F.w*.44);}
  float dl=length(q-m);acc+=pal(t*.02+.12)*exp(-dl*dl*26.)*.32;
  vec2 tp=vec2(.28*asp,.52);float tm=smoothstep(.06,.42,length((q-tp)*vec2(.62,1.25)));
  vec2 lp=vec2(.13*asp,.06);float lm=smoothstep(.02,.2,length((q-lp)*vec2(.55,1.6)));
