@@ -170,6 +170,16 @@ body .intro-lead, body .dt-desc { font-family: 'Allimjang', var(--font-ko); }
 .say span { display: block; white-space: nowrap; transform: translateX(var(--x, 30vw)); opacity: var(--o, 0); }
 .say span:nth-child(2) { margin-right: 12%; }
 .say span:nth-child(3) { margin-right: 4%; }
+.sfoot { display: grid; grid-template-columns: minmax(0, 1fr) repeat(2, minmax(140px, 200px)); gap: 40px 32px; margin-top: clamp(80px, 16vh, 160px); padding-bottom: 8px; }
+.sf-logo { font-family: var(--font-title); font-size: 30px; line-height: 1; text-decoration: none; color: var(--color-text); }
+.sf-logo b { font-weight: normal; color: var(--color-primary); }
+.sf-brand p { margin: 18px 0 0; font-size: 15px; line-height: 1.6; color: var(--color-text-muted); }
+.sf-col { display: grid; align-content: start; gap: 14px; }
+.sf-col .sf-k { margin: 0 0 6px; font-family: var(--font-display); font-size: 12px; text-transform: uppercase; color: var(--color-text-muted); }
+.sf-col a { font-family: var(--font-display); font-weight: 600; font-size: 15px; color: var(--color-text); text-decoration: none; justify-self: start; }
+.sf-end { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 16px; margin: clamp(48px, 10vh, 112px) 0 0; font-size: 12px; color: var(--color-text-muted); }
+.sf-end b { font-weight: 500; color: var(--color-primary); }
+@media (max-width: 760px) { .sfoot { grid-template-columns: 1fr 1fr; } .sf-brand { grid-column: 1 / -1; } }
 .mark-foot { display: flex; justify-content: space-between; gap: 16px; margin-top: 28px; font-size: 13px; color: var(--color-text-muted); }
 
 /* ---------- works list ---------- */
@@ -569,8 +579,8 @@ body .nav a, body .nav a[aria-current="page"] { border-bottom: 0; }
 body .home-links a::after { display: none; }
 body .link { text-decoration: none; }
 /* 2026-10-28 숨님: 누를 수 있는 글자는 모두 호버하면 제목(SUM)의 분홍으로 천천히 바뀜. 지우기 같은 경고 글자는 빨강 그대로 */
-body :is(.logo, .logo *, .nav a, .home-links a, .intro-down, .link, .btn-ghost, .dialog .x, .dt-link, .dt-link i, .dt-back, .dt-next a.big span, .dt-next a.big i, .wf-name b) { transition: color .45s ease, transform .45s cubic-bezier(.2,.7,.2,1), border-color .3s, text-shadow .45s, opacity .45s; }
-body :is(.logo:hover, .logo:hover *, .nav a:hover, .link:hover, .btn-ghost:hover, .dialog .x:hover, .dt-link:hover, .dt-back:hover, .wf:hover .wf-name b, .wf:focus-visible .wf-name b) { color: var(--color-primary); }
+body :is(.sf-col a, .sf-logo, .logo, .logo *, .nav a, .home-links a, .intro-down, .link, .btn-ghost, .dialog .x, .dt-link, .dt-link i, .dt-back, .dt-next a.big span, .dt-next a.big i, .wf-name b) { transition: color .45s ease, transform .45s cubic-bezier(.2,.7,.2,1), border-color .3s, text-shadow .45s, opacity .45s; }
+body :is(.sf-col a:hover, .sf-logo:hover, .logo:hover, .logo:hover *, .nav a:hover, .link:hover, .btn-ghost:hover, .dialog .x:hover, .dt-link:hover, .dt-back:hover, .wf:hover .wf-name b, .wf:focus-visible .wf-name b) { color: var(--color-primary); }
 body :is(.link.danger, .danger-ghost):hover { color: var(--color-error); }
 /* 2026-10-28 숨님: 글자를 드래그해 고를 때 파란 기본색 대신 사이트 색으로(모든 글자, 입력칸 포함). 흰 테마 = 연한 꽃분홍 바탕 + 자두 글자, 어두운 테마 = 복숭아 빛 */
 ::selection { background: rgba(245,183,163,.38); color: #F6F1EE; }
@@ -1409,7 +1419,6 @@ function Main(r) {
         <p class="door-k">guestbook</p><p class="door-t">a little space for you</p>
       </section>
       <section class="outro" aria-label="마무리"></section>
-      <div class="mark-foot"><span>© 2026 SUMin</span><span>inhale</span></div>
     </div>
     <p class="corner l" aria-hidden="true">SUM</p><p class="corner r" aria-hidden="true">in</p></section>`);
   const hero = $('.hero', s), title = $('.home-title', s), links = $('.home-links', s), hint = $('.hint', s), bar = $('.topbar', s), grid = $('#grid', s);
@@ -1449,6 +1458,7 @@ function Main(r) {
   if (bg.garden) { bg.garden.box = grid; bg.garden.els = flowers; bg.garden.open = -1; bg.garden.op = 0; }
   requestAnimationFrame(layoutGarden); addEventListener('resize', () => { if (s.isConnected) layoutGarden(); });
   $('.outro', s).appendChild(contactFooter());
+  $('.wrap', s).appendChild(siteFooter());
   // 맨 아래: 방명록의 숨 행성이 떠오르고, 누르면 그 행성이 방명록 가운데 자리로 다가가며 넘어감
   const door = $('.door', s), doorGo = $('.door-go', s), doorPl = $('.door-pl', s);
   const doorLook = p => { $('.bob', doorPl).innerHTML = planetHTML(p); };
@@ -1605,6 +1615,18 @@ function Main(r) {
 }
 
 const CONTACT = { email: 'tnals040@gmail.com' };
+// 맨 아래 푸터(2026-10-28 숨님 참고 그림): 로고 + 한 줄 소개 / WORKS 작업물 링크 / ELSEWHERE 메뉴·메일 / 저작권 줄. 구분선 없음
+function siteFooter() {
+  const f = el(`<footer class="sfoot" aria-label="사이트 정보">
+    <div class="sf-brand"><a class="sf-logo" href="#" aria-label="Sumin 홈으로"><b>SUM</b>in</a><p>breathe in slowly,<br>make things clear.</p></div>
+    <nav class="sf-col" aria-label="작업물"><p class="sf-k">works</p></nav>
+    <nav class="sf-col" aria-label="다른 곳"><p class="sf-k">elsewhere</p><a href="#works">All works</a><a href="#guestbook">Guestbook</a><a id="sfMail">Email</a></nav>
+    <p class="sf-end"><span>© 2026 <b>SUMin</b>. made with a slow breath.</span><span>inhale</span></p></footer>`);
+  const col = $$('.sf-col', f)[0];
+  WORKS.forEach(w => { const a = el('<a></a>'); a.href = '#' + w.slug; a.textContent = w.title; col.appendChild(a); });
+  $('#sfMail', f).href = 'mailto:' + CONTACT.email;
+  return f;
+}
 function contactFooter() {
   const f = el(`<footer class="contact ko" aria-label="연락">
     <div><p class="contact-k">함께 일하고 싶다면</p><p class="contact-mail"><span id="mail"></span> <button class="link" type="button" id="copyMail">복사</button></p></div></footer>`);
@@ -1658,6 +1680,7 @@ function Detail(r) {
   if (w.play && w.siteUrl) { const g = $('#playGo', s); g.href = w.siteUrl; g.setAttribute('aria-label', w.title + ' 플레이하기 (새 창)'); }
   if (WORKS.length > 1) $('.dt-next .big span', s).textContent = next.title;
   $('.wrap', s).appendChild(contactFooter());
+  $('.wrap', s).appendChild(siteFooter());
   const cta = $('#cta', s);
   if (w.siteUrl) { const a = el('<a class="dt-link" target="_blank" rel="noopener">open site <i>↗</i></a>'); a.href = w.siteUrl; cta.appendChild(a); }
   else cta.appendChild(el('<p class="unpublished ko">지금은 공개되지 않은 작업이에요.</p>'));
