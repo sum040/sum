@@ -1522,14 +1522,20 @@ function Main(r) {
     requestAnimationFrame(fly);
   });
   const says = $$('.say span', s), corners = $$('.corner', s), stage = $('.stage', s), sub = $('.subline', s);
-  // 첫 화면 SUMin이 옮겨 갈 자리(아래 가운데, 크게)를 미리 재 둠
+  // 첫 화면 SUMin이 옮겨 갈 자리(세 문장 아래 왼쪽, 크게)를 미리 재 둠
   const BIG = 1.75; // CSS에서 SUMin을 키워 둔 배율
   let mv = { y0: 0, x1: 0, y1: 0, s0: 1 / BIG, s1: 1 / BIG };
   const measure = () => {
     const keep = title.style.transform; title.style.transform = 'none';
     const r = title.getBoundingClientRect(), w = $('.wordmark', s).getBoundingClientRect(), sr = stage.getBoundingClientRect();
-    const s0 = 1 / BIG, s1 = Math.min(1, (sr.width * .84) / (w.width || 1));
-    mv = { y0: -.58 * r.height * s0, s0, s1, x1: sr.width / 2 - r.width * s1 / 2 - (r.left - sr.left), y1: sr.height * .76 - r.height * s1 / 2 - (r.top - sr.top) };
+    // 2026-10-28 숨님: 세 문장(take one more breath.) 바로 아래, 왼쪽 기준선부터 화면 너비 약 58%까지의 칸을 SUMin이 꽉 채움
+    const say = $('.say', s).getBoundingClientRect(), side = say.left - sr.left;
+    // 세로 화면(휴대폰·세운 태블릿)은 양옆 기준선 사이 전체를 씀. 글자 줄 칸 위아래 빈 곳(약 20%)은 빼고 잼
+    const tall = sr.width < sr.height, boxR = tall ? sr.width - side : sr.width * .62;
+    const boxTop = say.bottom + sr.height * .03, boxBot = sr.top + sr.height * .95, boxW = boxR - side, boxH = Math.max(40, boxBot - boxTop), gh = w.height * .8;
+    const s0 = 1 / BIG, s1 = Math.min(boxW / (w.width || 1), boxH / (gh || 1));
+    const ox = w.left - r.left, oy = w.top - r.top, wTop = boxTop + (boxH - w.height * s1) / 2;
+    mv = { y0: -.58 * r.height * s0, s0, s1, x1: side - (r.left - sr.left) - ox * s1, y1: wTop - r.top - oy * s1 };
     title.style.transform = keep;
   };
   addEventListener('resize', () => { if (s.isConnected) { measure(); onScroll(); } });
