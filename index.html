@@ -536,6 +536,14 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 @media (min-width: 2200px) { #app { zoom: 1.25; } :root { --zoom: 1.25; } }
 @media (min-width: 3000px) { #app { zoom: 1.6; } :root { --zoom: 1.6; } }
 
+/* 2026-10-28 숨님: 사이트 전체에서 라인 요소(구분선, 밑줄) 없앰. 입력칸·선택 칸·버튼·창 테두리처럼 누르는 자리를 알려 주는 선은 남김 */
+body .authbox, body .panel { border-left: 0; }
+body .thumb { border: 0; }
+body .intro-facts, body .contact, body .dt-row, body .dt-next, body .gb-body .panel { border-top: 0; }
+body .dt-row:last-child { border-bottom: 0; }
+body .nav a, body .nav a[aria-current="page"] { border-bottom: 0; }
+body .home-links a::after { display: none; }
+body .link { text-decoration: none; }
 </style>
 
 <canvas id="bg" aria-hidden="true"></canvas>
