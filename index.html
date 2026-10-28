@@ -283,6 +283,17 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 .dt-link { display: inline-flex; gap: 10px; align-items: baseline; color: var(--color-text); text-decoration: none; font-family: var(--font-display); font-weight: 500; text-transform: uppercase; font-size: 15px; letter-spacing: 0; }
 .dt-link i { font-style: normal; display: inline-block; transition: transform .35s cubic-bezier(.2,.7,.2,1); }
 .dt-link:hover i { transform: translate(3px, -3px); }
+/* 플레이 방법(2026-10-28): grid9의 단계 칸처럼 이름 · STEP 0N. · 흐린 번호 한 줄 + 아래 짧은 설명, 단계마다 왼쪽/가운데로 엇갈림 */
+.dt-play .dt-k { grid-column: 1 / span 3; }
+.dt-step { margin-top: clamp(48px, 11vh, 128px); }
+.dt-play .dt-grid:first-child + .dt-step { margin-top: clamp(24px, 5vh, 56px); }
+.dt-st { grid-column: 5 / span 5; display: grid; gap: 14px; }
+.dt-step.alt .dt-st { grid-column: 2 / span 5; }
+.dt-st-h { margin: 0; display: flex; align-items: baseline; gap: clamp(16px, 2.4vw, 40px); }
+.dt-step.alt .dt-st-h { flex-direction: row-reverse; justify-content: flex-end; }
+.dt-st-h b { font-family: var(--font-display); font-weight: 600; font-size: 14px; }
+.dt-st-h .ghost { opacity: .45; }
+.dt-st-t { margin: 0; max-width: 34em; font-size: 15px; line-height: 1.7; color: var(--color-text-muted); text-wrap: pretty; word-break: keep-all; }
 .dt-next { margin-top: clamp(115px, 24vh, 264px); padding-top: 18px; border-top: 1px solid rgba(78,58,76,.18); }
 .dt-next .dt-k { grid-column: 1 / span 3; }
 .dt-next .dt-back { grid-column: 10 / span 3; justify-self: end; }
@@ -301,7 +312,8 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
   .dt-pair .dt-side { flex-direction: row; justify-content: space-between; padding-top: 12px; }
   .dt-pair-a .dt-side { order: 2; }
   .dt-sec > .dt-k, .dt-next .dt-k { grid-column: 1 / -1; margin-bottom: 14px; }
-  .dt-desc, .dt-rows { grid-column: 1 / -1; }
+  .dt-desc, .dt-rows, .dt-st, .dt-step.alt .dt-st, .dt-play .dt-k { grid-column: 1 / -1; }
+  .dt-step.alt .dt-st-h { flex-direction: row; justify-content: flex-start; }
   .dt-next .dt-back { grid-column: 1 / -1; justify-self: start; margin-top: 6px; }
 }
 
@@ -689,8 +701,15 @@ function rulesCheck(d) {
    2. 작업물 (코드 안 데이터 파일). 지금은 자리표시 내용입니다.
    ===================================================================== */
 const WORKS = [
-  { slug: 'find-bananas', order: 1, title: 'Find Bananas', summary: '명화 속에 숨은 진짜 바나나를 찾는 게임', description: '바나나 괴물이 유명 화가의 그림을 훔쳐 갔어요.\n그림을 돌려받으려면 그림 속으로 들어가 진짜 바나나를 찾아야 해요.', year: 2026, tools: ['Claude'], siteUrl: 'https://sum040.github.io/find-bananas/', thumb: 'assets/works/find-bananas-thumb.jpg', video: 'assets/works/find-bananas.mp4', card: { video: 'assets/works/find-bananas-card.mp4', poster: 'assets/works/find-bananas-card-rest.jpg', rest: 0 }, thumbnailAlt: 'Find Bananas 첫 화면. 크림색 배경에 큰 제목과 게임 시작 버튼, 노란 바나나 하나가 떠 있음' },
-  { slug: 'lingo-loop', order: 2, title: 'Lingo Loop', summary: 'UX/UI·AI 영어 용어를 치며 익히는 타자 연습', description: '주니어 디자이너가 UX/UI, AI 개발, 프롬프트에 쓰이는 영어 용어를 직접 타이핑하며 타자 속도를 높이고 용어도 함께 익히는 사이트예요.\n게임 페이지에서는 혼자서도, 친구와도 용어 타이핑 게임을 할 수 있어요.', year: 2026, tools: ['Claude'], siteUrl: 'https://sum040.github.io/lingo-loop/', thumb: 'assets/works/lingo-loop-thumb.jpg', video: 'assets/works/lingo-loop.mp4', card: { video: 'assets/works/lingo-loop-card.mp4', poster: 'assets/works/lingo-loop-card-rest.jpg', rest: 2.82 }, thumbnailAlt: 'Lingo Loop 소개 화면. 노란 배경에 큰 제목과 타자 연습 화면, 픽셀 캐릭터들' },
+  // play: 상세 화면 [02. 플레이 방법] 단계 (2026-10-28 숨님 요청, 각 게임 사이트의 조작 안내를 보고 정리)
+  { slug: 'find-bananas', order: 1, play: [
+      { name: '들어가기', text: '게임 시작을 누르고 화면을 한 번 클릭하면 그림 속 공간으로 들어가요.' },
+      { name: '둘러보기', text: 'W A S D로 걷고 마우스로 둘러봐요. Space는 점프, Ctrl이나 C를 누르는 동안 웅크려요. ESC를 누르면 잠시 멈춰요.' },
+      { name: '바나나 줍기', text: '화면 가운데 점을 바나나에 맞추고 클릭해서 주워요. 3분 안에 숨은 바나나 5개를 모두 찾으면 그림을 돌려받아요.' } ], title: 'Find Bananas', summary: '명화 속에 숨은 진짜 바나나를 찾는 게임', description: '바나나 괴물이 유명 화가의 그림을 훔쳐 갔어요.\n그림을 돌려받으려면 그림 속으로 들어가 진짜 바나나를 찾아야 해요.', year: 2026, tools: ['Claude'], siteUrl: 'https://sum040.github.io/find-bananas/', thumb: 'assets/works/find-bananas-thumb.jpg', video: 'assets/works/find-bananas.mp4', card: { video: 'assets/works/find-bananas-card.mp4', poster: 'assets/works/find-bananas-card-rest.jpg', rest: 0 }, thumbnailAlt: 'Find Bananas 첫 화면. 크림색 배경에 큰 제목과 게임 시작 버튼, 노란 바나나 하나가 떠 있음' },
+  { slug: 'lingo-loop', order: 2, play: [
+      { name: '연습 고르기', text: '영어 따라 치기, 한국어 따라 치기, 한국어 뜻 고르기 중 하나를 고르고 연습할 주제를 골라요. 한 판에 용어 10개예요.' },
+      { name: '따라 치기', text: '화면에 나온 용어를 그대로 쳐요. 끝나면 타수, 정확도, 틀린 용어를 보여 줘요.' },
+      { name: '겨루기', text: '게임하러 가기에서 용어 레이스, 떨어지는 용어, 60초 도전 중 하나를 골라 컴퓨터나 친구와 겨뤄요. 친구는 방 코드 5자리로 들어와요.' } ], title: 'Lingo Loop', summary: 'UX/UI·AI 영어 용어를 치며 익히는 타자 연습', description: '주니어 디자이너가 UX/UI, AI 개발, 프롬프트에 쓰이는 영어 용어를 직접 타이핑하며 타자 속도를 높이고 용어도 함께 익히는 사이트예요.\n게임 페이지에서는 혼자서도, 친구와도 용어 타이핑 게임을 할 수 있어요.', year: 2026, tools: ['Claude'], siteUrl: 'https://sum040.github.io/lingo-loop/', thumb: 'assets/works/lingo-loop-thumb.jpg', video: 'assets/works/lingo-loop.mp4', card: { video: 'assets/works/lingo-loop-card.mp4', poster: 'assets/works/lingo-loop-card-rest.jpg', rest: 2.82 }, thumbnailAlt: 'Lingo Loop 소개 화면. 노란 배경에 큰 제목과 타자 연습 화면, 픽셀 캐릭터들' },
 ].sort((a, b) => a.order - b.order);
 
 /* =====================================================================
@@ -1571,6 +1590,7 @@ function contactFooter() {
 /* ---- S3 작업물 상세 ---- */
 function Detail(r) {
   const w = r.work, i = WORKS.indexOf(w), next = WORKS[(i + 1) % WORKS.length], pad = n => String(n).padStart(2, '0');
+  let secNo = 1; // [01. 소개] [02. 플레이 방법] [03. 정보] 처럼 있는 칸만 차례로 번호
   const s = el(`<section class="screen page" aria-label="작업물 상세">${topbar('works')}
     <div class="wrap dt">
       <div class="dt-meta mono dt-up"><span>work ${pad(i + 1)} / ${pad(WORKS.length)}</span><span>/${w.year}</span></div>
@@ -1583,8 +1603,11 @@ function Detail(r) {
         <div class="dt-media dt-up"><div class="thumb" id="big"></div></div>
         <div class="dt-side dt-up" style="--d:.12s"><b></b><span class="mono" id="tags"></span><span class="mono">/${w.year}</span></div>
       </div>
-      ${w.description ? `<div class="dt-grid dt-sec"><p class="dt-k dt-up">[01. 소개]</p><p class="dt-desc ko dt-up" id="desc" style="--d:.08s"></p></div>` : ''}
-      <div class="dt-grid dt-sec"><p class="dt-k dt-up">[${w.description ? '02' : '01'}. 정보]</p>
+      ${w.description ? `<div class="dt-grid dt-sec"><p class="dt-k dt-up">[${pad(secNo++)}. 소개]</p><p class="dt-desc ko dt-up" id="desc" style="--d:.08s"></p></div>` : ''}
+      ${w.play ? `<section class="dt-sec dt-play" aria-label="플레이 방법"><div class="dt-grid"><p class="dt-k dt-up">[${pad(secNo++)}. 플레이 방법]</p></div>
+        ${w.play.map((p, k) => `<div class="dt-grid dt-step${k % 2 ? ' alt' : ''}"><div class="dt-st dt-up"><p class="dt-st-h"><b class="ko"></b><span class="mono">step ${pad(k + 1)}.</span><span class="mono ghost">/${pad(k + 1)}</span></p><p class="dt-st-t ko"></p></div></div>`).join('')}
+        ${w.siteUrl ? '<div class="dt-grid dt-step"><div class="dt-st dt-up"><a class="dt-link" id="playGo" target="_blank" rel="noopener">play now <i>↗</i></a></div></div>' : ''}</section>` : ''}
+      <div class="dt-grid dt-sec"><p class="dt-k dt-up">[${pad(secNo++)}. 정보]</p>
         <dl class="dt-rows dt-up" style="--d:.08s">
           <div class="dt-row"><dt>year</dt><dd>${w.year}</dd></div>
           <div class="dt-row"><dt>tools</dt><dd id="tools"></dd></div>
@@ -1600,6 +1623,8 @@ function Detail(r) {
   $('#tools', s).textContent = w.tools.join(', ');
   if (w.description) $('#desc', s).textContent = w.description;
   if (w.result) $('#result', s).textContent = w.result;
+  if (w.play) { $$('.dt-st-h b', s).forEach((b, k) => b.textContent = w.play[k].name); $$('.dt-st-t', s).forEach((t, k) => t.textContent = w.play[k].text); }
+  if (w.play && w.siteUrl) { const g = $('#playGo', s); g.href = w.siteUrl; g.setAttribute('aria-label', w.title + ' 플레이하기 (새 창)'); }
   if (WORKS.length > 1) $('.dt-next .big span', s).textContent = next.title;
   $('.wrap', s).appendChild(contactFooter());
   const cta = $('#cta', s);
