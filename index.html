@@ -2406,6 +2406,11 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
 /* =====================================================================
    10. 시작 (S0 첫 진입)
    ===================================================================== */
+// 메뉴의 SUMin / inhale 로고를 누르면 어느 화면에서든 사이트를 새로고침하며 홈 첫 화면으로(숨님 2026-10-28). 새 창 열기(Ctrl·가운데 클릭)는 그대로
+document.addEventListener('click', e => {
+  const a = e.target.closest && e.target.closest('a.logo'); if (!a || e.button || e.ctrlKey || e.metaKey || e.shiftKey) return;
+  e.preventDefault(); e.stopPropagation(); location.assign(location.pathname + location.search);
+}, true);
 (function boot() {
   const loader = document.getElementById('loader');
   // 크롬은 첫 클릭(또는 키 입력) 전에는 소리를 막음. 그 뒤부터 소리가 남.
