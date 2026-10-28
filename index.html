@@ -305,6 +305,126 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 .dt-st-h b { font-family: var(--font-display); font-weight: 600; font-size: 14px; }
 .dt-st-h .ghost { opacity: .45; }
 .dt-st-t { margin: 0; max-width: 34em; font-size: 15px; line-height: 1.7; color: var(--color-text-muted); text-wrap: pretty; word-break: keep-all; }
+/* 2026-10-28 숨님: 플레이 방법 그림 = 각 게임의 디자인 시스템(색·글꼴·버튼 모양)을 따라 직접 만든 짧은 반복 모션 썸네일 (사진 대신) */
+@font-face { font-family: 'pv-paper'; font-weight: 500; font-display: swap; src: url(assets/fonts/pv-paperlogy-5.woff2) format('woff2'); }
+@font-face { font-family: 'pv-paper'; font-weight: 800; font-display: swap; src: url(assets/fonts/pv-paperlogy-8.woff2) format('woff2'); }
+@font-face { font-family: 'pv-mallang'; font-display: swap; src: url(assets/fonts/pv-okmallang.woff2) format('woff2'); }
+.pv { position: absolute; inset: 0; overflow: hidden; font-family: 'pv-paper', var(--font-display); container-type: size; --u: 1cqw; }
+.dt-shot { position: relative; }
+.pv * { box-sizing: border-box; }
+.pv .ab { position: absolute; }
+/* Find Bananas: 종이 바탕, 진한 갈색 테두리, 바나나 노랑, 갈색 그림자가 붙은 둥근 버튼 */
+.pv-fb { background: #f4ecd8; color: #3d3024; }
+.pv-fb .btn { display: inline-flex; align-items: center; justify-content: center; border: calc(var(--u) * .45) solid #3d3024; border-radius: calc(var(--u) * 2.4); background: #fffaf0; box-shadow: calc(var(--u) * .55) calc(var(--u) * .55) 0 #3d3024; font-family: inherit; color: #3d3024; gap: 0; font-weight: 800; font-size: calc(var(--u) * 2.6); padding: calc(var(--u) * 1.2) calc(var(--u) * 2.6); white-space: nowrap; }
+.pv-fb .btn.y { background: #f2c230; font-size: calc(var(--u) * 3.2); padding: calc(var(--u) * 1.5) calc(var(--u) * 4); }
+.pv-fb .logo { font-family: 'pv-mallang', 'pv-paper'; font-size: calc(var(--u) * 10); line-height: 1; color: #3d3024; text-shadow: calc(var(--u) * .5) calc(var(--u) * .5) 0 #f2c230; white-space: nowrap; }
+.pv-fb .sub { font-size: calc(var(--u) * 2.2); color: #6d5c49; white-space: nowrap; }
+.pv-fb .pill { background: #fffaf0; border: calc(var(--u) * .35) solid #3d3024; border-radius: 99px; font-weight: 800; font-size: calc(var(--u) * 2.2); padding: calc(var(--u) * .7) calc(var(--u) * 1.8); white-space: nowrap; box-shadow: calc(var(--u) * .35) calc(var(--u) * .35) 0 #3d3024; }
+.pv-fb .cur { width: calc(var(--u) * 4); filter: drop-shadow(0 calc(var(--u) * .3) calc(var(--u) * .4) rgba(40,30,20,.35)); }
+/* 1. 들어가기: 커서가 게임 시작을 누르면 장소 고르기 창이 올라옴 */
+.fb1 .fbhome { left: 0; right: 0; top: 14%; display: grid; justify-items: center; gap: calc(var(--u) * 2.4); animation: fb1Front 5s infinite; }
+.fb1 .btn.y { animation: fb1Press 5s infinite; }
+.fb1 .cur { left: 78%; top: 82%; animation: fb1Cur 5s cubic-bezier(.45,0,.2,1) infinite; }
+.fb1 .pick { left: 13%; right: 13%; top: 100%; background: #fffaf0; border: calc(var(--u) * .45) solid #3d3024; border-radius: calc(var(--u) * 2.4); box-shadow: calc(var(--u) * .6) calc(var(--u) * .6) 0 #3d3024; padding: calc(var(--u) * 2.4); display: grid; justify-items: center; gap: calc(var(--u) * 1.8); animation: fb1Pick 5s cubic-bezier(.2,.7,.2,1) infinite; }
+.fb1 .pick b { font-size: calc(var(--u) * 3.4); font-weight: 800; }
+.fb1 .maps { display: flex; gap: calc(var(--u) * 2); }
+.fb1 .map { width: calc(var(--u) * 15); aspect-ratio: 1; border: calc(var(--u) * .4) solid #3d3024; border-radius: calc(var(--u) * 1.6); }
+.fb1 .map:nth-child(1) { background: linear-gradient(#1f3555 55%, #2f4a2a 55%); }
+.fb1 .map:nth-child(2) { background: linear-gradient(#24324f 50%, #c47a3c 50% 62%, #3a3540 62%); }
+.fb1 .map:nth-child(3) { background: linear-gradient(#a9d2f0 45%, #7fb35a 45%); animation: fb1Map 5s infinite; }
+@keyframes fb1Cur { 0%, 8% { transform: translate(0, 0); } 34%, 40% { transform: translate(calc(var(--u) * -30), calc(var(--u) * -18)); } 44% { transform: translate(calc(var(--u) * -30), calc(var(--u) * -18)) scale(.85); } 48% { transform: translate(calc(var(--u) * -30), calc(var(--u) * -18)); } 66%, 100% { transform: translate(calc(var(--u) * -8), calc(var(--u) * -14)); } }
+@keyframes fb1Press { 0%, 42% { transform: none; box-shadow: calc(var(--u) * .55) calc(var(--u) * .55) 0 #3d3024; } 44%, 47% { transform: translate(calc(var(--u) * .55), calc(var(--u) * .55)); box-shadow: 0 0 0 #3d3024; } 50%, 100% { transform: none; box-shadow: calc(var(--u) * .55) calc(var(--u) * .55) 0 #3d3024; } }
+@keyframes fb1Front { 0%, 50% { opacity: 1; filter: none; } 60%, 92% { opacity: .55; filter: blur(calc(var(--u) * .2)); } 100% { opacity: 1; filter: none; } }
+@keyframes fb1Pick { 0%, 50% { transform: translateY(0); } 62%, 90% { transform: translateY(-106%); } 100% { transform: translateY(0); } }
+@keyframes fb1Map { 0%, 70% { transform: none; outline: 0 solid #f2c230; } 76%, 90% { transform: translateY(calc(var(--u) * -1)) scale(1.06); outline: calc(var(--u) * .8) solid #f2c230; } 100% { transform: none; } }
+/* 2. 둘러보기: 키를 누르면 풍경이 지나감 + 가운데 점 */
+.pv-fb .sky { inset: 0; background: linear-gradient(#bfe0f5, #e6f2f6 52%); }
+.pv-fb .hills { left: -50%; width: 200%; bottom: 0; height: 52%; }
+.pv-fb .hills i { position: absolute; border-radius: 50%; }
+.pv-fb .far { animation: fbPan 6s ease-in-out infinite; }
+.pv-fb .near { animation: fbPan2 6s ease-in-out infinite; }
+.pv-fb .far i { background: #9cc77a; width: 40%; height: 70%; bottom: 20%; }
+.pv-fb .near i { background: #7fb35a; width: 50%; height: 80%; bottom: -30%; }
+.pv-fb .tree { position: absolute; width: calc(var(--u) * 7); height: calc(var(--u) * 12); }
+.pv-fb .tree::before { content: ''; position: absolute; left: 44%; width: 12%; bottom: 0; height: 45%; background: #6d4a2e; border-radius: 2px; }
+.pv-fb .tree::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 70%; background: #4f8f45; border-radius: 50%; box-shadow: inset calc(var(--u) * -1) calc(var(--u) * -1) 0 rgba(0,0,0,.12); }
+.pv-fb .house { position: absolute; width: calc(var(--u) * 8); height: calc(var(--u) * 5); background: #f6e7cf; border: calc(var(--u) * .3) solid #3d3024; }
+.pv-fb .house::before { content: ''; position: absolute; left: -15%; right: -15%; bottom: 100%; height: calc(var(--u) * 3.2); background: #d0643f; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.pv-fb .flw { position: absolute; width: calc(var(--u) * 1.1); height: calc(var(--u) * 1.1); border-radius: 50%; }
+.pv-fb .dot { left: 50%; top: 50%; width: calc(var(--u) * 1.2); height: calc(var(--u) * 1.2); margin: calc(var(--u) * -.6); border-radius: 50%; background: #fff; border: calc(var(--u) * .3) solid #3d3024; z-index: 3; }
+.pv-fb .hud { left: 50%; top: 5%; transform: translateX(-50%); display: grid; gap: calc(var(--u) * .9); justify-items: center; z-index: 3; }
+.pv-fb .keys { left: 4%; bottom: 6%; display: grid; grid-template-columns: repeat(3, auto); gap: calc(var(--u) * .7); z-index: 3; }
+.pv-fb .k { width: calc(var(--u) * 5); height: calc(var(--u) * 5); display: grid; place-items: center; background: #fffaf0; border: calc(var(--u) * .35) solid #3d3024; border-radius: calc(var(--u) * 1.1); box-shadow: 0 calc(var(--u) * .45) 0 #3d3024; font-weight: 800; font-size: calc(var(--u) * 2.2); }
+.pv-fb .k.w { grid-column: 2; grid-row: 1; } .pv-fb .k.a { grid-column: 1; grid-row: 2; } .pv-fb .k.s { grid-column: 2; grid-row: 2; } .pv-fb .k.d { grid-column: 3; grid-row: 2; }
+.pv-fb .k.sp { position: absolute; left: calc(100% + var(--u) * 1.5); bottom: 0; width: calc(var(--u) * 12); font-size: calc(var(--u) * 1.8); }
+.fb2 .k.w { animation: kHit 6s infinite; } .fb2 .k.a { animation: kHit 6s 2s infinite; } .fb2 .k.d { animation: kHit 6s 4s infinite; } .fb2 .k.sp { animation: kHit 6s 1s infinite; }
+.fb2 .world { inset: 0; animation: fbJump 6s 1s infinite; }
+@keyframes kHit { 0%, 2% { transform: none; background: #fffaf0; box-shadow: 0 calc(var(--u) * .45) 0 #3d3024; } 4%, 26% { transform: translateY(calc(var(--u) * .45)); background: #f2c230; box-shadow: 0 0 0 #3d3024; } 30%, 100% { transform: none; background: #fffaf0; box-shadow: 0 calc(var(--u) * .45) 0 #3d3024; } }
+@keyframes fbPan { 0%, 100% { transform: translateX(0) scale(1); } 33% { transform: translateX(0) scale(1.06); } 66% { transform: translateX(6%); } 90% { transform: translateX(-6%); } }
+@keyframes fbPan2 { 0%, 100% { transform: translateX(0) scale(1); } 33% { transform: translateX(0) scale(1.14); } 66% { transform: translateX(12%); } 90% { transform: translateX(-12%); } }
+@keyframes fbJump { 0%, 100% { transform: none; } 6% { transform: translateY(calc(var(--u) * 2.5)); } 14% { transform: none; } }
+/* 3. 바나나 줍기: 점을 바나나에 맞추고 누르면 바나나가 톡 사라지고 1/5 */
+.fb3 .scope { inset: -30%; animation: fb3Aim 5s cubic-bezier(.45,0,.2,1) infinite; }
+.fb3 .ban { left: 62%; top: 60%; width: calc(var(--u) * 9); animation: fb3Ban 5s infinite; }
+.fb3 .cnt { position: relative; display: inline-block; }
+.fb3 .cnt b { font-weight: 800; }
+.fb3 .cnt .n2 { position: absolute; left: 0; right: 0; text-align: center; opacity: 0; }
+.fb3 .n1 { animation: fb3N1 5s infinite; } .fb3 .n2 { animation: fb3N2 5s infinite; }
+.fb3 .plus { left: 50%; top: 40%; transform: translate(-50%, 0); font-weight: 800; font-size: calc(var(--u) * 3.6); color: #3d3024; text-shadow: calc(var(--u) * .3) calc(var(--u) * .3) 0 #f2c230; opacity: 0; z-index: 4; animation: fb3Plus 5s infinite; }
+.fb3 .ring { left: 50%; top: 50%; width: calc(var(--u) * 6); height: calc(var(--u) * 6); margin: calc(var(--u) * -3); border-radius: 50%; border: calc(var(--u) * .4) solid #fff; opacity: 0; z-index: 3; animation: fb3Ring 5s infinite; }
+@keyframes fb3Aim { 0%, 10% { transform: translate(0, 0); } 45%, 100% { transform: translate(-14.7%, -13%); } }
+@keyframes fb3Ban { 0%, 52% { transform: rotate(-20deg) scale(1); opacity: 1; } 58% { transform: rotate(-10deg) scale(1.3) translateY(-10%); opacity: 1; } 66%, 92% { transform: rotate(0) scale(0); opacity: 0; } 100% { transform: rotate(-20deg) scale(1); opacity: 1; } }
+@keyframes fb3Ring { 0%, 50% { opacity: 0; transform: scale(.4); } 54% { opacity: 1; } 68%, 100% { opacity: 0; transform: scale(1.6); } }
+@keyframes fb3Plus { 0%, 55% { opacity: 0; transform: translate(-50%, 0); } 62%, 78% { opacity: 1; transform: translate(-50%, -60%); } 90%, 100% { opacity: 0; transform: translate(-50%, -90%); } }
+@keyframes fb3N1 { 0%, 60% { opacity: 1; } 64%, 94% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes fb3N2 { 0%, 60% { opacity: 0; } 64%, 94% { opacity: 1; } 100% { opacity: 0; } }
+/* Lingo Loop: 흰 바탕, 검은 타일, 노랑 #F2C230, 둥근 타일(22~28px), 픽셀 친구 */
+.pv-ll { background: #fff; color: #1D1D1F; }
+.pv-ll .tile { border-radius: calc(var(--u) * 2.2); padding: calc(var(--u) * 2); }
+.pv-ll .ink { background: #1D1D1F; color: #F5F5F7; }
+.pv-ll .srf { background: #F5F5F7; }
+.pv-ll .chip { border: calc(var(--u) * .25) solid #7D766C; border-radius: 99px; padding: calc(var(--u) * .8) calc(var(--u) * 2); font-size: calc(var(--u) * 2.1); font-weight: 500; white-space: nowrap; }
+.pv-ll .lab { font-size: calc(var(--u) * 1.9); color: #5F5850; font-weight: 500; white-space: nowrap; }
+.pv-ll .ch { width: calc(var(--u) * 6); }
+.pv-ll .ch .f { stroke: #1D1D1F; stroke-width: .5px; paint-order: stroke; }
+.pv-ll .ch .fc { fill: #F7E6CF; stroke: #1D1D1F; stroke-width: .35px; paint-order: stroke; }
+.pv-ll .ch .i { fill: #1D1D1F; }
+/* 1. 연습 고르기: 세 가지 연습 중 하나가 골라지고, 주제 칩이 켜짐 */
+.ll1 .modes { left: 6%; right: 6%; top: 10%; display: grid; grid-template-columns: repeat(3, 1fr); gap: calc(var(--u) * 1.6); }
+.ll1 .mode { height: calc(var(--u) * 20); display: grid; align-content: space-between; font-weight: 800; font-size: calc(var(--u) * 2.4); line-height: 1.3; transition: none; }
+.ll1 .mode small { display: block; font-weight: 500; font-size: calc(var(--u) * 1.7); color: #A1A1A6; margin-top: calc(var(--u) * .6); }
+.ll1 .mode .eg { font-size: calc(var(--u) * 2); color: #F2C230; }
+.ll1 .mode:nth-child(1) { animation: llPick 6s infinite; } .ll1 .mode:nth-child(2) { animation: llPick 6s -4s infinite; } .ll1 .mode:nth-child(3) { animation: llPick 6s -2s infinite; }
+.ll1 .topics { left: 6%; right: 6%; top: 64%; display: flex; flex-wrap: wrap; gap: calc(var(--u) * 1.2); align-items: center; }
+.ll1 .chip:nth-child(2) { animation: llChip 6s 1s infinite; } .ll1 .chip:nth-child(4) { animation: llChip 6s 3s infinite; }
+.ll1 .ten { right: 6%; bottom: 8%; display: flex; align-items: center; gap: calc(var(--u) * 1.2); }
+.ll1 .go { background: #F2C230; border: calc(var(--u) * .3) solid #1D1D1F; border-radius: 99px; font-weight: 800; font-size: calc(var(--u) * 2.2); padding: calc(var(--u) * 1) calc(var(--u) * 2.8); white-space: nowrap; }
+@keyframes llPick { 0%, 30% { transform: translateY(calc(var(--u) * -1)); box-shadow: 0 0 0 calc(var(--u) * .6) #F2C230; } 34%, 100% { transform: none; box-shadow: 0 0 0 0 #F2C230; } }
+@keyframes llChip { 0%, 5% { background: #fff; color: #1D1D1F; border-color: #7D766C; } 9%, 60% { background: #1D1D1F; color: #F5F5F7; border-color: #1D1D1F; } 66%, 100% { background: #fff; color: #1D1D1F; border-color: #7D766C; } }
+/* 2. 따라 치기: 글자가 하나씩 진해지고, 끝나면 타수와 정확도 */
+.ll2 .term { left: 0; right: 0; top: 18%; text-align: center; font-weight: 800; font-size: calc(var(--u) * 9.5); letter-spacing: -.01em; white-space: nowrap; }
+.ll2 .term span { color: #C9C4BC; animation: llType 6s infinite; animation-delay: calc(var(--i) * .2s); box-shadow: inset 0 0 0 #1D1D1F; }
+.ll2 .mean { left: 0; right: 0; top: 46%; text-align: center; font-size: calc(var(--u) * 2.4); color: #8A847C; }
+.ll2 .stats { left: 50%; bottom: 9%; transform: translateX(-50%); display: flex; gap: calc(var(--u) * 1.6); animation: llStats 6s infinite; }
+.ll2 .st { min-width: calc(var(--u) * 18); display: grid; gap: calc(var(--u) * .4); }
+.ll2 .st b { font-size: calc(var(--u) * 4.4); font-weight: 800; line-height: 1; }
+.ll2 .st.y { background: #F2C230; }
+@keyframes llType { 0% { color: #C9C4BC; } 2%, 88% { color: #1D1D1F; } 94%, 100% { color: #C9C4BC; } }
+@keyframes llStats { 0%, 40% { opacity: 0; transform: translate(-50%, 30%); } 48%, 86% { opacity: 1; transform: translate(-50%, 0); } 94%, 100% { opacity: 0; transform: translate(-50%, 30%); } }
+/* 3. 겨루기: 픽셀 친구 셋이 줄마다 달려 깃발로, 위에는 방 코드 5자리 */
+.ll3 .room { left: 50%; top: 7%; transform: translateX(-50%); display: flex; align-items: center; gap: calc(var(--u) * 1.4); }
+.ll3 .code { display: flex; gap: calc(var(--u) * .6); }
+.ll3 .code i { font-style: normal; width: calc(var(--u) * 4.2); height: calc(var(--u) * 5); display: grid; place-items: center; background: #F5F5F7; border: calc(var(--u) * .25) solid #1D1D1F; border-radius: calc(var(--u) * 1); font-weight: 800; font-size: calc(var(--u) * 2.6); }
+.ll3 .track { left: 6%; right: 6%; top: 27%; bottom: 8%; background: #1D1D1F; border-radius: calc(var(--u) * 2.6); display: grid; grid-template-rows: repeat(3, 1fr); padding: calc(var(--u) * 1) calc(var(--u) * 2); }
+.ll3 .lane { position: relative; border-bottom: 1px dashed rgba(245,245,247,.25); }
+.ll3 .lane:last-child { border-bottom: 0; }
+.ll3 .lane .ch { position: absolute; left: 0; bottom: 12%; width: calc(var(--u) * 6.4); animation: llRun 6s cubic-bezier(.4,0,.6,1) infinite; }
+.ll3 .lane:nth-child(1) .ch { --to: 74%; } .ll3 .lane:nth-child(2) .ch { --to: 86%; } .ll3 .lane:nth-child(3) .ch { --to: 60%; }
+.ll3 .lane .ch svg { animation: llHop .34s ease-in-out infinite; transform-origin: 50% 100%; }
+.ll3 .flag { position: absolute; right: 2%; top: 4%; bottom: 4%; width: calc(var(--u) * 2.4); }
+.ll3 .word { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-weight: 800; font-size: calc(var(--u) * 2); color: #F5F5F7; opacity: .0; }
+@keyframes llRun { 0%, 8% { left: 0; } 80%, 92% { left: var(--to); } 100% { left: 0; } }
+@keyframes llHop { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14%); } }
 /* 시안 B(2026-10-28 숨님 선택): 단계마다 한쪽에 게임 화면, 반대쪽에 글. 엇갈려 놓음 */
 .dt-step.has-shot { align-items: center; }
 .dt-step.has-shot .dt-shot { grid-column: 1 / span 5; grid-row: 1; }
@@ -742,13 +862,13 @@ function rulesCheck(d) {
 const WORKS = [
   // play: 상세 화면 [02. 플레이 방법] 단계 (2026-10-28 숨님 요청, 각 게임 사이트의 조작 안내를 보고 정리)
   { slug: 'find-bananas', order: 1, play: [
-      { name: '들어가기', img: 'assets/works/play/find-bananas-g1.jpg', text: '[게임 시작]을 누르고 화면을 한 번 클릭하면 그림 속 공간으로 들어가요.' },
-      { name: '둘러보기', img: 'assets/works/play/find-bananas-g2.jpg', text: '[W][A][S][D]로 걷고 마우스로 둘러봐요. [Space]는 점프, [Ctrl]이나 [C]를 누르는 동안 웅크려요. [ESC]를 누르면 잠시 멈춰요.' },
-      { name: '바나나 줍기', img: 'assets/works/play/find-bananas-g3.jpg', text: '화면 가운데 점을 바나나에 맞추고 클릭해서 주워요. *3분* 안에 숨은 바나나 *5개*를 모두 찾으면 그림을 돌려받아요.' } ], title: 'Find Bananas', summary: '명화 속에 숨은 진짜 바나나를 찾는 게임', description: '바나나 괴물이 유명 화가의 그림을 훔쳐 갔어요.\n그림을 돌려받으려면 그림 속으로 들어가 진짜 바나나를 찾아야 해요.', year: 2026, tools: ['Claude'], siteUrl: 'https://sum040.github.io/find-bananas/', thumb: 'assets/works/find-bananas-thumb.jpg', video: 'assets/works/find-bananas.mp4', card: { video: 'assets/works/find-bananas-card.mp4', poster: 'assets/works/find-bananas-card-rest.jpg', rest: 0 }, thumbnailAlt: 'Find Bananas 첫 화면. 크림색 배경에 큰 제목과 게임 시작 버튼, 노란 바나나 하나가 떠 있음' },
+      { name: '들어가기', anim: 'fb1', text: '[게임 시작]을 누르고 화면을 한 번 클릭하면 그림 속 공간으로 들어가요.' },
+      { name: '둘러보기', anim: 'fb2', text: '[W][A][S][D]로 걷고 마우스로 둘러봐요. [Space]는 점프, [Ctrl]이나 [C]를 누르는 동안 웅크려요. [ESC]를 누르면 잠시 멈춰요.' },
+      { name: '바나나 줍기', anim: 'fb3', text: '화면 가운데 점을 바나나에 맞추고 클릭해서 주워요. *3분* 안에 숨은 바나나 *5개*를 모두 찾으면 그림을 돌려받아요.' } ], title: 'Find Bananas', summary: '명화 속에 숨은 진짜 바나나를 찾는 게임', description: '바나나 괴물이 유명 화가의 그림을 훔쳐 갔어요.\n그림을 돌려받으려면 그림 속으로 들어가 진짜 바나나를 찾아야 해요.', year: 2026, tools: ['Claude'], siteUrl: 'https://sum040.github.io/find-bananas/', thumb: 'assets/works/find-bananas-thumb.jpg', video: 'assets/works/find-bananas.mp4', card: { video: 'assets/works/find-bananas-card.mp4', poster: 'assets/works/find-bananas-card-rest.jpg', rest: 0 }, thumbnailAlt: 'Find Bananas 첫 화면. 크림색 배경에 큰 제목과 게임 시작 버튼, 노란 바나나 하나가 떠 있음' },
   { slug: 'lingo-loop', order: 2, play: [
-      { name: '연습 고르기', img: 'assets/works/play/lingo-loop-1.jpg', text: '영어 따라 치기, 한국어 따라 치기, 한국어 뜻 고르기 중 하나를 고르고 연습할 주제를 골라요. 한 판에 용어 *10개*예요.' },
-      { name: '따라 치기', img: 'assets/works/play/lingo-loop-2.jpg', text: '화면에 나온 용어를 그대로 쳐요. 끝나면 *타수*, *정확도*, 틀린 용어를 보여 줘요.' },
-      { name: '겨루기', img: 'assets/works/play/lingo-loop-3.jpg', text: '[게임하러 가기]에서 용어 레이스, 떨어지는 용어, 60초 도전 중 하나를 골라 컴퓨터나 친구와 겨뤄요. 친구는 방 코드 *5자리*로 들어와요.' } ], title: 'Lingo Loop', summary: 'UX/UI·AI 영어 용어를 치며 익히는 타자 연습', description: '주니어 디자이너가 UX/UI, AI 개발, 프롬프트에 쓰이는 영어 용어를 직접 타이핑하며 타자 속도를 높이고 용어도 함께 익히는 사이트예요.\n게임 페이지에서는 혼자서도, 친구와도 용어 타이핑 게임을 할 수 있어요.', year: 2026, tools: ['Claude'], siteUrl: 'https://sum040.github.io/lingo-loop/', thumb: 'assets/works/lingo-loop-thumb.jpg', video: 'assets/works/lingo-loop.mp4', card: { video: 'assets/works/lingo-loop-card.mp4', poster: 'assets/works/lingo-loop-card-rest.jpg', rest: 2.82 }, thumbnailAlt: 'Lingo Loop 소개 화면. 노란 배경에 큰 제목과 타자 연습 화면, 픽셀 캐릭터들' },
+      { name: '연습 고르기', anim: 'll1', text: '영어 따라 치기, 한국어 따라 치기, 한국어 뜻 고르기 중 하나를 고르고 연습할 주제를 골라요. 한 판에 용어 *10개*예요.' },
+      { name: '따라 치기', anim: 'll2', text: '화면에 나온 용어를 그대로 쳐요. 끝나면 *타수*, *정확도*, 틀린 용어를 보여 줘요.' },
+      { name: '겨루기', anim: 'll3', text: '[게임하러 가기]에서 용어 레이스, 떨어지는 용어, 60초 도전 중 하나를 골라 컴퓨터나 친구와 겨뤄요. 친구는 방 코드 *5자리*로 들어와요.' } ], title: 'Lingo Loop', summary: 'UX/UI·AI 영어 용어를 치며 익히는 타자 연습', description: '주니어 디자이너가 UX/UI, AI 개발, 프롬프트에 쓰이는 영어 용어를 직접 타이핑하며 타자 속도를 높이고 용어도 함께 익히는 사이트예요.\n게임 페이지에서는 혼자서도, 친구와도 용어 타이핑 게임을 할 수 있어요.', year: 2026, tools: ['Claude'], siteUrl: 'https://sum040.github.io/lingo-loop/', thumb: 'assets/works/lingo-loop-thumb.jpg', video: 'assets/works/lingo-loop.mp4', card: { video: 'assets/works/lingo-loop-card.mp4', poster: 'assets/works/lingo-loop-card-rest.jpg', rest: 2.82 }, thumbnailAlt: 'Lingo Loop 소개 화면. 노란 배경에 큰 제목과 타자 연습 화면, 픽셀 캐릭터들' },
 ].sort((a, b) => a.order - b.order);
 
 /* =====================================================================
@@ -1646,6 +1766,22 @@ function contactFooter() {
 /* ---- S3 작업물 상세 ---- */
 // 플레이 방법 글: [W] → 키 모양 칩, *3분* → 진하게 (2026-10-28 숨님이 고른 시안 B의 글 배치)
 const playText = t => t.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]).replace(/\[([^\]]+)\]/g, '<kbd>$1</kbd>').replace(/\*([^*]+)\*/g, '<b>$1</b>');
+// 2026-10-28 숨님: 플레이 방법 그림 = 게임마다 디자인 시스템을 따라 만든 짧은 반복 모션 (사진 대신, 스타일은 .pv)
+const PV_CUR = '<svg class="ab cur" viewBox="0 0 20 24"><path d="M2 2L2 20L7 15L10.5 22.5L13.5 21L10 14L17 14Z" fill="#fffaf0" stroke="#3d3024" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+const PV_BAN = '<svg class="ab ban" viewBox="0 0 40 30"><path d="M5 9C9 22 25 27 35 16C33 15 32 13 32 11C26 17 15 18 9 8Z" fill="#f2c230" stroke="#3d3024" stroke-width="2" stroke-linejoin="round"/><path d="M32 11L34 7L36 8L35 12" fill="#6d4a2e" stroke="#3d3024" stroke-width="1.6" stroke-linejoin="round"/><path d="M11 13C15 18 22 20 28 17" fill="none" stroke="#fffaf0" stroke-width="1.4" stroke-linecap="round" opacity=".7"/></svg>';
+const pvWorld = () => '<div class="ab sky"></div><div class="ab hills far"><i style="left:4%"></i><i style="left:30%"></i><i style="left:58%"></i><i style="left:80%"></i><span class="house" style="left:41%;bottom:58%"></span><span class="tree" style="left:22%;bottom:55%"></span><span class="tree" style="left:64%;bottom:52%"></span></div><div class="ab hills near"><i style="left:-6%"></i><i style="left:40%"></i><i style="left:76%"></i><span class="tree" style="left:12%;bottom:30%"></span><span class="tree" style="left:83%;bottom:26%"></span>' + [[30, 22, '#f5b7a3'], [36, 14, '#fff'], [52, 18, '#f2c230'], [61, 10, '#f5b7a3'], [70, 20, '#fff'], [46, 8, '#c9a7e8']].map(([l, b, c]) => `<span class="flw" style="left:${l}%;bottom:${b}%;background:${c}"></span>`).join('') + '</div>';
+const pvKeys = () => '<div class="ab keys"><span class="k w">W</span><span class="k a">A</span><span class="k s">S</span><span class="k d">D</span><span class="k sp">Space</span></div>';
+const pvCritter = c => `<span class="ch"><svg viewBox="0 0 18 16"><g transform="matrix(-1 0 0 1 18 0)"><g class="f" fill="${c}"><rect x="3" y="2" width="12" height="9"/><path d="M3 0H6V2H3ZM12 0H15V2H12Z"/><path d="M15 10H17V8H18V11H15Z"/><path d="M4 11H6V14H4ZM8 11H10V14H8ZM12 11H14V14H12Z"/></g><path class="fc" d="M5 4H8V5H10V4H13V10H5Z"/><rect class="i" x="6" y="6" width="1" height="1.4"/><rect class="i" x="11" y="6" width="1" height="1.4"/></g></svg></span>`;
+const PV_FLAG = '<svg class="flag" viewBox="0 0 12 60" preserveAspectRatio="none"><rect x="1" y="0" width="1.4" height="60" fill="#F5F5F7"/>' + Array.from({ length: 4 }, (_, r) => Array.from({ length: 3 }, (_, c) => (r + c) % 2 ? '' : `<rect x="${2.4 + c * 3}" y="${2 + r * 3}" width="3" height="3" fill="#F5F5F7"/>`).join('')).join('') + '<rect x="2.4" y="2" width="9" height="12" fill="none" stroke="#F5F5F7" stroke-width=".6"/></svg>';
+const PV = {
+  fb1: ['게임 시작을 누르면 장소를 고르는 창이 올라오는 모습', '<div class="ab fbhome"><span class="logo">Find Bananas</span><span class="sub">명화 속에 숨은 진짜 바나나를 찾아요</span><span class="btn y">게임 시작</span><span style="display:flex;gap:calc(var(--u) * 1.6)"><span class="btn">조작 방법</span><span class="btn">랭킹</span></span></div><div class="ab pick"><b>어디에서 찾을까요?</b><div class="maps"><span class="map"></span><span class="map"></span><span class="map"></span></div></div>' + PV_CUR],
+  fb2: ['키를 누르면 그림 속 풍경을 걸으며 둘러보는 모습', `<div class="ab world">${pvWorld()}</div><span class="ab dot"></span><div class="ab hud"><span class="pill">찾은 바나나 0 / 5</span><span class="pill">남은 시간 2:58</span></div>${pvKeys()}`],
+  fb3: ['가운데 점을 바나나에 맞추고 눌러 줍는 모습', `<div class="ab scope">${pvWorld()}${PV_BAN}</div><span class="ab ring"></span><span class="ab dot"></span><span class="ab plus">+1</span><div class="ab hud"><span class="pill">찾은 바나나 <span class="cnt"><b class="n1">0</b><b class="n2">1</b></span> / 5</span><span class="pill">남은 시간 1:42</span></div>`],
+  ll1: ['세 가지 연습 중 하나와 주제를 고르는 모습', '<div class="ab modes">' + [['영어 따라 치기', '용어를 영어로', 'Prototype'], ['한국어 따라 치기', '뜻을 한국어로', '시제품'], ['한국어 뜻 고르기', '알맞은 뜻 고르기', 'A · B · C']].map(([t, s, e]) => `<div class="tile ink mode"><span>${t}<small>${s}</small></span><span class="eg">${e}</span></div>`).join('') + '</div><div class="ab topics"><span class="lab">주제</span>' + ['UX/UI', 'AI 개발', '프롬프트', '디자인 시스템'].map(t => `<span class="chip">${t}</span>`).join('') + '</div><div class="ab ten"><span class="lab">용어 10개</span><span class="go">시작</span></div>'],
+  ll2: ['용어를 한 글자씩 따라 치고 타수와 정확도가 나오는 모습', '<div class="ab term">' + [...'Prototype'].map((c, i) => `<span style="--i:${i}">${c}</span>`).join('') + '</div><div class="ab mean">시제품, 프로토타입</div><div class="ab stats"><div class="st tile srf"><span class="lab">타수</span><b>312</b></div><div class="st tile y"><span class="lab">정확도</span><b>98%</b></div></div>'],
+  ll3: ['방 코드로 모인 친구들이 용어 레이스를 하는 모습', '<div class="ab room"><span class="lab">방 코드</span><span class="code">' + [4, 8, 2, 1, 7].map(n => `<i>${n}</i>`).join('') + '</span></div><div class="ab track">' + ['#4A82D6', '#EA6B55', '#33A597'].map(c => `<div class="lane">${pvCritter(c)}${PV_FLAG}</div>`).join('') + '</div>']
+};
+const playAnim = k => `<div class="pv ${k.startsWith('fb') ? 'pv-fb' : 'pv-ll'} ${k}" role="img" aria-label="${PV[k][0]}">${PV[k][1]}</div>`;
 function Detail(r) {
   const w = r.work, i = WORKS.indexOf(w), next = WORKS[(i + 1) % WORKS.length], pad = n => String(n).padStart(2, '0');
   let secNo = 1; // [01. 소개] [02. 플레이 방법] [03. 정보] 처럼 있는 칸만 차례로 번호
@@ -1663,7 +1799,7 @@ function Detail(r) {
       </div>
       ${w.description ? `<div class="dt-grid dt-sec"><p class="dt-k dt-up">[${pad(secNo++)}. 소개]</p><p class="dt-desc ko dt-up" id="desc" style="--d:.08s"></p></div>` : ''}
       ${w.play ? `<section class="dt-sec dt-play" aria-label="플레이 방법"><div class="dt-grid"><p class="dt-k dt-up">[${pad(secNo++)}. 플레이 방법]</p></div>
-        ${w.play.map((p, k) => `<div class="dt-grid dt-step${k % 2 ? ' alt' : ''}${p.img ? ' has-shot' : ''}">${p.img ? `<div class="dt-shot dt-up"><img src="${p.img}" alt="${w.title} ${p.name} 화면" loading="lazy"></div>` : ''}<div class="dt-st dt-up" style="--d:.1s"><p class="dt-st-h"><b class="ko"></b><span class="mono">step ${pad(k + 1)}.</span><span class="mono ghost">/${pad(k + 1)}</span></p><p class="dt-st-t ko"></p></div></div>`).join('')}
+        ${w.play.map((p, k) => `<div class="dt-grid dt-step${k % 2 ? ' alt' : ''}${p.anim || p.img ? ' has-shot' : ''}">${p.anim ? `<div class="dt-shot dt-up">${playAnim(p.anim)}</div>` : p.img ? `<div class="dt-shot dt-up"><img src="${p.img}" alt="${w.title} ${p.name} 화면" loading="lazy"></div>` : ''}<div class="dt-st dt-up" style="--d:.1s"><p class="dt-st-h"><b class="ko"></b><span class="mono">step ${pad(k + 1)}.</span><span class="mono ghost">/${pad(k + 1)}</span></p><p class="dt-st-t ko"></p></div></div>`).join('')}
         ${w.siteUrl ? '<div class="dt-grid dt-step"><div class="dt-st dt-up"><a class="dt-link" id="playGo" target="_blank" rel="noopener">play now <i>↗</i></a></div></div>' : ''}</section>` : ''}
       <div class="dt-grid dt-sec"><p class="dt-k dt-up">[${pad(secNo++)}. 정보]</p>
         <dl class="dt-rows dt-up" style="--d:.08s">
