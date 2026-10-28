@@ -995,7 +995,6 @@ const planetGL = (() => {
   function frame(now) {
     requestAnimationFrame(frame);
     if (now - last < 33 || document.hidden) return; last = now;   // 30fps면 충분
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     document.querySelectorAll('canvas.pl-ball').forEach(cv => {
       const D = +cv.dataset.d * (SMOOTH ? UP : 1), t = tex(cv.dataset.tex); if (!t.ready) return;
       if (cv.width !== D) { cv.width = cv.height = D; cv._img = cv.getContext('2d').createImageData(D, D); }
@@ -1339,7 +1338,7 @@ function render(r, anim) {
   const old = Array.from(app.children);
   const screen = { home: Main, works: Main, detail: Detail, guestbook: Guestbook, lost: Lost }[r.name](r);
   app.appendChild(screen);
-  if (!anim || !old.length || matchMedia('(prefers-reduced-motion: reduce)').matches) old.forEach(o => o.remove());
+  if (!anim || !old.length) old.forEach(o => o.remove()); // 움직임 줄이기 설정과 상관없이 늘 겹쳐서 바뀜(숨님 2026-10-28)
   else {
     // 화면이 바뀔 때는 겹쳐서 서서히 바뀜
     const dur = 650, ease = `opacity ${dur}ms ease`;
