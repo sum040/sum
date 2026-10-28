@@ -305,13 +305,29 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 .dt-st-h b { font-family: var(--font-display); font-weight: 600; font-size: 14px; }
 .dt-st-h .ghost { opacity: .45; }
 .dt-st-t { margin: 0; max-width: 34em; font-size: 15px; line-height: 1.7; color: var(--color-text-muted); text-wrap: pretty; word-break: keep-all; }
+/* 2026-10-28 숨님: 작업물 상세의 재미 요소. 작업물마다 대표 에셋(바나나, 키보드 키)을 홈 꽃처럼 흐릿한 파스텔 유리 느낌으로 그려 빈자리에 띄움. 둥실거림 + 스크롤 시차, 올리면 커지며 흔들, 누르면 톡 튀어 오름 */
+.dt { position: relative; }
+.dt-toys { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.toy { position: absolute; left: 0; top: 0; width: var(--sz, 200px); pointer-events: auto; cursor: pointer; will-change: transform; }
+.toy .bob { display: block; animation: toyBob var(--bob, 6s) ease-in-out infinite; animation-delay: var(--bd, 0s); }
+.toy .hit { display: block; transform: rotate(var(--rot, 0deg)); transition: transform .9s cubic-bezier(.2,.7,.2,1); }
+.toy:hover .hit { transform: rotate(calc(var(--rot, 0deg) + 8deg)) scale(1.1); }
+.toy.pop .hit { animation: toyPop .9s cubic-bezier(.2,.7,.2,1); }
+.toy.press .hit { animation: toyPress .5s cubic-bezier(.2,.7,.2,1); }
+.toy svg { display: block; width: 100%; height: auto; overflow: visible; }
+.toy .sheen { transition: opacity .6s; opacity: .45; }
+.toy:hover .sheen { opacity: .75; }
+@keyframes toyBob { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-14px) rotate(2deg); } }
+@keyframes toyPop { 0% { transform: rotate(var(--rot, 0deg)) scale(1.1); } 35% { transform: translateY(-38px) rotate(calc(var(--rot, 0deg) - 22deg)) scale(1.18, 1.04); } 70% { transform: translateY(4px) rotate(calc(var(--rot, 0deg) + 6deg)) scale(.96, 1.06); } 100% { transform: rotate(var(--rot, 0deg)) scale(1.1); } }
+@keyframes toyPress { 0% { transform: rotate(var(--rot, 0deg)) scale(1.1); } 30% { transform: translateY(8px) rotate(var(--rot, 0deg)) scale(1.06, .9); } 100% { transform: rotate(var(--rot, 0deg)) scale(1.1); } }
+@media (max-width: 760px) { .toy { width: calc(var(--sz, 200px) * .42); } .toy.wide-only { display: none; } }
 /* 시안 B(2026-10-28 숨님 선택): 단계마다 한쪽에 게임 화면, 반대쪽에 글. 엇갈려 놓음 */
 .dt-step.has-shot { align-items: center; }
 .dt-step.has-shot .dt-shot { grid-column: 1 / span 5; grid-row: 1; }
 .dt-step.has-shot .dt-st { grid-column: 7 / span 5; grid-row: 1; }
 .dt-step.has-shot.alt .dt-shot { grid-column: 8 / span 5; }
 .dt-step.has-shot.alt .dt-st { grid-column: 2 / span 5; }
-.dt-shot { aspect-ratio: 16 / 10; border-radius: 14px; overflow: hidden; background: var(--color-surface); box-shadow: 0 18px 50px rgba(78,58,76,.12); }
+.dt-shot { aspect-ratio: 16 / 10; border-radius: 0; /* 2026-10-28 숨님: 위 영상(.dt-media .thumb)과 같은 모서리 */ overflow: hidden; background: var(--color-surface); box-shadow: 0 18px 50px rgba(78,58,76,.12); }
 .dt-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .dt-st-t kbd { font-family: var(--font-display); font-size: 12px; font-weight: 600; color: var(--color-text); background: var(--color-surface); border-radius: 6px; padding: 2px 7px; margin: 0 2px; box-shadow: 0 1px 0 rgba(78,58,76,.18), 0 3px 10px rgba(78,58,76,.06); white-space: nowrap; }
 .dt-st-t b { font-weight: 600; color: var(--color-text); }
@@ -742,9 +758,9 @@ function rulesCheck(d) {
 const WORKS = [
   // play: 상세 화면 [02. 플레이 방법] 단계 (2026-10-28 숨님 요청, 각 게임 사이트의 조작 안내를 보고 정리)
   { slug: 'find-bananas', order: 1, play: [
-      { name: '들어가기', img: 'assets/works/play/find-bananas-1.jpg', text: '[게임 시작]을 누르고 화면을 한 번 클릭하면 그림 속 공간으로 들어가요.' },
-      { name: '둘러보기', img: 'assets/works/play/find-bananas-2.jpg', text: '[W][A][S][D]로 걷고 마우스로 둘러봐요. [Space]는 점프, [Ctrl]이나 [C]를 누르는 동안 웅크려요. [ESC]를 누르면 잠시 멈춰요.' },
-      { name: '바나나 줍기', img: 'assets/works/play/find-bananas-3.jpg', text: '화면 가운데 점을 바나나에 맞추고 클릭해서 주워요. *3분* 안에 숨은 바나나 *5개*를 모두 찾으면 그림을 돌려받아요.' } ], title: 'Find Bananas', summary: '명화 속에 숨은 진짜 바나나를 찾는 게임', description: '바나나 괴물이 유명 화가의 그림을 훔쳐 갔어요.\n그림을 돌려받으려면 그림 속으로 들어가 진짜 바나나를 찾아야 해요.', year: 2026, tools: ['Claude'], siteUrl: 'https://sum040.github.io/find-bananas/', thumb: 'assets/works/find-bananas-thumb.jpg', video: 'assets/works/find-bananas.mp4', card: { video: 'assets/works/find-bananas-card.mp4', poster: 'assets/works/find-bananas-card-rest.jpg', rest: 0 }, thumbnailAlt: 'Find Bananas 첫 화면. 크림색 배경에 큰 제목과 게임 시작 버튼, 노란 바나나 하나가 떠 있음' },
+      { name: '들어가기', img: 'assets/works/play/find-bananas-g1.jpg', text: '[게임 시작]을 누르고 화면을 한 번 클릭하면 그림 속 공간으로 들어가요.' },
+      { name: '둘러보기', img: 'assets/works/play/find-bananas-g2.jpg', text: '[W][A][S][D]로 걷고 마우스로 둘러봐요. [Space]는 점프, [Ctrl]이나 [C]를 누르는 동안 웅크려요. [ESC]를 누르면 잠시 멈춰요.' },
+      { name: '바나나 줍기', img: 'assets/works/play/find-bananas-g3.jpg', text: '화면 가운데 점을 바나나에 맞추고 클릭해서 주워요. *3분* 안에 숨은 바나나 *5개*를 모두 찾으면 그림을 돌려받아요.' } ], title: 'Find Bananas', summary: '명화 속에 숨은 진짜 바나나를 찾는 게임', description: '바나나 괴물이 유명 화가의 그림을 훔쳐 갔어요.\n그림을 돌려받으려면 그림 속으로 들어가 진짜 바나나를 찾아야 해요.', year: 2026, tools: ['Claude'], siteUrl: 'https://sum040.github.io/find-bananas/', thumb: 'assets/works/find-bananas-thumb.jpg', video: 'assets/works/find-bananas.mp4', card: { video: 'assets/works/find-bananas-card.mp4', poster: 'assets/works/find-bananas-card-rest.jpg', rest: 0 }, thumbnailAlt: 'Find Bananas 첫 화면. 크림색 배경에 큰 제목과 게임 시작 버튼, 노란 바나나 하나가 떠 있음' },
   { slug: 'lingo-loop', order: 2, play: [
       { name: '연습 고르기', img: 'assets/works/play/lingo-loop-1.jpg', text: '영어 따라 치기, 한국어 따라 치기, 한국어 뜻 고르기 중 하나를 고르고 연습할 주제를 골라요. 한 판에 용어 *10개*예요.' },
       { name: '따라 치기', img: 'assets/works/play/lingo-loop-2.jpg', text: '화면에 나온 용어를 그대로 쳐요. 끝나면 *타수*, *정확도*, 틀린 용어를 보여 줘요.' },
@@ -1695,7 +1711,9 @@ function Detail(r) {
   // 영상은 글자보다 조금 느리게 움직임 (깊이감)
   const media = $$('.dt-media', s);
   const drift = () => { const H = innerHeight; media.forEach(m => { const r = m.getBoundingClientRect(); m.style.transform = `translateY(${((r.top + r.height / 2 - H / 2) * -.06).toFixed(1)}px)`; }); };
-  s.addEventListener('scroll', () => requestAnimationFrame(drift), { passive: true }); requestAnimationFrame(drift);
+  const toys = detailToys(s, w);
+  if (toys) { const re = () => { if (s.isConnected) { toys.place(); toys.paint(); } }; requestAnimationFrame(re); setTimeout(re, 400); setTimeout(re, 1500); addEventListener('resize', re); document.fonts && document.fonts.ready.then(re); }
+  s.addEventListener('scroll', () => requestAnimationFrame(() => { drift(); toys && toys.paint(); }), { passive: true }); requestAnimationFrame(drift);
   // 휠 스크롤은 홈처럼 관성 있게 부드럽게 (터치와 키보드는 원래대로)
   let target = 0, pos = 0, running = false;
   const clampY = y => Math.max(0, Math.min(s.scrollHeight - s.clientHeight, y));
@@ -1716,6 +1734,75 @@ function Detail(r) {
   const io = typeof IntersectionObserver === 'function' ? new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } }), { root: s, rootMargin: '0px 0px -6% 0px', threshold: .1 }) : null;
   requestAnimationFrame(() => $$('.dt-up', s).forEach(n => io ? io.observe(n) : n.classList.add('in')));
   return s;
+}
+
+/* ---- 작업물 상세 재미 요소: 유리 같은 파스텔 에셋 (2026-10-28 숨님) ---- */
+// at: 놓을 자리(title 제목 오른쪽, pair 첫 영상 왼쪽 빈칸, info 정보 칸 왼쪽 빈칸), x/y: 그 자리 안에서 비율, sz: 크기(px, 화면 너비 1440 기준)
+const TOYS = {
+  'find-bananas': [
+    { k: 'banana', at: 'title', x: .9, y: -.3, sz: 260, rot: -12, bob: 6.5 },
+    { k: 'banana', at: 'pair', x: .16, y: .15, sz: 210, rot: 18, bob: 5.2, bd: -2, flip: 1, wide: 1, mad: 1 },
+    { k: 'banana', at: 'info', x: .12, y: .5, sz: 170, rot: -40, bob: 7, bd: -4, wide: 1 } ],
+  'lingo-loop': [
+    { k: 'critter', c: '#4A82D6', eyes: 'dot', at: 'title', x: .9, y: -.3, sz: 190, rot: -8, bob: 6 },
+    { k: 'critter', c: '#EA6B55', eyes: 'happy', at: 'pair', x: .15, y: .15, sz: 240, rot: 6, bob: 5.4, bd: -2, wide: 1, flip: 1 },
+    { k: 'critter', c: '#33A597', eyes: 'wow', at: 'info', x: .12, y: .5, sz: 170, rot: 10, bob: 7, bd: -3.5, wide: 1 } ]
+};
+let toyN = 0;
+function toySVG(t) {
+  const id = 'ty' + (++toyN);
+  const soft = `<filter id="${id}s" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.2"/></filter><filter id="${id}g" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="16"/></filter>`;
+  if (t.k === 'banana') {
+    const d = 'M34 52 C 22 140, 112 200, 182 140 C 190 132, 184 116, 170 118 C 116 136, 76 108, 66 54 C 63 40, 36 38, 34 52 Z';
+    return `<svg viewBox="0 0 200 200" aria-hidden="true"${t.flip ? ' style="transform:scaleX(-1)"' : ''}><defs>${soft}
+      <radialGradient id="${id}f" cx=".5" cy=".72" r=".62"><stop offset="0" stop-color="#FFF3A8"/><stop offset=".5" stop-color="#FFD98C"/><stop offset=".82" stop-color="#F9A9C7"/><stop offset="1" stop-color="#B9A8FF"/></radialGradient>
+      <linearGradient id="${id}h" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".4" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
+      <path d="${d}" fill="#F7A6C8" opacity=".65" filter="url(#${id}g)"/>
+      <path d="${d}" fill="url(#${id}f)" fill-opacity=".86" filter="url(#${id}s)"/>
+      <path class="sheen" d="M42 70 C 44 124, 100 162, 160 146" fill="none" stroke="url(#${id}h)" stroke-width="6" stroke-linecap="round" filter="url(#${id}s)"/>
+      <ellipse cx="50" cy="42" rx="8" ry="6" fill="#A99BEA" opacity=".85" filter="url(#${id}s)"/>
+      <g filter="url(#${id}s)"><ellipse cx="92" cy="128" rx="7.5" ry="9.5" fill="#fff" opacity=".95"/><ellipse cx="116" cy="132" rx="7.5" ry="9.5" fill="#fff" opacity=".95"/>
+      <ellipse cx="94" cy="130" rx="3.6" ry="4.8" fill="#4E3A4C" opacity=".85"/><ellipse cx="118" cy="134" rx="3.6" ry="4.8" fill="#4E3A4C" opacity=".85"/>
+      <ellipse cx="80" cy="140" rx="7" ry="4" fill="#F28FB0" opacity=".6"/><ellipse cx="131" cy="146" rx="7" ry="4" fill="#F28FB0" opacity=".6"/>
+      <path d="M98 146 Q 105 153, 112 148" fill="none" stroke="#4E3A4C" stroke-width="2.6" stroke-linecap="round" opacity=".75"/>${t.mad ? '<path d="M84 114 L 98 120 M 124 122 L 110 124" stroke="#4E3A4C" stroke-width="3" stroke-linecap="round" opacity=".75"/>' : ''}</g></svg>`;
+  }
+  // Lingo Loop 캐릭터(사이트의 18x16 픽셀 친구)를 같은 모양 그대로, 색만 파스텔로 옅게 + 흐린 가장자리와 빛
+  const mix = (h, k) => { const n = parseInt(h.slice(1), 16), m = c => Math.round(c + (255 - c) * k); return `rgb(${m(n >> 16)},${m((n >> 8) & 255)},${m(n & 255)})`; };
+  const body = mix(t.c, .32), deep = mix(t.c, .05), ink = '#4E3A4C';
+  const eyes = t.eyes === 'happy' ? `<path d="M5 7L6 6L7 7M10 7L11 6L12 7" fill="none" stroke="${ink}" stroke-width=".8" stroke-linecap="round" stroke-linejoin="round"/><rect x="7.4" y="8" width="3.2" height=".9" rx=".45" fill="${ink}"/>`
+    : t.eyes === 'wow' ? `<rect x="5" y="5" width="2" height="2" rx=".5" fill="${ink}"/><rect x="11" y="5" width="2" height="2" rx=".5" fill="${ink}"/><rect x="8" y="8" width="2" height="1.8" rx=".7" fill="${ink}"/>`
+    : `<rect x="6" y="5" width="1" height="2" rx=".4" fill="${ink}"/><rect x="11" y="5" width="1" height="2" rx=".4" fill="${ink}"/>`;
+  const shape = `<path d="M15 10H17V8H18V11H15Z"/><rect x="1" y="3" width="2" height="3" rx=".6"/><rect x="15" y="3" width="2" height="3" rx=".6"/><rect x="3" y="2" width="12" height="9" rx="1.6"/><rect x="5" y="11" width="2" height="2.6" rx=".6"/><rect x="11" y="11" width="2" height="2.6" rx=".6"/>`;
+  return `<svg viewBox="-2 -2 22 20" aria-hidden="true"${t.flip ? ' style="transform:scaleX(-1)"' : ''}><defs>
+    <filter id="${id}s" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".22"/></filter><filter id="${id}g" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="1.6"/></filter>
+    <radialGradient id="${id}f" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#fff"/><stop offset=".35" stop-color="${body}"/><stop offset=".85" stop-color="${deep}"/><stop offset="1" stop-color="#C9B6FF"/></radialGradient></defs>
+    <g fill="${body}" opacity=".7" filter="url(#${id}g)">${shape}</g>
+    <g fill="url(#${id}f)" fill-opacity=".88" filter="url(#${id}s)">${shape}</g>
+    <path d="M5 4H8V5H10V4H13V10H5Z" fill="#FFF4E6" fill-opacity=".85" filter="url(#${id}s)"/>
+    <g opacity=".8" filter="url(#${id}s)">${eyes}</g>
+    <rect class="sheen" x="3.8" y="2.5" width="4.5" height="1.1" rx=".55" fill="#fff" filter="url(#${id}s)"/></svg>`;
+}
+function detailToys(s, w) {
+  const list = TOYS[w.slug]; if (!list) return null;
+  const wrap = $('.wrap.dt', s), layer = el('<div class="dt-toys" aria-hidden="true"></div>');
+  wrap.prepend(layer);
+  const anchors = { title: () => $('.dt-title', s), pair: () => $('.dt-pair-a', s) || $('.dt-pair-b', s), info: () => $$('.dt-sec', s).pop() };
+  const toys = list.map((t, i) => {
+    const n = el(`<span class="toy${t.wide ? ' wide-only' : ''}" style="--sz:${t.sz}px;--rot:${t.rot}deg;--bob:${t.bob}s;--bd:${t.bd || 0}s"><span class="bob"><span class="hit">${toySVG(t)}</span></span></span>`);
+    n.addEventListener('pointerenter', () => sound.play('spark'));
+    n.addEventListener('click', () => { const c = 'pop'; n.classList.remove(c); void n.offsetWidth; n.classList.add(c); sound.play('rise'); });
+    n.addEventListener('animationend', e => { if (e.target !== n.querySelector('.bob')) n.classList.remove('pop', 'press'); });
+    layer.appendChild(n); return { t, n, x: 0, y: 0, k: .02 + i * .03 };
+  });
+  const place = () => {
+    const wr = wrap.getBoundingClientRect(), sc = Math.min(1.25, Math.max(.7, innerWidth / 1440));
+    toys.forEach(o => { const a = anchors[o.t.at](); if (!a) return; const r = a.getBoundingClientRect(), sz = o.t.sz * sc;
+      o.n.style.setProperty('--sz', sz + 'px');
+      const nar = innerWidth <= 760 && o.t.at === 'title'; // 휴대폰은 제목 글자를 가리지 않게 제목 위 오른쪽으로
+      o.x = r.left - wr.left + r.width * (nar ? .56 : o.t.x) - sz / 2; o.y = r.top - wr.top + (nar ? -sz * .8 : r.height * o.t.y); });
+  };
+  const paint = () => { const H = innerHeight; toys.forEach(o => { const top = o.y + layer.getBoundingClientRect().top; o.n.style.transform = `translate(${o.x.toFixed(1)}px, ${(o.y + (top - H / 2) * -o.k).toFixed(1)}px)`; }); };
+  return { place, paint, toys };
 }
 
 /* ---- S9 없는 페이지 ---- */
