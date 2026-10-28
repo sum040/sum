@@ -568,6 +568,10 @@ body .group > legend, body .lab { font-family: var(--font-accent); font-weight: 
 body .group > legend small, body .lab small { font-family: var(--font-display); font-size: 12px; line-height: 1.4; }
 /* 2026-10-28 숨님: 메뉴에서 지금 보고 있는 페이지(works, guestbook)는 호버 때의 분홍을 계속 유지 */
 body .nav a[aria-current="page"] { color: var(--color-primary); }
+/* 2026-10-28 비교용 예시(?bg=white): 배경만 순백. 나머지 색은 그대로 */
+:root[data-theme="white"][data-bg="pure"] body { --color-bg: #FFFFFF; }
+:root[data-theme="white"][data-bg="pure"] body .topbar.scrolled { background: rgba(255,255,255,.85); }
+:root[data-theme="white"][data-bg="pure"] #loader { background: #FFFFFF; }
 </style>
 
 <canvas id="bg" aria-hidden="true"></canvas>
@@ -598,6 +602,8 @@ body .nav a[aria-current="page"] { color: var(--color-primary); }
 <script>
 const WHITE = new URLSearchParams(location.search).get('theme') !== 'dark'; // 2026-10-27부터 흰 배경이 기본(숨님 결정). ?theme=dark 를 붙이면 예전 어두운 화면
 if (WHITE) document.documentElement.dataset.theme = 'white';
+const PURE = WHITE && new URLSearchParams(location.search).get('bg') === 'white'; // 2026-10-28 비교용 예시: ?bg=white 를 붙이면 미색 대신 순백 배경
+if (PURE) document.documentElement.dataset.bg = 'pure';
 const SOFT_PX = false; // true면 흰 배경에서 행성(유리구슬)과 동물(둥근 그림)도 픽셀 없이. 숨님 결정(2026-10-27): 픽셀 그대로
 if (WHITE && SOFT_PX) document.documentElement.dataset.soft = '1';
 /* =====================================================================
@@ -1137,7 +1143,7 @@ void main(){
   vec3 c=mix(hue,min(acc*uFlower,1.),smoothstep(.6,1.2,m));float al=smoothstep(0.,.75,m);
   // 꽃이 겹치는 곳의 색 갈라짐만 조금 키움(유리 굴절 느낌). 흰 테두리는 눈이 아파서 뺌(숨님)
   c+=(hue-vec3(dot(hue,vec3(.333))))*smoothstep(1.,1.6,m)*.22;
-  col=mix(col,mix(vec3(.969,.953,.941),c,al),uLight);}
+  col=mix(col,mix(vec3(${PURE ? '1.,1.,1.' : '.969,.953,.941'}),c,al),uLight);}
   gl_FragColor=vec4(col,1.);}`;
   const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
   let prog;
