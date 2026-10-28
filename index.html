@@ -524,13 +524,10 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 
 /* ---------- 화면 크기별 ---------- */
 .topbar { transition: background-color .3s; }
-/* 마우스 포인터: 기기 커서 자체를 작은 점으로(늦게 따라오지 않음). 누를 수 있는 곳 위에서는 점 둘레에 고리가 부드럽게 커지며 나타남(#ring). 입력칸은 기본 커서 */
-@media (hover: hover) and (pointer: fine) {
-  html, html * { cursor: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='12'%20height='12'%20viewBox='0%200%2012%2012'%3E%3Ccircle%20cx='6'%20cy='6'%20r='4'%20fill='%234E3A4C'/%3E%3C/svg%3E") 6 6, auto !important; }
-  html :is(input, textarea, [contenteditable]) { cursor: text !important; }
-  html:not([data-theme="white"]), html:not([data-theme="white"]) * { cursor: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='12'%20height='12'%20viewBox='0%200%2012%2012'%3E%3Ccircle%20cx='6'%20cy='6'%20r='4'%20fill='%23F6F1EE'/%3E%3C/svg%3E") 6 6, auto !important; }
-  html:not([data-theme="white"]) :is(input, textarea, [contenteditable]) { cursor: text !important; }
-}
+/* 마우스 포인터(2026-10-28 숨님): 기기 포인터는 그대로 보이고, 작은 점(#dot)이 포인터를 부드럽게 따라다님. 누를 수 있는 곳 위에서는 점 둘레에 고리(#ring)가 커지며 나타남 */
+#dot { position: fixed; left: 0; top: 0; z-index: 9999; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: var(--color-primary); pointer-events: none; opacity: 0; transition: opacity .3s ease, scale .35s cubic-bezier(.2,.7,.2,1); }
+#dot.on { opacity: 1; }
+#dot.typing { opacity: 0; }
 #ring { position: fixed; left: 0; top: 0; z-index: 9999; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; border: 1.5px solid var(--color-text); pointer-events: none; opacity: 0; scale: .25; transition: opacity .25s ease, scale .35s cubic-bezier(.2,.7,.2,1); }
 #ring.on { opacity: 1; scale: 1; }
 /* 흰 배경 시안: 주소 뒤에 ?theme=white 를 붙이면 보임 */
@@ -2478,18 +2475,30 @@ document.addEventListener('click', e => {
   Promise.all([fontsReady, wait(LOADER.hold)]).then(enter);
 })();
 
-/* 누를 수 있는 곳 위에서 점 둘레에 고리가 부드럽게 나타남. 위치는 마우스 이벤트에서 바로 옮김 */
-(function hoverRing() {
+/* 작은 점이 마우스 포인터를 살짝 늦게 부드럽게 따라다님. 누를 수 있는 곳 위에서는 점 둘레에 고리가 나타남(점과 같이 움직임) */
+(function cursorDot() {
   if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-  const r = document.createElement('div'); r.id = 'ring'; r.setAttribute('aria-hidden', 'true'); document.body.appendChild(r);
+  const d = document.createElement('div'), r = document.createElement('div');
+  d.id = 'dot'; r.id = 'ring'; d.setAttribute('aria-hidden', 'true'); r.setAttribute('aria-hidden', 'true');
+  document.body.append(r, d);
   const CLICK = 'a, button, [role="button"], label, select, summary, .sp, .opt';
+  let tx = -100, ty = -100, x = -100, y = -100, last = performance.now(), seen = false;
   addEventListener('pointermove', e => {
     if (e.pointerType !== 'mouse') return;
-    r.style.translate = `${e.clientX}px ${e.clientY}px`;
-    const t = e.target instanceof Element ? e.target : null;
-    r.classList.toggle('on', !!(t && t.closest(CLICK) && !t.closest('input, textarea, [contenteditable]')));
+    tx = e.clientX; ty = e.clientY;
+    if (!seen) { x = tx; y = ty; seen = true; }
+    d.classList.add('on');
+    const t = e.target instanceof Element ? e.target : null, typing = !!(t && t.closest('input, textarea, [contenteditable]'));
+    d.classList.toggle('typing', typing);
+    r.classList.toggle('on', !!(t && t.closest(CLICK)) && !typing);
   }, { passive: true });
-  document.addEventListener('pointerleave', () => r.classList.remove('on'));
+  document.addEventListener('pointerleave', () => { d.classList.remove('on'); r.classList.remove('on'); });
+  (function tick(now) {
+    const k = 1 - Math.pow(1 - .2, Math.min(now - last, 100) / 16.7); last = now; // 프레임 속도와 상관없이 같은 빠르기
+    x += (tx - x) * k; y += (ty - y) * k;
+    d.style.translate = r.style.translate = `${x.toFixed(1)}px ${y.toFixed(1)}px`;
+    requestAnimationFrame(tick);
+  })(last);
 })();
 
 </script>
