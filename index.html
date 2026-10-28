@@ -168,8 +168,8 @@ body .intro-lead, body .dt-desc { font-family: 'Allimjang', var(--font-ko); }
 .outro .contact { margin: 0; padding: 0; border: 0; order: -1; }
 .say { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: clamp(48px, 7.4vw, 124px); line-height: .98; letter-spacing: -.03em; display: grid; justify-items: start; } /* 2026-10-28 숨님: 오른쪽 위 → 왼쪽 위, 왼쪽에서 밀려 들어옴 */
 .say span { display: block; white-space: nowrap; transform: translateX(calc(-1 * var(--x, 30vw))); opacity: var(--o, 0); }
-.say span:nth-child(2) { margin-left: 12%; }
-.say span:nth-child(3) { margin-left: 4%; }
+.say span:nth-child(2) { margin-left: 0; } /* 2026-10-28 숨님: 엇갈림 없이 왼쪽 정렬 */
+.say span:nth-child(3) { margin-left: 0; }
 .sfoot { display: grid; grid-template-columns: minmax(0, 1fr) repeat(2, minmax(140px, 200px)); gap: 40px 32px; margin-top: clamp(80px, 16vh, 160px); padding-bottom: 8px; }
 .sf-logo { font-family: var(--font-title); font-size: 30px; line-height: 1; text-decoration: none; color: var(--color-text); }
 .sf-logo b { font-weight: normal; color: var(--color-primary); }
