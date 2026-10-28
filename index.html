@@ -560,6 +560,9 @@ body .link { text-decoration: none; }
 body :is(.logo, .logo *, .nav a, .home-links a, .intro-down, .link, .btn-ghost, .dialog .x, .dt-link, .dt-link i, .dt-back, .dt-next a.big span, .dt-next a.big i, .wf-name b) { transition: color .45s ease, transform .45s cubic-bezier(.2,.7,.2,1), border-color .3s, text-shadow .45s, opacity .45s; }
 body :is(.logo:hover, .logo:hover *, .nav a:hover, .link:hover, .btn-ghost:hover, .dialog .x:hover, .dt-link:hover, .dt-back:hover, .wf:hover .wf-name b, .wf:focus-visible .wf-name b) { color: var(--color-primary); }
 body :is(.link.danger, .danger-ghost):hover { color: var(--color-error); }
+/* 2026-10-28 숨님: 글자를 드래그해 고를 때 파란 기본색 대신 사이트 색으로(모든 글자, 입력칸 포함). 흰 테마 = 연한 꽃분홍 바탕 + 자두 글자, 어두운 테마 = 복숭아 빛 */
+::selection { background: rgba(245,183,163,.38); color: #F6F1EE; }
+:root[data-theme="white"] ::selection { background: #F6CEDB; color: #4E3A4C; }
 </style>
 
 <canvas id="bg" aria-hidden="true"></canvas>
