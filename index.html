@@ -176,7 +176,8 @@ body .intro-lead, body .dt-desc { font-family: 'Allimjang', var(--font-ko); }
 .sf-brand p { margin: 18px 0 0; font-size: 15px; line-height: 1.6; color: var(--color-text-muted); }
 .sf-col { display: grid; align-content: start; gap: 14px; }
 .sf-col .sf-k { margin: 0 0 6px; font-family: var(--font-display); font-size: 12px; text-transform: uppercase; color: var(--color-text-muted); }
-.sf-col a { font-family: var(--font-display); font-weight: 600; font-size: 15px; color: var(--color-text); text-decoration: none; justify-self: start; }
+/* 2026-10-28 숨님: 푸터 링크는 부제 inhale과 같은 Bebas Neue */
+.sf-col a { font-family: var(--font-accent); font-synthesis: none; font-weight: 400; font-size: 21px; letter-spacing: .03em; line-height: 1.1; color: var(--color-text); text-decoration: none; justify-self: start; }
 .sf-end { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 16px; margin: clamp(48px, 10vh, 112px) 0 0; font-size: 12px; color: var(--color-text-muted); }
 .sf-end b { font-weight: 500; color: var(--color-primary); }
 @media (max-width: 760px) { .sfoot { grid-template-columns: 1fr 1fr; } .sf-brand { grid-column: 1 / -1; } }
