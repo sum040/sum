@@ -125,7 +125,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 /* 2026-10-27 밤 숨님 요청: inhale, 스크롤 문장 세 줄, works 큰 제목은 Bebas Neue (굵기 1개라 가짜 굵게 막음) */
 body .subline, body .subline .in, body .say { font-family: var(--font-accent); font-weight: normal; font-synthesis: none; }
 body .say { letter-spacing: 0; }
-body .space-intro h1, body .logo .sep + .thin, body .loader-word, body .page-head h1, body .door-k { font-family: var(--font-accent); font-weight: normal; font-synthesis: none; } /* 2026-10-27 숨님: 방명록 제목, 메뉴 inhale, 첫 로딩 inhale, works 제목도 Bebas Neue */
+body .space-intro h1, body .logo .sep + .thin, body .loader-word, body .page-head h1, body .door-k, body .panel h2 { font-family: var(--font-accent); font-weight: normal; font-synthesis: none; } /* 2026-10-27 숨님: 방명록 제목, 메뉴 inhale, 첫 로딩 inhale, works 제목도 Bebas Neue */
 body .contact-mail #mail { font-family: var(--font-accent); font-weight: normal; font-synthesis: none; letter-spacing: 0; } /* 2026-10-27 숨님: 큰 이메일 주소도 Bebas Neue */
 body .intro-lead, body .dt-desc { font-family: 'Allimjang', var(--font-ko); }
 
@@ -420,7 +420,7 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 
 /* panel */
 .panel { min-width: 0; overflow: auto; border-left: 1px solid rgba(111,103,112,.45); background: rgba(22,20,26,.86); padding: 26px 28px 40px; padding-right: max(28px, env(safe-area-inset-right, 0px)); display: grid; align-content: start; gap: 22px; }
-.panel h2 { margin: 0; font-family: var(--font-display); font-weight: 300; font-size: 30px; letter-spacing: 0; line-height: 1.1; }
+.panel h2 { margin: 0; font-family: var(--font-display); font-weight: 300; font-size: 34px; letter-spacing: 0; line-height: 1.1; }
 .panel-sub { margin: -14px 0 0; color: var(--color-text-muted); font-size: 13px; }
 .group { display: grid; gap: 10px; border: 0; margin: 0; padding: 0; min-width: 0; }
 .group > legend, .lab { font-family: var(--font-display); font-weight: 400; font-size: 15px; letter-spacing: 0; padding: 0; margin-bottom: 10px; display: flex; justify-content: space-between; width: 100%; }
