@@ -566,6 +566,8 @@ body :is(.link.danger, .danger-ghost):hover { color: var(--color-error); }
 /* 2026-10-28 숨님: 방명록 편집 창 칸 제목(your planet, your animal, name, your note)도 inhale 글씨체(Bebas Neue). 옆 작은 안내 글자는 본문 글씨 그대로 */
 body .group > legend, body .lab { font-family: var(--font-accent); font-weight: normal; font-synthesis: none; font-size: 21px; line-height: 1; align-items: baseline; }
 body .group > legend small, body .lab small { font-family: var(--font-display); font-size: 12px; line-height: 1.4; }
+/* 2026-10-28 숨님: 메뉴에서 지금 보고 있는 페이지(works, guestbook)는 호버 때의 분홍을 계속 유지 */
+body .nav a[aria-current="page"] { color: var(--color-primary); }
 </style>
 
 <canvas id="bg" aria-hidden="true"></canvas>
