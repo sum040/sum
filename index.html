@@ -171,6 +171,25 @@ body .intro-lead, body .dt-desc { font-family: 'Allimjang', var(--font-ko); }
 .corner.l { left: var(--side); } .corner.r { right: var(--side); }
 .outro { margin-top: 0; } /* 2026-10-28 숨님: 맨 끝 화면에 메일 주소도 같이 보이게, 방명록 행성 아래로 옮김 */
 .outro .contact { margin: 0; padding: 0; border: 0; order: -1; }
+/* 2026-10-29 숨님: 맨 끝 = 위 크림 칸 SUMin(작게) + 아래 분홍 푸터(큰 메일). 푸터는 커튼처럼 드러남(bindFooter) */
+.outro { padding-bottom: clamp(24px, 6vh, 64px); }
+.ou-mark { margin: 0; font-family: var(--font-title); font-synthesis: none; font-size: clamp(56px, 7vw, 112px); line-height: .9; color: var(--color-text); }
+.ou-mark b { font-weight: normal; color: var(--color-primary); }
+.ou-t { margin: 14px 0 0; font-size: 15px; line-height: 1.6; color: var(--color-text-muted); }
+.pfoot { position: relative; z-index: 1; flex: none; overflow: hidden; background: #E57C9C; color: #3F2A3A; --v: 1; }
+.pfoot::after { content: ''; position: absolute; inset: 0; background: #3F2A3A; opacity: calc((1 - var(--v)) * .35); pointer-events: none; }
+.pf-in { min-height: clamp(400px, 58vh, 640px); box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; gap: clamp(28px, 5vh, 56px); padding: clamp(32px, 6vh, 64px) max(var(--side), env(safe-area-inset-right, 0px)) 18px max(var(--side), env(safe-area-inset-left, 0px)); will-change: transform; }
+.pf-top { display: grid; grid-template-columns: minmax(0, 1fr) repeat(2, minmax(140px, 200px)); gap: 32px; }
+.pf-say p { margin: 0; font-size: 15px; }
+.pf-copy { margin-top: 10px; padding: 0; border: 0; background: none; font: inherit; font-size: 13px; color: #3F2A3A; opacity: .75; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.pf-copy:hover { opacity: 1; }
+.pfoot .sf-k { color: #3F2A3A; opacity: .7; }
+body .pfoot .sf-col a { color: #3F2A3A; }
+body .pfoot .sf-col a:hover, .pf-mail:hover { color: #F7F3F0; }
+.pf-mail { display: block; width: max-content; font-family: var(--font-accent); font-weight: normal; font-synthesis: none; font-size: 12vw; line-height: .82; letter-spacing: 0; color: #3F2A3A; text-decoration: none; text-transform: uppercase; white-space: nowrap; transition: color .45s ease; }
+.pf-end { display: flex; justify-content: space-between; gap: 16px; margin: 0; font-size: 12px; }
+.main.door-open .pfoot { opacity: 0 !important; transition: opacity .5s ease; }
+@media (max-width: 760px) { .pf-top { grid-template-columns: 1fr 1fr; } .pf-say { grid-column: 1 / -1; } .pf-in { min-height: 62vh; } }
 .say { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: clamp(48px, 7.4vw, 124px); line-height: .98; letter-spacing: -.03em; display: grid; justify-items: start; } /* 2026-10-28 숨님: 오른쪽 위 → 왼쪽 위, 왼쪽에서 밀려 들어옴 */
 .say span { display: block; white-space: nowrap; transform: translateX(calc(-1 * var(--x, 30vw))); opacity: var(--o, 0); }
 .say span:nth-child(2) { margin-left: 0; } /* 2026-10-28 숨님: 엇갈림 없이 왼쪽 정렬 */
@@ -1558,7 +1577,7 @@ function Main(r) {
         <a class="door-go" href="#guestbook" aria-label="방명록으로 가기"><span class="door-pl"><span class="bob"></span></span></a>
         <p class="door-k" data-kin>guestbook</p><p class="door-t">a little space for you</p>
       </section>
-      <section class="outro" aria-label="마무리"></section>
+      <section class="outro" aria-label="마무리"><p class="ou-mark"><b>SUM</b>in</p><p class="ou-t">breathe in slowly,<br>make things clear.</p></section>
     </div>
     <p class="corner l" aria-hidden="true">SUM</p><p class="corner r" aria-hidden="true">in</p></section>`);
   const hero = $('.hero', s), title = $('.home-title', s), links = $('.home-links', s), hint = $('.hint', s), bar = $('.topbar', s), grid = $('#grid', s);
@@ -1607,8 +1626,7 @@ function Main(r) {
   };
   if (bg.garden) { bg.garden.box = grid; bg.garden.els = flowers; bg.garden.open = -1; bg.garden.op = 0; }
   requestAnimationFrame(layoutGarden); addEventListener('resize', () => { if (s.isConnected) layoutGarden(); });
-  $('.outro', s).appendChild(contactFooter());
-  $('.wrap', s).appendChild(siteFooter());
+  { const f = siteFooter(); s.appendChild(f); bindFooter(s, f); }
   // 맨 아래: 방명록의 숨 행성이 떠오르고, 누르면 그 행성이 방명록 가운데 자리로 다가가며 넘어감
   const door = $('.door', s), doorGo = $('.door-go', s), doorPl = $('.door-pl', s);
   const doorLook = p => { $('.bob', doorPl).innerHTML = planetHTML(p); };
@@ -1773,26 +1791,31 @@ function Main(r) {
 
 const CONTACT = { email: 'tnals040@gmail.com' };
 // 맨 아래 푸터(2026-10-28 숨님 참고 그림): 로고 + 한 줄 소개 / WORKS 작업물 링크 / ELSEWHERE 메뉴·메일 / 저작권 줄. 구분선 없음
+// 2026-10-29 숨님(참고 mill3.studio, A안 + 메일·SUMin 자리 바꿈): 맨 아래 분홍 푸터가 제자리에 있고, 위 내용이 커튼처럼 올라가며 드러남.
+// 푸터 = 위 작은 안내·링크 + 화면 폭을 채우는 큰 메일 주소 + © 줄. bindFooter가 스크롤에 맞춰 안쪽을 화면 바닥에 붙여 둠
 function siteFooter() {
-  const f = el(`<footer class="sfoot" aria-label="사이트 정보">
-    <div class="sf-brand"><a class="sf-logo" href="#" aria-label="Sumin 홈으로"><b>SUM</b>in</a><p>breathe in slowly,<br>make things clear.</p></div>
-    <nav class="sf-col" aria-label="작업물"><p class="sf-k">works</p></nav>
-    <nav class="sf-col" aria-label="다른 곳"><p class="sf-k">elsewhere</p><a href="#works">All works</a><a href="#guestbook">Guestbook</a><a id="sfMail">Email</a></nav>
-    <p class="sf-end"><span>© 2026 <b>SUMin</b>. made with a slow breath.</span><span>inhale</span></p></footer>`);
+  const f = el(`<footer class="pfoot" aria-label="연락과 사이트 정보"><div class="pf-in">
+    <div class="pf-top"><div class="pf-say ko"><p>함께 일하고 싶다면</p><button class="pf-copy" type="button">메일 주소 복사</button></div>
+      <nav class="sf-col" aria-label="작업물"><p class="sf-k">works</p></nav>
+      <nav class="sf-col" aria-label="다른 곳"><p class="sf-k">elsewhere</p><a href="#works">All works</a><a href="#guestbook">Guestbook</a></nav></div>
+    <a class="pf-mail" aria-label="메일 보내기"></a>
+    <p class="pf-end"><span>© 2026 SUMin. made with a slow breath.</span><span>inhale</span></p></div></footer>`);
   const col = $$('.sf-col', f)[0];
   WORKS.forEach(w => { const a = el('<a></a>'); a.href = '#' + w.slug; a.textContent = w.title; col.appendChild(a); });
-  $('#sfMail', f).href = 'mailto:' + CONTACT.email;
-  return f;
-}
-function contactFooter() {
-  const f = el(`<footer class="contact ko" aria-label="연락">
-    <div><p class="contact-k">함께 일하고 싶다면</p><p class="contact-mail"><span id="mail"></span> <button class="link" type="button" id="copyMail">복사</button></p></div></footer>`);
-  $('#mail', f).textContent = CONTACT.email;
-  $('#copyMail', f).onclick = async e => {
+  const mail = $('.pf-mail', f); mail.href = 'mailto:' + CONTACT.email; mail.textContent = CONTACT.email;
+  $('.pf-copy', f).onclick = async () => {
     try { await navigator.clipboard.writeText(CONTACT.email); toast('이메일 주소를 복사했어요'); }
-    catch (err) { const r = document.createRange(); r.selectNodeContents($('#mail', f)); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); toast('주소를 선택해 두었어요. 복사해 주세요'); }
+    catch (err) { const r = document.createRange(); r.selectNodeContents(mail); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); toast('주소를 선택해 두었어요. 복사해 주세요'); }
   };
   return f;
+}
+function bindFooter(s, f) {
+  const inn = $('.pf-in', f), mail = $('.pf-mail', f);
+  const fit = () => { mail.style.fontSize = '100px'; const w = mail.scrollWidth, room = inn.clientWidth - parseFloat(getComputedStyle(inn).paddingLeft) - parseFloat(getComputedStyle(inn).paddingRight); if (w) mail.style.fontSize = (100 * room / w * .995).toFixed(2) + 'px'; };
+  const on = () => { const FH = f.offsetHeight || 1, v = Math.max(0, Math.min(FH, s.scrollTop + s.clientHeight - f.offsetTop)); inn.style.transform = `translateY(${(v - FH).toFixed(1)}px)`; f.style.setProperty('--v', (v / FH).toFixed(3)); };
+  s.addEventListener('scroll', on, { passive: true });
+  addEventListener('resize', () => { if (s.isConnected) { fit(); on(); } });
+  requestAnimationFrame(() => { fit(); on(); }); document.fonts && document.fonts.ready.then(() => { if (s.isConnected) { fit(); on(); } });
 }
 
 /* ---- S3 작업물 상세 ---- */
@@ -1836,8 +1859,7 @@ function Detail(r) {
   if (w.play) { $$('.dt-st-h b', s).forEach((b, k) => b.textContent = w.play[k].name); $$('.dt-st-t', s).forEach((t, k) => t.innerHTML = playText(w.play[k].text)); }
   if (w.play && w.siteUrl) { const g = $('#playGo', s); g.href = w.siteUrl; g.setAttribute('aria-label', w.title + ' 플레이하기 (새 창)'); }
   if (WORKS.length > 1) $('.dt-next .big span', s).textContent = next.title;
-  $('.wrap', s).appendChild(contactFooter());
-  $('.wrap', s).appendChild(siteFooter());
+  { const f = siteFooter(); s.appendChild(f); bindFooter(s, f); }
   const cta = $('#cta', s);
   if (w.siteUrl) { const a = el('<a class="dt-link" target="_blank" rel="noopener">open site <i>↗</i></a>'); a.href = w.siteUrl; cta.appendChild(a); }
   else cta.appendChild(el('<p class="unpublished ko">지금은 공개되지 않은 작업이에요.</p>'));
