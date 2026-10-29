@@ -1073,10 +1073,14 @@ const planetGL = (() => {
     return maps[D] = pts;
   }
   let last = 0;
+  // 화면 밖(위아래 300px 여유 밖)에 있는 행성은 그리기 쉼. 다시 다가오면 화면에 들어오기 전에 이어서 그림
+  const seen = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => { e.target._off = !e.isIntersecting; }), { rootMargin: '300px' }) : null;
   function frame(now) {
     requestAnimationFrame(frame);
     if (now - last < 33 || document.hidden) return; last = now;   // 30fps면 충분
     document.querySelectorAll('canvas.pl-ball').forEach(cv => {
+      if (seen && !cv._seen) { cv._seen = true; seen.observe(cv); }
+      if (cv._off && cv._img) return; // 처음 한 장은 늘 그려 둠(창이 열릴 때 빈 칸이 보이지 않게)
       const D = +cv.dataset.d * (SMOOTH ? UP : 1), t = tex(cv.dataset.tex); if (!t.ready) return;
       if (cv.width !== D) { cv.width = cv.height = D; cv._img = cv.getContext('2d').createImageData(D, D); }
       const rot = now / 1000 / +cv.dataset.spd + +cv.dataset.off;
@@ -1193,8 +1197,9 @@ void main(){
  vec2 uv=fc/uRes;float asp=uRes.x/uRes.y;vec2 q=vec2(uv.x*asp,uv.y);vec2 m=vec2(uMouse.x*asp,uMouse.y);
  float t=uTime;vec2 ctr=vec2(.5*asp,.5);vec3 acc=vec3(0.);
  for(int i=0;i<13;i++){float fi=float(i);
-  vec4 F=uFl[i];
-  acc+=uFa[i]*flower(q,F.xy,max(F.z,.001),t*.04*(mod(fi,2.)*2.-1.)+fi,.11*fi+t*.012,F.w*.33);} // 꽃 가장자리 아주 살짝 흐리게(숨님 2026-10-28, 예전 .22)
+  vec4 F=uFl[i];float fz=max(F.z,.001);
+  if(uFa[i]<=0.||length(q-F.xy)>fz*3.)continue; // 느린 컴퓨터용: 보이지 않는 꽃, 꽃에서 먼 점(빛이 1/255보다 훨씬 작음)은 계산하지 않음
+  acc+=uFa[i]*flower(q,F.xy,fz,t*.04*(mod(fi,2.)*2.-1.)+fi,.11*fi+t*.012,F.w*.33);} // 꽃 가장자리 아주 살짝 흐리게(숨님 2026-10-28, 예전 .22)
  float dl=length(q-m);acc+=pal(t*.02+.12)*exp(-dl*dl*26.)*.32;
  vec2 tp=vec2(.28*asp,.52);float tm=smoothstep(.06,.42,length((q-tp)*vec2(.62,1.25)));
  vec2 lp=vec2(.13*asp,.06);float lm=smoothstep(.02,.2,length((q-lp)*vec2(.55,1.6)));
@@ -1223,14 +1228,16 @@ void main(){
   const uPix = U('uPix'), uFl = U('uFl'), flBuf = new Float32Array(52), uFa = U('uFa'), faBuf = new Float32Array(13).fill(1), inside = new Array(13).fill(false); // 꽃 13송이
   const u = { res: U('uRes'), time: U('uTime'), mouse: U('uMouse'), flower: U('uFlower'), stars: U('uStars'), inhale: U('uInhale'), mask: U('uMask'), light: U('uLight') };
   let light = WHITE ? 1 : 0;
-  let scale = Math.min(devicePixelRatio || 1, 1.5), slowFrames = 0, last = performance.now(), t0 = performance.now();
-  function resize() { canvas.width = Math.round(innerWidth * scale); canvas.height = Math.round(innerHeight * scale); gl.viewport(0, 0, canvas.width, canvas.height); }
+  const base = Math.min(devicePixelRatio || 1, 1.5), minScale = Math.max(.5, base * .5);
+  let scale = base, slowFrames = 0, slowSum = 0, last = performance.now(), t0 = performance.now(), still = false;
+  function resize() { canvas.width = Math.round(innerWidth * scale); canvas.height = Math.round(innerHeight * scale); gl.viewport(0, 0, canvas.width, canvas.height); still = false; }
   addEventListener('resize', resize); resize();
   addEventListener('pointermove', e => { mouse.tx = e.clientX / innerWidth; mouse.ty = 1 - e.clientY / innerHeight; }, { passive: true });
   function frame(now) {
     const dt = now - last; last = now;
     const fr = a => 1 - Math.pow(1 - a, Math.min(dt, 100) / 16.7); // 프레임 속도와 상관없이 같은 빠르기
-    if (dt > 45 && scale > .6) { if (++slowFrames > 40) { scale *= .75; slowFrames = 0; resize(); } } else slowFrames = Math.max(0, slowFrames - 1); // 느린 컴퓨터면 해상도를 낮춤
+    // 느린 컴퓨터면 해상도를 낮춤: 1초쯤(40장) 평균이 초당 45장보다 느리면 75%씩, 최저 50%까지. 빠른 컴퓨터는 그대로(2026-10-29)
+    if (dt < 250 && now - t0 > 2500 && scale > minScale) { slowSum += dt; if (++slowFrames >= 40) { if (slowSum / slowFrames > 22) { scale = Math.max(minScale, scale * .75); resize(); } slowFrames = slowSum = 0; } }
     for (const k in cur) cur[k] += (target[k] - cur[k]) * (k === 'inhale' ? .06 : .035);
     let gt = 0; // 꽃밭이 얼마나 보이는지(0~1)
     if (garden.box && garden.box.isConnected) {
@@ -1277,7 +1284,10 @@ void main(){
     gl.uniform2f(u.res, canvas.width, canvas.height); gl.uniform1f(u.time, time);
     gl.uniform2f(u.mouse, mouse.x, mouse.y); gl.uniform1f(u.flower, Math.max(cur.flower, garden.k)); gl.uniform1f(u.stars, cur.stars); gl.uniform1f(u.inhale, cur.inhale); gl.uniform1f(u.mask, cur.mask);
     light += ((WHITE ? 1 : 0) - light) * .06; gl.uniform1f(u.light, light);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    // 흰 배경에서 꽃이 하나도 안 보이면(작업물 상세) 화면이 한 색이라 한 번만 그리고 쉼
+    const blank = light > .999 && Math.max(cur.flower, garden.k) < .001 && Math.max(target.flower, gt) < .001;
+    if (!(blank && still)) gl.drawArrays(gl.TRIANGLES, 0, 3);
+    still = blank;
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
@@ -1762,6 +1772,7 @@ function Main(r) {
     if (!running) target = pos = s.scrollTop;
     const vh = s.clientHeight, cl = v => Math.max(0, Math.min(1, v));
     const y = s.scrollTop, H = hero.offsetHeight || 1, run = Math.max(1, H - vh), q = cl(y / run);
+    const pY = pinY(), dY = doorY(); // 위치 읽기는 스타일을 바꾸기 전에 한 번에(느린 컴퓨터에서 레이아웃 계산이 겹치지 않게)
     // 멈춘 구간: SUMin이 아래 가운데로 옮겨 가며 커지고, inhale·링크는 흐려지고, 문장 세 줄이 차례로 밀려 들어옴
     const t = sm(cl(q / .6));
     title.style.transform = `translate(${(mv.x1 * t).toFixed(1)}px, ${mix(mv.y0, mv.y1, t).toFixed(1)}px) scale(${mix(mv.s0, mv.s1, t).toFixed(4)})`;
@@ -1775,7 +1786,7 @@ function Main(r) {
     if (b >= .5 && logoPlay && !kinLogoDone) kinReady.then(logoPlay); // 메뉴가 처음 보일 때 로고 글자 등장
     if (s.isConnected && mainApi && mainApi.root === s && ['home', 'about', 'works'].includes(current)) bg.set({ flower: mix(SCENES.home.flower, SCENES.works.flower, e), stars: mix(SCENES.home.stars, SCENES.works.stars, e), mask: mix(SCENES.home.mask, SCENES.works.mask, e) });
     // 2026-10-29 숨님: 소개 칸 = about 구간(첫 화면 다음), works 제목부터 = works 구간. 주소와 메뉴 표시가 따라 바뀜
-    const now = y >= pinY() - vh * .35 ? 'works' : p > .5 ? 'about' : 'home';
+    const now = y >= pY - vh * .35 ? 'works' : p > .5 ? 'about' : 'home';
     if (now !== place) {
       place = now;
       if (s.isConnected) {
@@ -1786,7 +1797,7 @@ function Main(r) {
       ['about', 'works'].forEach(k => { const a = $(`.nav a[href="#${k}"]`, bar); if (now === k) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     }
     // 구석의 SUM · in 은 첫 화면을 지나면 나타나고, 맨 끝에 닿으면 사라짐
-    const dY = doorY(), m = sm(cl((y - (dY - vh * .55)) / (vh * .4))); // 2026-10-29 숨님: 방명록 문이 올라오면서 사라짐
+    const m = sm(cl((y - (dY - vh * .55)) / (vh * .4))); // 2026-10-29 숨님: 방명록 문이 올라오면서 사라짐
     corners.forEach(c => c.style.opacity = (cl((p - .7) / .3) * (1 - m)).toFixed(3));
     // 썸네일은 카드보다 조금 느리게 움직임 (깊이감)
   };
@@ -1904,7 +1915,13 @@ function Detail(r) {
   // 영상은 글자보다 조금 느리게 움직임 (깊이감)
   const media = $$('.dt-media', s);
   const drift = () => { const H = innerHeight; media.forEach(m => { const r = m.getBoundingClientRect(); m.style.transform = `translateY(${((r.top + r.height / 2 - H / 2) * -.06).toFixed(1)}px)`; }); };
-  s.addEventListener('scroll', () => requestAnimationFrame(drift), { passive: true }); requestAnimationFrame(drift);
+  let driftQ = false; // 한 장면에 한 번만 계산
+  s.addEventListener('scroll', () => { if (!driftQ) { driftQ = true; requestAnimationFrame(() => { driftQ = false; drift(); }); } }, { passive: true }); requestAnimationFrame(drift);
+  // 화면 밖에 나간 영상은 잠시 멈췄다가 다시 다가오면 이어서 재생(느린 컴퓨터에서 영상 여러 개를 동시에 풀지 않게)
+  if (typeof IntersectionObserver === 'function') {
+    const vio = new IntersectionObserver(es => es.forEach(en => { const v = en.target; if (en.isIntersecting) { const pr = v.play(); if (pr) pr.catch(() => {}); } else v.pause(); }), { root: s, rootMargin: '200px 0px' });
+    $$('video', s).forEach(v => vio.observe(v));
+  }
   // 휠 스크롤은 홈처럼 관성 있게 부드럽게 (터치와 키보드는 원래대로)
   let target = 0, pos = 0, running = false;
   const clampY = y => Math.max(0, Math.min(s.scrollHeight - s.clientHeight, y));
@@ -2714,7 +2731,8 @@ document.addEventListener('click', e => {
   (function tick(now) {
     const k = 1 - Math.pow(1 - .21, Math.min(now - last, 100) / 16.7); last = now; // 프레임 속도와 상관없이 같은 빠르기. 2026-10-29 숨님: 50% 빠르게(.14 → .21)
     x += (tx - x) * k; y += (ty - y) * k;
-    d.style.translate = r.style.translate = `${x.toFixed(1)}px ${y.toFixed(1)}px`;
+    const v = `${x.toFixed(1)}px ${y.toFixed(1)}px`;
+    if (v !== d._v) d._v = d.style.translate = r.style.translate = v; // 멈춰 있으면 같은 값을 다시 쓰지 않음
     requestAnimationFrame(tick);
   })(last);
 })();
