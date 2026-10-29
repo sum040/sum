@@ -260,7 +260,6 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 .work-meta p { margin: 0; color: var(--color-text-muted); grid-column: 1 / -1; }
 
 /* ---------- intro (works 위 소개) ---------- */
-.about > .wrap { padding-top: clamp(84px, 12vh, 132px); padding-bottom: clamp(48px, 10vh, 112px); } /* 2026-10-29 about 페이지 */
 .intro { min-height: calc(100vh - 110px); display: grid; align-content: center; gap: 24px; max-width: min(1180px, 100%); padding-block: 4vh 6vh; }
 .intro .proto-note { justify-self: start; }
 .intro-hi { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 22px; letter-spacing: 0; color: var(--color-text-muted); }
@@ -1396,7 +1395,7 @@ addEventListener('hashchange', () => {
 });
 function transition(r) {
   // 홈과 작업물은 한 페이지라 다시 그리지 않고 그 자리로 부드럽게 스크롤
-  if (mainApi && mainApi.root.isConnected && (r.name === 'home' || r.name === 'works') && (current === 'home' || current === 'works')) { mainApi.go(r.name); return; }
+  if (mainApi && mainApi.root.isConnected && ['home', 'about', 'works'].includes(r.name) && ['home', 'about', 'works'].includes(current)) { mainApi.go(r.name); return; }
   render(r, 'fade');
 }
 /* ---- 글자 등장 모션 (2026-10-29 숨님 참고: tympanus.net Museum of Motion) ----
@@ -1534,7 +1533,7 @@ function render(r, anim) {
   bg.set(SCENES[r.name] || SCENES.lost);
   document.getElementById('proto').hidden = auth.live || r.name !== 'guestbook';
   const old = Array.from(app.children);
-  const screen = { home: Main, works: Main, detail: Detail, guestbook: Guestbook, about: About, lost: Lost }[r.name](r);
+  const screen = { home: Main, works: Main, detail: Detail, guestbook: Guestbook, about: Main, lost: Lost }[r.name](r);
   app.appendChild(screen);
   $$('[data-kin]', screen).forEach(kinHeading);
   if (!screen.classList.contains('main')) { const lp = kinLogo($('.topbar', screen)); if (lp) kinReady.then(() => setTimeout(lp, 120)); }
@@ -1569,6 +1568,13 @@ function Main(r) {
       <p class="say" aria-label="take one more breath"><span>take</span><span>one more</span><span>breath.</span></p>
     </div></div>
     <div class="wrap">
+      <section class="intro" aria-label="소개">
+        <p class="intro-hi rv">hello, I'm <span class="intro-nm"><b>SUM</b>in</span></p>
+        <h2 class="intro-lead ko lines"><span class="ln"><span>천천히 들이쉬고,</span></span><span class="ln"><span style="--d:.12s">또렷하게 만드는</span></span></h2>
+        <p class="intro-body ko rv" style="--d:.2s">꽉 채우기보다 조금 비워 두는 걸 좋아해요. 그 빈 곳에서 좋은 생각이 자주 찾아오거든요</p>
+        <dl class="intro-facts ko rv" style="--d:.3s"><div><dt>좋아하는 것</dt><dd>simple things</dd></div><div><dt>연락</dt><dd>tnals040@gmail.com</dd></div></dl>
+        <a class="intro-down rv" style="--d:.4s" href="#works" aria-label="작업물로 내려가기">works ↓</a>
+      </section>
       <div class="page-head rv" id="works-list"><h1 data-kin>works</h1></div>
       <div class="works-grid" id="grid"></div>
       <section class="door" aria-label="방명록으로">
@@ -1753,16 +1759,17 @@ function Main(r) {
     const b = cl((p - .4) / .3);
     bar.style.setProperty('--bar', b.toFixed(3)); bar.classList.toggle('off', b < .5);
     if (b >= .5 && logoPlay && !kinLogoDone) kinReady.then(logoPlay); // 메뉴가 처음 보일 때 로고 글자 등장
-    if (s.isConnected && mainApi && mainApi.root === s && (current === 'home' || current === 'works')) bg.set({ flower: mix(SCENES.home.flower, SCENES.works.flower, e), stars: mix(SCENES.home.stars, SCENES.works.stars, e), mask: mix(SCENES.home.mask, SCENES.works.mask, e) });
-    const now = p > .5 ? 'works' : 'home';
+    if (s.isConnected && mainApi && mainApi.root === s && ['home', 'about', 'works'].includes(current)) bg.set({ flower: mix(SCENES.home.flower, SCENES.works.flower, e), stars: mix(SCENES.home.stars, SCENES.works.stars, e), mask: mix(SCENES.home.mask, SCENES.works.mask, e) });
+    // 2026-10-29 숨님: 소개 칸 = about 구간(첫 화면 다음), works 제목부터 = works 구간. 주소와 메뉴 표시가 따라 바뀜
+    const now = y >= pinY() - vh * .35 ? 'works' : p > .5 ? 'about' : 'home';
     if (now !== place) {
       place = now;
       if (s.isConnected) {
         current = now; document.body.dataset.route = now;
-        history.replaceState(null, '', now === 'works' ? '#works' : location.pathname + location.search);
-        document.title = now === 'works' ? 'works · SUMin' : 'SUMin inhale';
+        history.replaceState(null, '', now === 'home' ? location.pathname + location.search : '#' + now);
+        document.title = now === 'home' ? 'SUMin inhale' : now + ' · SUMin';
       }
-      const wl = $('.nav a[href="#works"]', bar); if (now === 'works') wl.setAttribute('aria-current', 'page'); else wl.removeAttribute('aria-current');
+      ['about', 'works'].forEach(k => { const a = $(`.nav a[href="#${k}"]`, bar); if (now === k) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     }
     // 구석의 SUM · in 은 첫 화면을 지나면 나타나고, 맨 끝에 닿으면 사라짐
     const m = sm(cl(1 - (maxY() - y) / (vh * .9)));
@@ -1775,10 +1782,10 @@ function Main(r) {
   const io = typeof IntersectionObserver === 'function' ? new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } }), { root: s, rootMargin: '0px 0px -8% 0px', threshold: .12 }) : null;
   $$('.rv, .lines', s).forEach(n => io ? io.observe(n) : n.classList.add('in'));
 
-  const spot = name => name === 'works' ? hero.offsetHeight : 0;
+  const spot = name => name === 'works' ? pinY() : name === 'about' ? hero.offsetHeight : 0;
   const go = name => glide(spot(name));
   // 이미 같은 주소일 때도 메뉴·로고를 누르면 그 자리로 이동
-  $$('a[href="#works"], a[href="#"]', s).forEach(a => a.addEventListener('click', e => { if (!s.isConnected) return; e.preventDefault(); go(a.getAttribute('href') === '#works' ? 'works' : 'home'); }));
+  $$('a[href="#works"], a[href="#about"], a[href="#"]', s).forEach(a => a.addEventListener('click', e => { if (!s.isConnected) return; e.preventDefault(); go(a.getAttribute('href').slice(1) || 'home'); }));
   requestAnimationFrame(() => { measure(); s.scrollTop = target = pos = clamp(spot(r.name)); onScroll(); });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (s.isConnected) { measure(); onScroll(); } });
   s.tabIndex = -1; // 키보드(PageDown, 스페이스)로 바로 스크롤되게
@@ -1903,23 +1910,6 @@ function Detail(r) {
 }
 
 /* ---- S9 없는 페이지 ---- */
-/* ---- 소개 (2026-10-29 숨님: 홈의 works 위 소개 칸을 따로 about 페이지로) ---- */
-function About() {
-  const s = el(`<section class="screen page about" aria-label="소개">${topbar('about')}
-    <div class="wrap">
-      <section class="intro" aria-label="소개">
-        <p class="intro-hi rv">hello, I'm <span class="intro-nm"><b>SUM</b>in</span></p>
-        <h2 class="intro-lead ko lines"><span class="ln"><span>천천히 들이쉬고,</span></span><span class="ln"><span style="--d:.12s">또렷하게 만드는</span></span></h2>
-        <p class="intro-body ko rv" style="--d:.2s">꽉 채우기보다 조금 비워 두는 걸 좋아해요. 그 빈 곳에서 좋은 생각이 자주 찾아오거든요</p>
-        <dl class="intro-facts ko rv" style="--d:.3s"><div><dt>좋아하는 것</dt><dd>simple things</dd></div><div><dt>연락</dt><dd>tnals040@gmail.com</dd></div></dl>
-        <a class="intro-down rv" style="--d:.4s" href="#works" aria-label="작업물 보러 가기">works →</a>
-      </section>
-    </div></section>`);
-  { const f = siteFooter(); s.appendChild(f); bindFooter(s, f); }
-  requestAnimationFrame(() => requestAnimationFrame(() => $$('.rv, .lines', s).forEach(n => n.classList.add('in'))));
-  return s;
-}
-
 function Lost() {
   return el(`<section class="screen lost" aria-label="없는 페이지"><div>
     <h1 data-kin>404</h1><p class="ko">길을 잃었어요. 숨 한 번 쉬고 돌아가요.</p>
