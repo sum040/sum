@@ -181,7 +181,7 @@ body .intro-lead, body .dt-desc { font-family: 'Allimjang', var(--font-ko); }
 .pf-in { min-height: 0; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; gap: clamp(28px, 5vh, 56px); padding: clamp(32px, 6vh, 64px) max(var(--side), env(safe-area-inset-right, 0px)) 18px max(var(--side), env(safe-area-inset-left, 0px)); will-change: transform; }
 .pf-top { display: grid; grid-template-columns: minmax(0, 1fr) repeat(2, minmax(140px, 200px)); gap: 32px; }
 .pf-say p { margin: 0; font-size: 15px; }
-.pf-copy { margin-top: 10px; padding: 0; border: 0; background: none; font: inherit; font-size: 13px; color: #3F2A3A; opacity: .75; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.pf-copy { margin-top: clamp(8px, 1.6vh, 16px); padding: 0; border: 0; background: none; font: inherit; font-size: 13px; color: #3F2A3A; opacity: .75; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .pf-copy:hover { opacity: 1; }
 .pfoot .sf-k { color: #3F2A3A; opacity: .7; }
 body .pfoot .sf-col a { color: #3F2A3A; }
@@ -1799,10 +1799,10 @@ const CONTACT = { email: 'tnals040@gmail.com' };
 // 푸터 = 위 작은 안내·링크 + 화면 폭을 채우는 큰 메일 주소 + © 줄. bindFooter가 스크롤에 맞춰 안쪽을 화면 바닥에 붙여 둠
 function siteFooter() {
   const f = el(`<footer class="pfoot" aria-label="연락과 사이트 정보"><div class="pf-in">
-    <div class="pf-top"><div class="pf-say ko"><p>Let's make something together</p><button class="pf-copy" type="button">메일 주소 복사</button></div>
+    <div class="pf-top"><div class="pf-say ko"><p>Let's make something together</p></div>
       <nav class="sf-col" aria-label="작업물"><p class="sf-k">works</p></nav>
       <nav class="sf-col" aria-label="다른 곳"><p class="sf-k">elsewhere</p><a href="#about">About</a><a href="#works">All works</a><a href="#guestbook">Guestbook</a></nav></div>
-    <a class="pf-mail" aria-label="메일 보내기"></a>
+    <div class="pf-mailbox"><a class="pf-mail" aria-label="메일 보내기"></a><button class="pf-copy" type="button">Copy email</button></div>
     <p class="pf-end"><span>© 2026 SUMin. made with a slow breath.</span><span>inhale</span></p></div></footer>`);
   const col = $$('.sf-col', f)[0];
   WORKS.forEach(w => { const a = el('<a></a>'); a.href = '#' + w.slug; a.textContent = w.title; col.appendChild(a); });
