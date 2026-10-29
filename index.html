@@ -2702,7 +2702,7 @@ document.addEventListener('click', e => {
   }, { passive: true });
   document.addEventListener('pointerleave', () => { d.classList.remove('on'); r.classList.remove('on'); });
   (function tick(now) {
-    const k = 1 - Math.pow(1 - .14, Math.min(now - last, 100) / 16.7); last = now; // 프레임 속도와 상관없이 같은 빠르기
+    const k = 1 - Math.pow(1 - .21, Math.min(now - last, 100) / 16.7); last = now; // 프레임 속도와 상관없이 같은 빠르기. 2026-10-29 숨님: 50% 빠르게(.14 → .21)
     x += (tx - x) * k; y += (ty - y) * k;
     d.style.translate = r.style.translate = `${x.toFixed(1)}px ${y.toFixed(1)}px`;
     requestAnimationFrame(tick);
