@@ -178,7 +178,7 @@ body .intro-lead, body .dt-desc { font-family: 'Allimjang', var(--font-ko); }
 .ou-t { margin: 14px 0 0; font-size: 15px; line-height: 1.6; color: var(--color-text-muted); }
 .pfoot { position: relative; z-index: 1; flex: none; overflow: hidden; background: #E57C9C; color: #3F2A3A; --v: 1; }
 .pfoot::after { content: ''; position: absolute; inset: 0; background: #3F2A3A; opacity: calc((1 - var(--v)) * .35); pointer-events: none; }
-.pf-in { min-height: clamp(400px, 58vh, 640px); box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; gap: clamp(28px, 5vh, 56px); padding: clamp(32px, 6vh, 64px) max(var(--side), env(safe-area-inset-right, 0px)) 18px max(var(--side), env(safe-area-inset-left, 0px)); will-change: transform; }
+.pf-in { min-height: 0; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; gap: clamp(28px, 5vh, 56px); padding: clamp(32px, 6vh, 64px) max(var(--side), env(safe-area-inset-right, 0px)) 18px max(var(--side), env(safe-area-inset-left, 0px)); will-change: transform; }
 .pf-top { display: grid; grid-template-columns: minmax(0, 1fr) repeat(2, minmax(140px, 200px)); gap: 32px; }
 .pf-say p { margin: 0; font-size: 15px; }
 .pf-copy { margin-top: 10px; padding: 0; border: 0; background: none; font: inherit; font-size: 13px; color: #3F2A3A; opacity: .75; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
@@ -189,7 +189,9 @@ body .pfoot .sf-col a:hover, .pf-mail:hover { color: #F7F3F0; }
 .pf-mail { display: block; width: max-content; font-family: var(--font-accent); font-weight: normal; font-synthesis: none; font-size: 12vw; line-height: .82; letter-spacing: 0; color: #3F2A3A; text-decoration: none; text-transform: uppercase; white-space: nowrap; transition: color .45s ease; }
 .pf-end { display: flex; justify-content: space-between; gap: 16px; margin: 0; font-size: 12px; }
 .main.door-open .pfoot { opacity: 0 !important; transition: opacity .5s ease; }
-@media (max-width: 760px) { .pf-top { grid-template-columns: 1fr 1fr; } .pf-say { grid-column: 1 / -1; } .pf-in { min-height: 62vh; } }
+@media (max-width: 760px) { .pf-top { grid-template-columns: 1fr 1fr; } .pf-say { grid-column: 1 / -1; } }
+.pf-low .pf-top .sf-col { display: none; } .pf-low .pf-in { gap: 12px; padding-top: 18px; }
+.main > .wrap { padding-bottom: 0; } .outro { padding-bottom: clamp(28px, 6vh, 64px); }
 .say { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: clamp(48px, 7.4vw, 124px); line-height: .98; letter-spacing: -.03em; display: grid; justify-items: start; } /* 2026-10-28 숨님: 오른쪽 위 → 왼쪽 위, 왼쪽에서 밀려 들어옴 */
 .say span { display: block; white-space: nowrap; transform: translateX(calc(-1 * var(--x, 30vw))); opacity: var(--o, 0); }
 .say span:nth-child(2) { margin-left: 0; } /* 2026-10-28 숨님: 엇갈림 없이 왼쪽 정렬 */
@@ -1626,7 +1628,7 @@ function Main(r) {
   };
   if (bg.garden) { bg.garden.box = grid; bg.garden.els = flowers; bg.garden.open = -1; bg.garden.op = 0; }
   requestAnimationFrame(layoutGarden); addEventListener('resize', () => { if (s.isConnected) layoutGarden(); });
-  { const f = siteFooter(); s.appendChild(f); bindFooter(s, f); }
+  { const f = siteFooter(); s.appendChild(f); bindFooter(s, f, $('.outro', s)); }
   // 맨 아래: 방명록의 숨 행성이 떠오르고, 누르면 그 행성이 방명록 가운데 자리로 다가가며 넘어감
   const door = $('.door', s), doorGo = $('.door-go', s), doorPl = $('.door-pl', s);
   const doorLook = p => { $('.bob', doorPl).innerHTML = planetHTML(p); };
@@ -1809,9 +1811,22 @@ function siteFooter() {
   };
   return f;
 }
-function bindFooter(s, f) {
+function bindFooter(s, f, keep) {
+  // 2026-10-29 숨님 'SUMin 잘림': 끝 화면에서 위 크림 칸(keep: 홈 SUMin, 상세 NEXT WORK)이 메뉴 줄 아래에 다 보이도록 푸터 높이를 화면 높이에 맞춤.
+  // 높이가 모자라면 큰 메일 글자를 줄이고, 아주 낮은 화면(가로 휴대폰 등)은 푸터 링크 칸을 숨김
   const inn = $('.pf-in', f), mail = $('.pf-mail', f);
-  const fit = () => { mail.style.fontSize = '100px'; const w = mail.scrollWidth, room = inn.clientWidth - parseFloat(getComputedStyle(inn).paddingLeft) - parseFloat(getComputedStyle(inn).paddingRight); if (w) mail.style.fontSize = (100 * room / w * .995).toFixed(2) + 'px'; };
+  const fit = () => {
+    f.classList.remove('pf-low'); inn.style.height = ''; mail.style.fontSize = '100px';
+    const cs = getComputedStyle(inn), room = inn.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    let fs = 100 * room / (mail.scrollWidth || 1) * .995;
+    const H = s.clientHeight, bar = Math.max(56, ($('.topbar', s) || {}).offsetHeight || 0) + 18;
+    let FH = Math.min(H * .62, 640);
+    if (keep) { const kTop = keep.getBoundingClientRect().top - s.getBoundingClientRect().top + s.scrollTop, gap = f.offsetTop - kTop; FH = Math.min(FH, H - bar - gap); }
+    if (FH < 300) f.classList.add('pf-low');
+    FH = Math.max(f.classList.contains('pf-low') ? 150 : 300, FH);
+    inn.style.height = FH + 'px'; mail.style.fontSize = fs.toFixed(2) + 'px';
+    const over = inn.scrollHeight - FH; if (over > 0) mail.style.fontSize = Math.max(24, fs - over / .82).toFixed(2) + 'px';
+  };
   const on = () => { const FH = f.offsetHeight || 1, v = Math.max(0, Math.min(FH, s.scrollTop + s.clientHeight - f.offsetTop)); inn.style.transform = `translateY(${(v - FH).toFixed(1)}px)`; f.style.setProperty('--v', (v / FH).toFixed(3)); };
   s.addEventListener('scroll', on, { passive: true });
   addEventListener('resize', () => { if (s.isConnected) { fit(); on(); } });
@@ -1859,7 +1874,7 @@ function Detail(r) {
   if (w.play) { $$('.dt-st-h b', s).forEach((b, k) => b.textContent = w.play[k].name); $$('.dt-st-t', s).forEach((t, k) => t.innerHTML = playText(w.play[k].text)); }
   if (w.play && w.siteUrl) { const g = $('#playGo', s); g.href = w.siteUrl; g.setAttribute('aria-label', w.title + ' 플레이하기 (새 창)'); }
   if (WORKS.length > 1) $('.dt-next .big span', s).textContent = next.title;
-  { const f = siteFooter(); s.appendChild(f); bindFooter(s, f); }
+  { const f = siteFooter(); s.appendChild(f); bindFooter(s, f, $('.dt-next', s)); }
   const cta = $('#cta', s);
   if (w.siteUrl) { const a = el('<a class="dt-link" target="_blank" rel="noopener">open site <i>↗</i></a>'); a.href = w.siteUrl; cta.appendChild(a); }
   else cta.appendChild(el('<p class="unpublished ko">지금은 공개되지 않은 작업이에요.</p>'));
