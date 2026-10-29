@@ -260,6 +260,7 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 .work-meta p { margin: 0; color: var(--color-text-muted); grid-column: 1 / -1; }
 
 /* ---------- intro (works 위 소개) ---------- */
+.about > .wrap { padding-top: clamp(84px, 12vh, 132px); padding-bottom: clamp(48px, 10vh, 112px); } /* 2026-10-29 about 페이지 */
 .intro { min-height: calc(100vh - 110px); display: grid; align-content: center; gap: 24px; max-width: min(1180px, 100%); padding-block: 4vh 6vh; }
 .intro .proto-note { justify-self: start; }
 .intro-hi { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 22px; letter-spacing: 0; color: var(--color-text-muted); }
@@ -1284,7 +1285,7 @@ void main(){
 })();
 const FLOWERS = [[.62, .70, .16, .6], [.75, .40, .18, .75], [.54, .22, .13, .55], [.86, .66, .13, .85], [.47, .82, .11, .7], [.80, .15, .12, .6], [.66, .55, .10, .9], [.38, .22, .11, .8], [.90, .88, .12, .7],
   [.70, .28, .12, .7], [.57, .46, .12, .8], [.83, .52, .11, .65], [.73, .86, .10, .75]]; // 뒤 4송이는 앞 꽃들과 겹치게 끼워 넣음 (셰이더 uFl[13]과 개수 같아야 함)
-const SCENES = { home: { flower: 1, stars: 0, mask: 1 }, works: { flower: .24, stars: .15, mask: 0 }, detail: { flower: 0, stars: .15, mask: 0 }, guestbook: { flower: .12, stars: 1, mask: 0 }, lost: { flower: .25, stars: .5, mask: 0 }, loader: { flower: 0, stars: 0, mask: 1 } };
+const SCENES = { home: { flower: 1, stars: 0, mask: 1 }, works: { flower: .24, stars: .15, mask: 0 }, detail: { flower: 0, stars: .15, mask: 0 }, guestbook: { flower: .12, stars: 1, mask: 0 }, about: { flower: .24, stars: .15, mask: 0 }, lost: { flower: .25, stars: .5, mask: 0 }, loader: { flower: 0, stars: 0, mask: 1 } };
 
 /* =====================================================================
    7. 작업물 썸네일 (영상 자리를 캔버스 그림으로 대신함)
@@ -1377,6 +1378,7 @@ function parseRoute() {
   if (!h) return { name: 'home' };
   if (h === 'works') return { name: 'works' };
   if (h === 'guestbook') return { name: 'guestbook' };
+  if (h === 'about') return { name: 'about' };
   const w = WORKS.find(x => x.slug === h);
   if (w) return { name: 'detail', work: w };
   return { name: 'lost' };
@@ -1517,6 +1519,7 @@ function topbar(active) {
     <a class="logo" href="#" aria-label="Sumin 홈으로"><span class="logo-name"><b>SUM</b><span class="thin">in</span></span><span class="sep">/</span><span class="thin">inhale</span></a>
     <div style="display:flex;align-items:center;gap:20px">
       <nav class="nav" aria-label="주 메뉴">
+        <a href="#about" ${active === 'about' ? 'aria-current="page"' : ''}>about</a>
         <a href="#works" ${active === 'works' ? 'aria-current="page"' : ''}>works</a>
         <a href="#guestbook" ${active === 'guestbook' ? 'aria-current="page"' : ''}>guestbook</a>
       </nav>
@@ -1531,7 +1534,7 @@ function render(r, anim) {
   bg.set(SCENES[r.name] || SCENES.lost);
   document.getElementById('proto').hidden = auth.live || r.name !== 'guestbook';
   const old = Array.from(app.children);
-  const screen = { home: Main, works: Main, detail: Detail, guestbook: Guestbook, lost: Lost }[r.name](r);
+  const screen = { home: Main, works: Main, detail: Detail, guestbook: Guestbook, about: About, lost: Lost }[r.name](r);
   app.appendChild(screen);
   $$('[data-kin]', screen).forEach(kinHeading);
   if (!screen.classList.contains('main')) { const lp = kinLogo($('.topbar', screen)); if (lp) kinReady.then(() => setTimeout(lp, 120)); }
@@ -1548,7 +1551,7 @@ function render(r, anim) {
     }));
     setTimeout(() => { old.forEach(o => o.remove()); screen.style.transition = screen.style.zIndex = ''; }, dur + 60);
   }
-  const titles = { home: 'SUMin inhale', works: 'works · SUMin', detail: (r.work && r.work.title) + ' · SUMin', guestbook: 'guestbook · SUMin', lost: '길을 잃었어요 · SUMin' };
+  const titles = { home: 'SUMin inhale', works: 'works · SUMin', detail: (r.work && r.work.title) + ' · SUMin', guestbook: 'guestbook · SUMin', about: 'about · SUMin', lost: '길을 잃었어요 · SUMin' };
   document.title = titles[r.name];
 }
 
@@ -1561,18 +1564,11 @@ function Main(r) {
         <h1 class="wordmark" aria-label="Sumin"><span class="sum">SUM</span><span class="in">in</span></h1>
         <p class="subline kin-mask" aria-label="inhale"><span class="in">in</span><span class="hale">hale</span></p>
       </div>
-      <nav class="home-links" aria-label="주 메뉴"><a href="#works">works</a><a href="#guestbook">guestbook</a></nav>
+      <nav class="home-links" aria-label="주 메뉴"><a href="#about">about</a><a href="#works">works</a><a href="#guestbook">guestbook</a></nav>
       <p class="hint">move to breathe</p>
       <p class="say" aria-label="take one more breath"><span>take</span><span>one more</span><span>breath.</span></p>
     </div></div>
     <div class="wrap">
-      <section class="intro" aria-label="소개">
-        <p class="intro-hi rv">hello, I'm <span class="intro-nm"><b>SUM</b>in</span></p>
-        <h2 class="intro-lead ko lines"><span class="ln"><span>천천히 들이쉬고,</span></span><span class="ln"><span style="--d:.12s">또렷하게 만드는</span></span></h2>
-        <p class="intro-body ko rv" style="--d:.2s">꽉 채우기보다 조금 비워 두는 걸 좋아해요. 그 빈 곳에서 좋은 생각이 자주 찾아오거든요</p>
-        <dl class="intro-facts ko rv" style="--d:.3s"><div><dt>좋아하는 것</dt><dd>simple things</dd></div><div><dt>연락</dt><dd>tnals040@gmail.com</dd></div></dl>
-        <a class="intro-down rv" style="--d:.4s" href="#works-list" aria-label="작업물로 내려가기">works ↓</a>
-      </section>
       <div class="page-head rv" id="works-list"><h1 data-kin>works</h1></div>
       <div class="works-grid" id="grid"></div>
       <section class="door" aria-label="방명록으로">
@@ -1783,7 +1779,6 @@ function Main(r) {
   const go = name => glide(spot(name));
   // 이미 같은 주소일 때도 메뉴·로고를 누르면 그 자리로 이동
   $$('a[href="#works"], a[href="#"]', s).forEach(a => a.addEventListener('click', e => { if (!s.isConnected) return; e.preventDefault(); go(a.getAttribute('href') === '#works' ? 'works' : 'home'); }));
-  $('.intro-down', s).onclick = e => { e.preventDefault(); const t = $('#works-list', s); glide(t.getBoundingClientRect().top - s.getBoundingClientRect().top + s.scrollTop - 90); };
   requestAnimationFrame(() => { measure(); s.scrollTop = target = pos = clamp(spot(r.name)); onScroll(); });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (s.isConnected) { measure(); onScroll(); } });
   s.tabIndex = -1; // 키보드(PageDown, 스페이스)로 바로 스크롤되게
@@ -1799,7 +1794,7 @@ function siteFooter() {
   const f = el(`<footer class="pfoot" aria-label="연락과 사이트 정보"><div class="pf-in">
     <div class="pf-top"><div class="pf-say ko"><p>함께 일하고 싶다면</p><button class="pf-copy" type="button">메일 주소 복사</button></div>
       <nav class="sf-col" aria-label="작업물"><p class="sf-k">works</p></nav>
-      <nav class="sf-col" aria-label="다른 곳"><p class="sf-k">elsewhere</p><a href="#works">All works</a><a href="#guestbook">Guestbook</a></nav></div>
+      <nav class="sf-col" aria-label="다른 곳"><p class="sf-k">elsewhere</p><a href="#about">About</a><a href="#works">All works</a><a href="#guestbook">Guestbook</a></nav></div>
     <a class="pf-mail" aria-label="메일 보내기"></a>
     <p class="pf-end"><span>© 2026 SUMin. made with a slow breath.</span><span>inhale</span></p></div></footer>`);
   const col = $$('.sf-col', f)[0];
@@ -1908,6 +1903,23 @@ function Detail(r) {
 }
 
 /* ---- S9 없는 페이지 ---- */
+/* ---- 소개 (2026-10-29 숨님: 홈의 works 위 소개 칸을 따로 about 페이지로) ---- */
+function About() {
+  const s = el(`<section class="screen page about" aria-label="소개">${topbar('about')}
+    <div class="wrap">
+      <section class="intro" aria-label="소개">
+        <p class="intro-hi rv">hello, I'm <span class="intro-nm"><b>SUM</b>in</span></p>
+        <h2 class="intro-lead ko lines"><span class="ln"><span>천천히 들이쉬고,</span></span><span class="ln"><span style="--d:.12s">또렷하게 만드는</span></span></h2>
+        <p class="intro-body ko rv" style="--d:.2s">꽉 채우기보다 조금 비워 두는 걸 좋아해요. 그 빈 곳에서 좋은 생각이 자주 찾아오거든요</p>
+        <dl class="intro-facts ko rv" style="--d:.3s"><div><dt>좋아하는 것</dt><dd>simple things</dd></div><div><dt>연락</dt><dd>tnals040@gmail.com</dd></div></dl>
+        <a class="intro-down rv" style="--d:.4s" href="#works" aria-label="작업물 보러 가기">works →</a>
+      </section>
+    </div></section>`);
+  { const f = siteFooter(); s.appendChild(f); bindFooter(s, f); }
+  requestAnimationFrame(() => requestAnimationFrame(() => $$('.rv, .lines', s).forEach(n => n.classList.add('in'))));
+  return s;
+}
+
 function Lost() {
   return el(`<section class="screen lost" aria-label="없는 페이지"><div>
     <h1 data-kin>404</h1><p class="ko">길을 잃었어요. 숨 한 번 쉬고 돌아가요.</p>
