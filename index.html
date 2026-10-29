@@ -112,7 +112,7 @@ body.no-gl::after { /* still background when WebGL is missing (background glow i
 .nav a { text-decoration: none; padding: 4px 0; border-bottom: 1px solid transparent; color: var(--color-text-muted); }
 .nav a:hover { color: var(--color-text); }
 .nav a[aria-current="page"] { color: var(--color-text); border-bottom-color: var(--color-text); }
-.authbox { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--color-text-muted); padding-left: 20px; border-left: 1px solid var(--color-border); }
+.authbox { display: flex; align-items: center; gap: 10px; font-size: 13px; white-space: nowrap; color: var(--color-text-muted); padding-left: 20px; border-left: 1px solid var(--color-border); }
 .authbox .who { color: var(--color-text); }
 
 /* ---------- S1 home ---------- */
@@ -604,6 +604,7 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
   .topbar > div { gap: 14px !important; }
   .nav { gap: 16px; font-size: 15px; }
   .authbox { padding-left: 12px; }
+  .authbox .who { display: none; } /* 2026-10-29 숨님 제보: 좁은 휴대폰에서 이름·로그아웃이 두 줄로 깨짐 → 이름은 숨기고 로그아웃만(내 행성은 mine 표시로 알 수 있음) */
   .logo .sep, .logo .sep + .thin { display: none; } /* 좁으면 "/ inhale" 숨김 */
   .home-links { gap: 34px; }
   .hint { display: none; }
