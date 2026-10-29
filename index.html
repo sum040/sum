@@ -154,6 +154,11 @@ body .intro-lead, body .dt-desc { font-family: 'Allimjang', var(--font-ko); }
 .main > .wrap { padding-top: 0; }
 .rv { opacity: 0; transform: translateY(48px); transition: opacity 1.1s cubic-bezier(.2,.7,.2,1), transform 1.1s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0s); }
 .rv.in { opacity: 1; transform: none; }
+/* 글자 등장 모션(2026-10-29): 글자를 하나씩 나눠 움직임 */
+[data-kin-split] .kw { display: inline-block; white-space: nowrap; }
+[data-kin-split] .kc { display: inline-block; transition: none !important; }
+.kin-wait .kc, .kin-sup { opacity: 0; }
+.kin-masking .kw { clip-path: inset(-60% -40% 0 -40%); }
 .lines .ln { display: block; overflow: hidden; padding-bottom: .06em; }
 .lines .ln > span { display: block; transform: translateY(110%); transition: transform 1.2s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0s); }
 .lines.in .ln > span { transform: none; }
@@ -1371,6 +1376,121 @@ function transition(r) {
   if (mainApi && mainApi.root.isConnected && (r.name === 'home' || r.name === 'works') && (current === 'home' || current === 'works')) { mainApi.go(r.name); return; }
   render(r, 'fade');
 }
+/* ---- 글자 등장 모션 (2026-10-29 숨님 참고: tympanus.net Museum of Motion) ----
+   글자를 하나씩 나눠, 글자마다 다른 움직임으로 살짝 넘치듯 들어와 제자리에 멈춤. 제목은 쉬는 동안 가끔 물결처럼 한 번씩 움직임.
+   움직임 줄이기 설정과 상관없이 늘 작동(숨님 2026-10-28) */
+const KIN_IN = 'cubic-bezier(.2,1.5,.35,1)'; // 빠르게 들어와 8%쯤 넘쳤다가 제자리
+let kinGo; const kinReady = new Promise(r => { kinGo = r; }); // 로딩 화면이 걷힐 때 풀림
+// 글자마다 span.kc로 나눔(낱말은 .kw로 묶어 줄이 낱말 중간에서 안 끊기게). 읽기 프로그램은 원래 글을 읽음
+function kinSplit(node) {
+  if (node.dataset.kinSplit) return $$('.kc', node);
+  if (!node.hasAttribute('aria-label')) { const c = node.cloneNode(true); c.querySelectorAll('sup').forEach(x => x.remove()); node.setAttribute('aria-label', c.textContent.replace(/\s+/g, ' ').trim()); } // 작은 번호(sup)는 빼고
+  node.dataset.kinSplit = '1';
+  const walk = n => Array.from(n.childNodes).forEach(c => {
+    if (c.nodeType === 1) { if (c.tagName !== 'SUP') walk(c); return; }
+    if (c.nodeType !== 3) return;
+    const f = document.createDocumentFragment();
+    c.textContent.split(/(\s+)/).forEach(w => {
+      if (!w) return; if (/^\s+$/.test(w)) return f.append(' ');
+      const kw = document.createElement('span'); kw.className = 'kw'; kw.setAttribute('aria-hidden', 'true');
+      for (const ch of w) { const sp = document.createElement('span'); sp.className = 'kc'; sp.textContent = ch; kw.append(sp); }
+      f.append(kw);
+    });
+    c.replaceWith(f);
+  });
+  walk(node);
+  node.classList.add('kin-wait'); // 들어오기 전까지 숨김
+  return $$('.kc', node);
+}
+// 글자들을 각자의 시작 모습(from)에서 제자리로. 투명도는 따로 부드럽게(빠른 곡선이면 글자가 툭 튀어나옴)
+function kinIn(node, chars, from, { at = 0, stagger = .04, dur = .8, ease = KIN_IN } = {}) {
+  node.classList.remove('kin-wait');
+  if (node.classList.contains('kin-mask')) { node.classList.add('kin-masking'); setTimeout(() => node.classList.remove('kin-masking'), (at + chars.length * stagger + dur) * 1000 + 80); }
+  chars.forEach((c, i) => {
+    const f = typeof from === 'function' ? from(i) : from, delay = (at + i * stagger) * 1000;
+    c.animate([{ transformOrigin: f.o || '50% 50%', transform: f.t }, { transformOrigin: f.o || '50% 50%', transform: 'none' }], { duration: dur * 1000, delay, easing: f.ease || ease, fill: 'backwards' });
+    c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 350, delay, easing: 'cubic-bezier(.25,.46,.45,.94)', fill: 'backwards' });
+  });
+  return (at + (chars.length - 1) * stagger + dur) * 1000;
+}
+// 작은 글자·버튼이 빠르게 살짝 떠오름
+function kinRise(nodes, at = 0) {
+  nodes.forEach((n, i) => n.animate([{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'none' }], { duration: 400, delay: (at + i * .04) * 1000, easing: KIN_IN, fill: 'backwards' }));
+}
+// 큰 제목: 글자가 위에서 하나씩 떨어져 통 튀며 자리 잡고, 옆의 작은 번호(sup)는 그 뒤에 떠오름. 화면에 보일 때 한 번
+const KIN_DROP = { t: 'translateY(-70%)' };
+function kinHeading(node) {
+  const chars = kinSplit(node), sup = $('sup', node);
+  if (sup) sup.classList.add('kin-sup');
+  const play = () => kinReady.then(() => requestAnimationFrame(() => {
+    const end = kinIn(node, chars, KIN_DROP);
+    if (sup) { sup.classList.remove('kin-sup'); sup.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 350, delay: end - 300, easing: KIN_IN, fill: 'backwards' }); }
+  }));
+  if (typeof IntersectionObserver !== 'function') return play();
+  const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { io.disconnect(); play(); } }, { threshold: .2 });
+  io.observe(node);
+}
+// 쉬는 동안의 물결: 몇 초마다 움직임 하나를 골라 글자들이 차례로 한 번씩(나갔다가 돌아옴). 숨쉬는 사이트라 참고보다 조금 느리게
+const KIN_WAVE = [
+  { name: 'hop', t: () => 'translateY(-.07em)' },
+  { name: 'breathe', t: () => 'scale(1.08)', o: '50% 100%' },
+  { name: 'lean', t: () => 'rotate(7deg)', o: '50% 100%' },
+  { name: 'flip', t: () => 'rotateY(360deg)', once: true },
+  { name: 'shear', t: () => 'skewX(12deg)' },
+  { name: 'squash', t: () => 'scaleY(.82)', o: '50% 100%' },
+  { name: 'twist', t: () => `scale(1.1) rotate(${(Math.random() * 24 - 12).toFixed(1)}deg)` },
+];
+function kinWave(chars, { live, period = 4800, first = 1000, ripple = .05, each = .44 } = {}) {
+  let deck = [], timer = 0;
+  const next = () => {
+    if (!deck.length) { const last = next.last; deck = KIN_WAVE.slice().sort(() => Math.random() - .5); if (deck[deck.length - 1] === last) deck.unshift(deck.pop()); }
+    return (next.last = deck.pop());
+  };
+  const tick = () => {
+    if (!chars[0].isConnected) return; // 화면이 바뀌면 끝
+    timer = setTimeout(tick, period);
+    if (document.hidden || (live && !live())) return; // 안 보이는 동안은 쉼
+    const m = next();
+    chars.forEach((c, i) => {
+      const o = m.o || '50% 50%', t = m.t(), k = m.once ? [{ transformOrigin: o, transform: 'none' }, { transformOrigin: o, transform: t }] : [{ transformOrigin: o, transform: 'none' }, { transformOrigin: o, transform: t }, { transformOrigin: o, transform: 'none' }];
+      c.animate(k, { duration: each * 1000 * (m.once ? 1.4 : 1), delay: i * ripple * 1000, easing: m.once ? 'cubic-bezier(.45,0,.55,1)' : 'ease-in-out' });
+    });
+  };
+  timer = setTimeout(tick, first);
+  return () => clearTimeout(timer);
+}
+// 메뉴의 SUMin / inhale 로고: 글자마다 다른 움직임으로 차례로 들어옴(사이트를 열고 메뉴가 처음 보일 때 한 번)
+const KIN_TOUR = [
+  { t: 'translateY(-2.2em)' }, // 떨어짐
+  { t: 'perspective(400px) rotateX(-90deg)', o: '50% 0%' }, // 위 모서리에서 젖혀 내려옴
+  { t: 'rotate(-180deg) scale(0)' }, // 점에서 돌며 커짐
+  { t: 'scaleX(0)', o: '0% 50%' }, // 옆으로 펼쳐짐
+  { t: 'translateY(2em)' }, // 아래에서 올라옴
+  { t: 'translateX(-2em) skewX(-30deg)' }, // 기울어진 채 밀려옴
+  { t: 'scale(2.2)' }, // 크게 있다가 내려앉음
+  { t: 'rotate(90deg)', o: '0% 100%' }, // 문처럼 열리며 섬
+  { t: 'perspective(400px) rotateY(180deg)' }, // 돌아서 앞을 봄
+  { t: 'scale(0)' }, // 점에서 톡
+  { t: 'translateY(-1.7em) rotate(90deg)' }, // 떨어지며 바로 섬
+  { t: 'scaleY(0)', o: '50% 100%' }, // 바닥에서 자람
+  { t: 'translateX(2em)' }, // 오른쪽에서 밀려옴
+  { t: 'perspective(400px) rotateX(90deg)', o: '50% 100%' }, // 아래 모서리에서 일어섬
+];
+let kinLogoDone = false;
+function kinLogo(bar) {
+  const logo = $('.logo', bar); if (!logo || kinLogoDone) return;
+  const parts = [$('.logo-name', logo), ...$$(':scope > .sep, :scope > .thin', logo)];
+  const chars = parts.flatMap(p => kinSplit(p));
+  return () => { if (kinLogoDone) return; kinLogoDone = true; parts.forEach(p => p.classList.remove('kin-wait')); chars.forEach((c, i) => kinIn(c.parentNode.closest('[data-kin-split]'), [c], KIN_TOUR[i % KIN_TOUR.length], { at: i * .07, stagger: 0 })); };
+}
+// 통 튀며 멈추는 곡선(용수철). 이 곡선을 못 쓰는 브라우저는 기본 등장 곡선
+const KIN_SPRING = (() => {
+  const p = .5, a = 1, s = p / 4, pts = [];
+  for (let i = 0; i <= 40; i++) { const t = i / 40; pts.push((t === 1 ? 1 : a * Math.pow(2, -10 * t) * Math.sin((t - s) * 2 * Math.PI / p) + 1).toFixed(3)); }
+  const v = `linear(${pts.join(', ')})`;
+  return window.CSS && CSS.supports && CSS.supports('animation-timing-function', v) ? v : KIN_IN;
+})();
+
 function topbar(active) {
   return `<header class="topbar">
     <a class="logo" href="#" aria-label="Sumin 홈으로"><span class="logo-name"><b>SUM</b><span class="thin">in</span></span><span class="sep">/</span><span class="thin">inhale</span></a>
@@ -1392,6 +1512,8 @@ function render(r, anim) {
   const old = Array.from(app.children);
   const screen = { home: Main, works: Main, detail: Detail, guestbook: Guestbook, lost: Lost }[r.name](r);
   app.appendChild(screen);
+  $$('[data-kin]', screen).forEach(kinHeading);
+  if (!screen.classList.contains('main')) { const lp = kinLogo($('.topbar', screen)); if (lp) kinReady.then(() => setTimeout(lp, 120)); }
   if (!anim || !old.length) old.forEach(o => o.remove()); // 움직임 줄이기 설정과 상관없이 늘 겹쳐서 바뀜(숨님 2026-10-28)
   else {
     // 화면이 바뀔 때는 겹쳐서 서서히 바뀜
@@ -1416,7 +1538,7 @@ function Main(r) {
     <div class="hero home" aria-label="홈"><div class="stage">
       <div class="home-title">
         <h1 class="wordmark" aria-label="Sumin"><span class="sum">SUM</span><span class="in">in</span></h1>
-        <p class="subline" aria-label="inhale"><span class="in">in</span><span class="hale">hale</span></p>
+        <p class="subline kin-mask" aria-label="inhale"><span class="in">in</span><span class="hale">hale</span></p>
       </div>
       <nav class="home-links" aria-label="주 메뉴"><a href="#works">works</a><a href="#guestbook">guestbook</a></nav>
       <p class="hint">move to breathe</p>
@@ -1430,16 +1552,26 @@ function Main(r) {
         <dl class="intro-facts ko rv" style="--d:.3s"><div><dt>좋아하는 것</dt><dd>simple things</dd></div><div><dt>연락</dt><dd>tnals040@gmail.com</dd></div></dl>
         <a class="intro-down rv" style="--d:.4s" href="#works-list" aria-label="작업물로 내려가기">works ↓</a>
       </section>
-      <div class="page-head rv" id="works-list"><h1>works</h1></div>
+      <div class="page-head rv" id="works-list"><h1 data-kin>works</h1></div>
       <div class="works-grid" id="grid"></div>
       <section class="door" aria-label="방명록으로">
         <a class="door-go" href="#guestbook" aria-label="방명록으로 가기"><span class="door-pl"><span class="bob"></span></span></a>
-        <p class="door-k">guestbook</p><p class="door-t">a little space for you</p>
+        <p class="door-k" data-kin>guestbook</p><p class="door-t">a little space for you</p>
       </section>
       <section class="outro" aria-label="마무리"></section>
     </div>
     <p class="corner l" aria-hidden="true">SUM</p><p class="corner r" aria-hidden="true">in</p></section>`);
   const hero = $('.hero', s), title = $('.home-title', s), links = $('.home-links', s), hint = $('.hint', s), bar = $('.topbar', s), grid = $('#grid', s);
+  // 첫 화면 글자 등장(참고: Museum of Motion). SUMin은 글자마다 다른 움직임, inhale은 아래 가림막 뒤에서 올라오고, 링크는 빠르게 떠오름. 다 들어오면 가끔 물결
+  const wm = $('.wordmark', s), wmChars = kinSplit(wm), subEl = $('.subline', s), subChars = kinSplit(subEl), logoPlay = kinLogo(bar);
+  const HERO_IN = [{ t: 'translateY(-70%)' }, { t: 'perspective(600px) rotateX(-90deg)', o: '50% 0%' }, { t: 'scale(1.8)' }, { t: 'scaleY(0)', o: '50% 100%' }, { t: 'translateX(60%) skewX(-30deg)', ease: KIN_SPRING }];
+  kinReady.then(() => {
+    if (!s.isConnected) return;
+    const end = kinIn(wm, wmChars, i => HERO_IN[i % HERO_IN.length], { stagger: .09, dur: .9 });
+    kinIn(subEl, subChars, { t: 'translateY(110%)' }, { at: .55, stagger: .05, dur: .8 });
+    kinRise([...$$('.home-links a', s), hint], 1.05);
+    kinWave(wmChars, { live: () => s.scrollTop < 40 && current === 'home', first: end + 1000 });
+  });
   let moved = 0;
   s.addEventListener('pointermove', e => { moved += Math.abs(e.movementX) + Math.abs(e.movementY); if (moved > 900) hint.classList.add('fade'); });
   $$('.home-links a', s).forEach(a => a.addEventListener('pointerenter', () => sound.play('spark')));
@@ -1604,6 +1736,7 @@ function Main(r) {
     const p = cl((y - run) / vh), e = sm(cl((y - run * .6) / (run * .4 + vh * .6)));
     const b = cl((p - .4) / .3);
     bar.style.setProperty('--bar', b.toFixed(3)); bar.classList.toggle('off', b < .5);
+    if (b >= .5 && logoPlay && !kinLogoDone) kinReady.then(logoPlay); // 메뉴가 처음 보일 때 로고 글자 등장
     if (s.isConnected && mainApi && mainApi.root === s && (current === 'home' || current === 'works')) bg.set({ flower: mix(SCENES.home.flower, SCENES.works.flower, e), stars: mix(SCENES.home.stars, SCENES.works.stars, e), mask: mix(SCENES.home.mask, SCENES.works.mask, e) });
     const now = p > .5 ? 'works' : 'home';
     if (now !== place) {
@@ -1671,7 +1804,7 @@ function Detail(r) {
   const s = el(`<section class="screen page" aria-label="작업물 상세">${topbar('works')}
     <div class="wrap dt">
       <div class="dt-meta mono dt-up"><span>work ${pad(i + 1)} / ${pad(WORKS.length)}</span><span>/${w.year}</span></div>
-      <h1 class="dt-title dt-up" style="--d:.08s"><span></span><sup>${pad(i + 1)}</sup></h1>
+      <h1 class="dt-title" data-kin><span></span><sup>${pad(i + 1)}</sup></h1>
       ${w.card ? `<div class="dt-grid dt-pair dt-pair-a">
         <div class="dt-side dt-up" style="--d:.3s"><b></b><span class="mono">preview</span><span class="mono">/${w.year}</span></div>
         <div class="dt-media dt-up" style="--d:.18s">${w.siteUrl ? '<a class="thumb dt-go" id="loop" target="_blank" rel="noopener"></a>' : '<div class="thumb" id="loop"></div>'}</div>
@@ -1740,7 +1873,7 @@ function Detail(r) {
 /* ---- S9 없는 페이지 ---- */
 function Lost() {
   return el(`<section class="screen lost" aria-label="없는 페이지"><div>
-    <h1>404</h1><p class="ko">길을 잃었어요. 숨 한 번 쉬고 돌아가요.</p>
+    <h1 data-kin>404</h1><p class="ko">길을 잃었어요. 숨 한 번 쉬고 돌아가요.</p>
     <div class="row"><a class="btn" href="#">홈으로</a><a class="btn-ghost" href="#works">works</a><a class="btn-ghost" href="#guestbook">guestbook</a></div>
   </div></section>`);
 }
@@ -1766,7 +1899,7 @@ function Guestbook() {
   const s = el(`<section class="screen gb" aria-label="방명록">${topbar('guestbook')}
     <div class="gb-body" id="gbBody">
       <div class="space" id="space">
-        <div class="space-intro"><h1>a little space for you</h1></div>
+        <div class="space-intro"><h1 data-kin>a little space for you</h1></div>
         <div class="cam" id="cam"><div id="planets"></div>
         <div class="front" id="front"><div class="bob"></div><span class="front-tag">my planet</span></div></div>
         <p class="orbit-hint" aria-hidden="true">drag to orbit</p>
@@ -2496,6 +2629,7 @@ document.addEventListener('click', e => {
     loader.classList.add('expand');
     setTimeout(() => { bg.set(SCENES[current] || SCENES.lost); loader.classList.add('gone'); }, LOADER.out);
     setTimeout(() => loader.remove(), LOADER.out + LOADER.fade + 100);
+    setTimeout(kinGo, LOADER.out + 180); // 로딩 화면이 흐려지기 시작하면 글자들이 들어옴
     if (current === 'home') setTimeout(() => { const h = $('.main'); h && h.focus({ preventScroll: true }); }, LOADER.out + LOADER.fade);
   };
   const fontsReady = document.fonts ? Promise.race([document.fonts.ready, wait(LOADER.max)]) : wait(300);
