@@ -793,7 +793,7 @@ const WORKS = [
   { slug: 'lingo-loop', order: 2, play: [
       { name: '연습 고르기', video: 'assets/works/play/lingo-loop-step1.mp4', text: '영어 따라 치기, 한국어 따라 치기, 한국어 뜻 고르기 중 하나를 고르고 연습할 주제를 골라요. 한 판에 용어 *10개*예요.' },
       { name: '따라 치기', video: 'assets/works/play/lingo-loop-step2.mp4', text: '화면에 나온 용어를 그대로 쳐요. 끝나면 *타수*, *정확도*, 틀린 용어를 보여 줘요.' },
-      { name: '겨루기', video: 'assets/works/play/lingo-loop-step3.mp4', text: '[게임하러 가기]에서 용어 레이스, 떨어지는 용어, 60초 도전 중 하나를 골라 컴퓨터나 친구와 겨뤄요. 친구는 방 코드 *5자리*로 들어와요.' } ], title: 'Lingo Loop', summary: 'UX/UI·AI 영어 용어를 치며 익히는 타자 연습', description: '주니어 디자이너가 UX/UI, AI 개발, 프롬프트에 쓰이는 영어 용어를 직접 타이핑하며 타자 속도를 높이고 용어도 함께 익히는 사이트예요.\n게임 페이지에서는 혼자서도, 친구와도 용어 타이핑 게임을 할 수 있어요.', year: 2026, tools: ['Claude'], siteUrl: 'https://sum040.github.io/lingo-loop/', thumb: 'assets/works/lingo-loop-thumb.jpg', video: 'assets/works/lingo-loop.mp4', card: { video: 'assets/works/lingo-loop-card.mp4', poster: 'assets/works/lingo-loop-card-rest.jpg', rest: 2.82 }, thumbnailAlt: 'Lingo Loop 소개 화면. 노란 배경에 큰 제목과 타자 연습 화면, 픽셀 캐릭터들' },
+      { name: '겨루기', video: 'assets/works/play/lingo-loop-step3.mp4', text: '[게임하러 가기]에서 용어 레이스, 떨어지는 용어, 60초 도전 중 하나를 골라 컴퓨터나 친구와 겨뤄요. 친구는 방 코드 *5자리*로 들어와요.' } ], title: 'Lingo Loop', summary: 'UX/UI·AI 영어 용어를 치며 익히는 타자 연습', description: '주니어 디자이너가 UX/UI, AI 개발, 프롬프트에 쓰이는 영어 용어를 직접 타이핑하며 타자 속도를 높이고 용어도 함께 익히는 사이트예요.\n게임 페이지에서는 혼자서도, 친구와도 용어 타이핑 게임을 할 수 있어요.', year: 2026, role: '기획, UX/UI 디자인, 방향 결정', tools: ['Claude', 'HTML/CSS/JS', 'Firebase', 'GitHub Pages'], siteUrl: 'https://sum040.github.io/lingo-loop/', thumb: 'assets/works/lingo-loop-thumb.jpg', video: 'assets/works/lingo-loop.mp4', card: { video: 'assets/works/lingo-loop-card.mp4', poster: 'assets/works/lingo-loop-card-rest.jpg', rest: 2.82 }, thumbnailAlt: 'Lingo Loop 소개 화면. 노란 배경에 큰 제목과 타자 연습 화면, 픽셀 캐릭터들' },
 ].sort((a, b) => a.order - b.order);
 
 /* =====================================================================
@@ -1873,6 +1873,7 @@ function Detail(r) {
       <div class="dt-grid dt-sec"><p class="dt-k dt-up">[${pad(secNo++)}. 정보]</p>
         <dl class="dt-rows dt-up" style="--d:.08s">
           <div class="dt-row"><dt>year</dt><dd>${w.year}</dd></div>
+          ${w.role ? '<div class="dt-row"><dt>role</dt><dd id="role" class="ko"></dd></div>' : ''}
           <div class="dt-row"><dt>tools</dt><dd id="tools"></dd></div>
           ${w.result ? '<div class="dt-row"><dt>result</dt><dd id="result" class="ko"></dd></div>' : ''}
           <div class="dt-row"><dt>site</dt><dd id="cta"></dd></div>
@@ -1882,9 +1883,10 @@ function Detail(r) {
     </div></section>`);
   $('.dt-title span', s).textContent = w.title;
   $$('.dt-side b', s).forEach(b => b.textContent = w.title);
-  $('#tags', s).textContent = w.tools.map(t => '#' + t).join(' ');
+  $('#tags', s).textContent = w.tools.map(t => '#' + t.replace(/\s+/g, '')).join(' ');
   $('#tools', s).textContent = w.tools.join(', ');
   if (w.description) $('#desc', s).textContent = w.description;
+  if (w.role) $('#role', s).textContent = w.role;
   if (w.result) $('#result', s).textContent = w.result;
   if (w.play) { $$('.dt-st-h b', s).forEach((b, k) => b.textContent = w.play[k].name); $$('.dt-st-t', s).forEach((t, k) => t.innerHTML = playText(w.play[k].text)); }
   if (w.play && w.siteUrl) { const g = $('#playGo', s); g.href = w.siteUrl; g.setAttribute('aria-label', w.title + ' 플레이하기 (새 창)'); }
