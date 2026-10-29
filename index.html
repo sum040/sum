@@ -313,6 +313,16 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 .dt-step.has-shot.alt .dt-st { grid-column: 2 / span 5; }
 .dt-shot { aspect-ratio: 16 / 10; border-radius: 0; /* 2026-10-28 숨님: 위 영상(.dt-media .thumb)과 같은 모서리 */ overflow: hidden; background: var(--color-surface); box-shadow: 0 18px 50px rgba(78,58,76,.12); }
 .dt-shot img, .dt-shot video { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* 2026-10-29 숨님 '플레이 방법이 한 묶음처럼': 엇갈림 대신 세 단계를 한 줄에 같은 크기 카드로(그림 위, 글 아래). 그림은 위 영상과 같은 16:9 */
+.dt-steps { margin-top: clamp(24px, 5vh, 56px); row-gap: 56px; align-items: start; }
+.dt-card { grid-column: span 4; display: grid; align-content: start; gap: 22px; }
+.dt-card .dt-st { grid-column: auto; gap: 10px; }
+.dt-card .dt-st-h { gap: 18px; }
+.dt-card .dt-shot { aspect-ratio: 16 / 9; }
+.dt-playgo { margin-top: clamp(40px, 7vh, 72px); }
+.dt-playgo .dt-st { grid-column: 1 / -1; }
+@media (max-width: 1000px) { .dt-steps { row-gap: 44px; } .dt-card { grid-column: 1 / -1; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: center; column-gap: clamp(16px, 3vw, 32px); } }
+@media (max-width: 760px) { .dt-card { grid-template-columns: 1fr; gap: 18px; } }
 .dt-st-t kbd { font-family: var(--font-display); font-size: 12px; font-weight: 600; color: var(--color-text); background: var(--color-surface); border-radius: 6px; padding: 2px 7px; margin: 0 2px; box-shadow: 0 1px 0 rgba(78,58,76,.18), 0 3px 10px rgba(78,58,76,.06); white-space: nowrap; }
 .dt-st-t b { font-weight: 600; color: var(--color-text); }
 .dt-next { margin-top: clamp(115px, 24vh, 264px); padding-top: 18px; border-top: 1px solid rgba(78,58,76,.18); }
@@ -1663,8 +1673,8 @@ function Detail(r) {
       </div>
       ${w.description ? `<div class="dt-grid dt-sec"><p class="dt-k dt-up">[${pad(secNo++)}. 소개]</p><p class="dt-desc ko dt-up" id="desc" style="--d:.08s"></p></div>` : ''}
       ${w.play ? `<section class="dt-sec dt-play" aria-label="플레이 방법"><div class="dt-grid"><p class="dt-k dt-up">[${pad(secNo++)}. 플레이 방법]</p></div>
-        ${w.play.map((p, k) => `<div class="dt-grid dt-step${k % 2 ? ' alt' : ''}${p.img || p.video ? ' has-shot' : ''}">${p.video ? `<div class="dt-shot dt-up"><video src="${p.video}" autoplay muted loop playsinline preload="metadata" aria-label="${w.title} ${p.name} 화면"></video></div>` : p.img ? `<div class="dt-shot dt-up"><img src="${p.img}" alt="${w.title} ${p.name} 화면" loading="lazy"></div>` : ''}<div class="dt-st dt-up" style="--d:.1s"><p class="dt-st-h"><b class="ko"></b><span class="mono">step ${pad(k + 1)}.</span><span class="mono ghost">/${pad(k + 1)}</span></p><p class="dt-st-t ko"></p></div></div>`).join('')}
-        ${w.siteUrl ? '<div class="dt-grid dt-step"><div class="dt-st dt-up"><a class="dt-link" id="playGo" target="_blank" rel="noopener">play now <i>↗</i></a></div></div>' : ''}</section>` : ''}
+        <div class="dt-grid dt-steps">${w.play.map((p, k) => `<div class="dt-card dt-up" style="--d:${(k * .08).toFixed(2)}s">${p.video ? `<div class="dt-shot"><video src="${p.video}" autoplay muted loop playsinline preload="metadata" aria-label="${w.title} ${p.name} 화면"></video></div>` : p.img ? `<div class="dt-shot"><img src="${p.img}" alt="${w.title} ${p.name} 화면" loading="lazy"></div>` : ''}<div class="dt-st"><p class="dt-st-h"><b class="ko"></b><span class="mono">step ${pad(k + 1)}.</span><span class="mono ghost">/${pad(k + 1)}</span></p><p class="dt-st-t ko"></p></div></div>`).join('')}</div>
+        ${w.siteUrl ? '<div class="dt-grid dt-playgo"><div class="dt-st dt-up"><a class="dt-link" id="playGo" target="_blank" rel="noopener">play now <i>↗</i></a></div></div>' : ''}</section>` : ''}
       <div class="dt-grid dt-sec"><p class="dt-k dt-up">[${pad(secNo++)}. 정보]</p>
         <dl class="dt-rows dt-up" style="--d:.08s">
           <div class="dt-row"><dt>year</dt><dd>${w.year}</dd></div>
