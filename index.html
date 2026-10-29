@@ -183,7 +183,7 @@ body .intro-lead, body .dt-desc { font-family: 'Allimjang', var(--font-ko); }
 .pf-say p { margin: 0; font-size: 15px; }
 .pf-copy { margin-top: clamp(8px, 1.6vh, 16px); padding: 0; border: 0; background: none; font: inherit; font-size: 13px; color: #3F2A3A; opacity: .85; text-decoration: none; cursor: pointer; } /* 사이트 규칙: 밑줄 없음 */
 .pf-copy:hover { opacity: 1; }
-body .pfoot .sf-col .sf-k { color: #3F2A3A; opacity: 1; font-weight: 600; } /* 2026-10-29 숨님: 회색이라 잘 안 보여서 진한 자두색 */
+body .pfoot .sf-col .sf-k { color: #3F2A3A; opacity: 1; font-weight: 400; } /* 2026-10-29 숨님: 회색이라 잘 안 보여서 진한 자두색 */
 body .pfoot .sf-col a { color: #3F2A3A; }
 body .pfoot .sf-col a:hover, .pf-mail:hover { color: #F7F3F0; }
 .pf-mail { display: block; width: max-content; font-family: var(--font-accent); font-weight: normal; font-synthesis: none; font-size: 12vw; line-height: .82; letter-spacing: 0; color: #3F2A3A; text-decoration: none; text-transform: uppercase; white-space: nowrap; transition: color .45s ease; }
@@ -1732,17 +1732,20 @@ function Main(r) {
   const glide = y => { target = clamp(y); if (!running) { pos = s.scrollTop; running = true; requestAnimationFrame(step); } };
   // works 칸에 닿으면 화면이 잠시 멈추고, 휠을 몇 번 더 내려야 다음으로 넘어감(숨님 2026-10-28). 위로 올릴 때는 멈추지 않음
   const HOLD = 420; // 휠 약 4칸
-  let held = false, heldSum = 0, passed = false;
+  let held = -1, heldSum = 0; const passed = [];
   const pinY = () => { const h = $('#works-list', s); return h ? clamp(h.getBoundingClientRect().top - s.getBoundingClientRect().top + s.scrollTop - Math.min(110, s.clientHeight * .12)) : Infinity; };
+  // 2026-10-29 숨님: works처럼 about(소개 칸)과 방명록 문(숨 행성)에서도 잠시 멈춤
+  const doorY = () => { const d = $('.door-go', s), t = $('.door-t', s); if (!d || !t) return Infinity; const top = d.getBoundingClientRect().top, bot = t.getBoundingClientRect().bottom, o = s.getBoundingClientRect().top - s.scrollTop; return clamp((top + bot) / 2 - o - s.clientHeight / 2); };
+  const pins = () => [hero.offsetHeight, pinY(), doorY()];
   s.addEventListener('wheel', e => {
     if (e.ctrlKey) return;
     e.preventDefault();
-    const dy = e.deltaMode === 1 ? e.deltaY * 32 : e.deltaMode === 2 ? e.deltaY * s.clientHeight : e.deltaY, py = pinY();
-    if (target < py - s.clientHeight * .5) passed = false; // 위로 충분히 돌아가면 다시 멈춤
-    if (held) {
-      if (dy < 0) held = false; // 위로 올리면 바로 풀림
-      else { heldSum += dy; if (heldSum < HOLD) return; held = false; passed = true; }
-    } else if (dy > 0 && !passed && target < py && target + dy >= py) { held = true; heldSum = 0; return glide(py); }
+    const dy = e.deltaMode === 1 ? e.deltaY * 32 : e.deltaMode === 2 ? e.deltaY * s.clientHeight : e.deltaY, ps = pins();
+    ps.forEach((py, i) => { if (target < py - s.clientHeight * .5) passed[i] = false; }); // 위로 충분히 돌아가면 다시 멈춤
+    if (held >= 0) {
+      if (dy < 0) held = -1; // 위로 올리면 바로 풀림
+      else { heldSum += dy; if (heldSum < HOLD) return; passed[held] = true; held = -1; }
+    } else if (dy > 0) { const i = ps.findIndex((py, k) => !passed[k] && target < py && target + dy >= py); if (i >= 0) { held = i; heldSum = 0; return glide(ps[i]); } }
     glide(target + dy);
   }, { passive: false });
 
@@ -1777,7 +1780,7 @@ function Main(r) {
       ['about', 'works'].forEach(k => { const a = $(`.nav a[href="#${k}"]`, bar); if (now === k) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     }
     // 구석의 SUM · in 은 첫 화면을 지나면 나타나고, 맨 끝에 닿으면 사라짐
-    const m = sm(cl(1 - (maxY() - y) / (vh * .9)));
+    const dY = doorY(), m = sm(cl((y - (dY - vh * .55)) / (vh * .4))); // 2026-10-29 숨님: 방명록 문이 올라오면서 사라짐
     corners.forEach(c => c.style.opacity = (cl((p - .7) / .3) * (1 - m)).toFixed(3));
     // 썸네일은 카드보다 조금 느리게 움직임 (깊이감)
   };
