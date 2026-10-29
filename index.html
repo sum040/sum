@@ -181,9 +181,9 @@ body .intro-lead, body .dt-desc { font-family: 'Allimjang', var(--font-ko); }
 .pf-in { min-height: 0; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; gap: clamp(28px, 5vh, 56px); padding: clamp(32px, 6vh, 64px) max(var(--side), env(safe-area-inset-right, 0px)) 18px max(var(--side), env(safe-area-inset-left, 0px)); will-change: transform; }
 .pf-top { display: grid; grid-template-columns: minmax(0, 1fr) repeat(2, minmax(140px, 200px)); gap: 32px; }
 .pf-say p { margin: 0; font-size: 15px; }
-.pf-copy { margin-top: clamp(8px, 1.6vh, 16px); padding: 0; border: 0; background: none; font: inherit; font-size: 13px; color: #3F2A3A; opacity: .75; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.pf-copy { margin-top: clamp(8px, 1.6vh, 16px); padding: 0; border: 0; background: none; font: inherit; font-size: 13px; color: #3F2A3A; opacity: .85; text-decoration: none; cursor: pointer; } /* 사이트 규칙: 밑줄 없음 */
 .pf-copy:hover { opacity: 1; }
-.pfoot .sf-k { color: #3F2A3A; opacity: .7; }
+body .pfoot .sf-col .sf-k { color: #3F2A3A; opacity: 1; font-weight: 600; } /* 2026-10-29 숨님: 회색이라 잘 안 보여서 진한 자두색 */
 body .pfoot .sf-col a { color: #3F2A3A; }
 body .pfoot .sf-col a:hover, .pf-mail:hover { color: #F7F3F0; }
 .pf-mail { display: block; width: max-content; font-family: var(--font-accent); font-weight: normal; font-synthesis: none; font-size: 12vw; line-height: .82; letter-spacing: 0; color: #3F2A3A; text-decoration: none; text-transform: uppercase; white-space: nowrap; transition: color .45s ease; }
