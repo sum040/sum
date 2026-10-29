@@ -575,7 +575,7 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 #dot { position: fixed; left: 0; top: 0; z-index: 9999; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--color-text); /* 2026-10-29 숨님: 색 반전 없이 짙은 자주색만 */ pointer-events: none; opacity: 0; transition: opacity .3s ease, scale .35s cubic-bezier(.2,.7,.2,1); }
 #dot.on { opacity: 1; }
 #dot.typing { opacity: 0; }
-#ring { position: fixed; left: 0; top: 0; z-index: 9999; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; border: 1.5px solid var(--color-text); pointer-events: none; opacity: 0; scale: .25; transition: opacity .25s ease, scale .35s cubic-bezier(.2,.7,.2,1); }
+#ring { position: fixed; left: 0; top: 0; z-index: 9999; width: 41px; height: 41px; margin: -20.5px 0 0 -20.5px; /* 2026-10-29 숨님: 20% 크게(34 → 41px) */ border-radius: 50%; border: 1.5px solid var(--color-text); pointer-events: none; opacity: 0; scale: .25; transition: opacity .25s ease, scale .35s cubic-bezier(.2,.7,.2,1); }
 #ring.on { opacity: 1; scale: 1; }
 /* 흰 배경 시안: 주소 뒤에 ?theme=white 를 붙이면 보임 */
 :root[data-theme="white"] body .panel { background: rgba(255,255,255,.88); border-left-color: rgba(78,58,76,.1); }
