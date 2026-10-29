@@ -1732,7 +1732,7 @@ function Main(r) {
   const glide = y => { target = clamp(y); if (!running) { pos = s.scrollTop; running = true; requestAnimationFrame(step); } };
   // works 칸에 닿으면 화면이 잠시 멈추고, 휠을 몇 번 더 내려야 다음으로 넘어감(숨님 2026-10-28). 위로 올릴 때는 멈추지 않음
   const HOLD = 420; // 휠 약 4칸
-  let held = -1, heldSum = 0; const passed = [];
+  let held = -1, heldDir = 1, heldSum = 0; const passedDn = [], passedUp = [];
   const pinY = () => { const h = $('#works-list', s); return h ? clamp(h.getBoundingClientRect().top - s.getBoundingClientRect().top + s.scrollTop - Math.min(110, s.clientHeight * .12)) : Infinity; };
   // 2026-10-29 숨님: works처럼 about(소개 칸)과 방명록 문(숨 행성)에서도 잠시 멈춤
   const doorY = () => { const d = $('.door-go', s), t = $('.door-t', s); if (!d || !t) return Infinity; const top = d.getBoundingClientRect().top, bot = t.getBoundingClientRect().bottom, o = s.getBoundingClientRect().top - s.scrollTop; return clamp((top + bot) / 2 - o - s.clientHeight / 2); };
@@ -1741,11 +1741,16 @@ function Main(r) {
     if (e.ctrlKey) return;
     e.preventDefault();
     const dy = e.deltaMode === 1 ? e.deltaY * 32 : e.deltaMode === 2 ? e.deltaY * s.clientHeight : e.deltaY, ps = pins();
-    ps.forEach((py, i) => { if (target < py - s.clientHeight * .5) passed[i] = false; }); // 위로 충분히 돌아가면 다시 멈춤
+    // 2026-10-29 숨님: 위로 올릴 때도 같은 자리에서 멈춤. 반 화면 넘게 멀어지면 그 방향 멈춤이 다시 켜짐
+    ps.forEach((py, i) => { if (target < py - s.clientHeight * .5) passedDn[i] = false; if (target > py + s.clientHeight * .5) passedUp[i] = false; });
+    const dir = Math.sign(dy);
     if (held >= 0) {
-      if (dy < 0) held = -1; // 위로 올리면 바로 풀림
-      else { heldSum += dy; if (heldSum < HOLD) return; passed[held] = true; held = -1; }
-    } else if (dy > 0) { const i = ps.findIndex((py, k) => !passed[k] && target < py && target + dy >= py); if (i >= 0) { held = i; heldSum = 0; return glide(ps[i]); } }
+      if (dir !== heldDir) held = -1; // 반대로 굴리면 바로 풀림
+      else { heldSum += Math.abs(dy); if (heldSum < HOLD) return; (heldDir > 0 ? passedDn : passedUp)[held] = true; held = -1; }
+    } else if (dir) {
+      const i = ps.findIndex((py, k) => dir > 0 ? !passedDn[k] && target < py && target + dy >= py : !passedUp[k] && target > py && target + dy <= py);
+      if (i >= 0) { held = i; heldDir = dir; heldSum = 0; (dir > 0 ? passedUp : passedDn)[i] = true; return glide(ps[i]); }
+    }
     glide(target + dy);
   }, { passive: false });
 
