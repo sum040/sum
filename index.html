@@ -321,6 +321,15 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 .dt-card .dt-shot { aspect-ratio: 16 / 9; }
 .dt-playgo { margin-top: clamp(40px, 7vh, 72px); }
 .dt-playgo .dt-st { grid-column: 1 / -1; }
+/* 2026-10-29 숨님 B안(선 없이): 아주 큰 Bebas PLAY NOW + 분홍 원 화살표. 호버하면 글자 분홍, 원이 살짝 커지며 화살표가 오른쪽 위로 */
+.dt-play-k { margin: 0 0 8px; font-family: var(--font-display); font-size: 13px; color: var(--color-text-muted); }
+.dt-play-now { display: flex; align-items: center; justify-content: space-between; gap: 24px; color: var(--color-text); text-decoration: none; font-family: var(--font-accent); font-weight: normal; font-synthesis: none; font-size: clamp(72px, 10vw, 160px); line-height: .9; }
+.dt-play-now span { transition: color .45s ease; }
+.dt-play-now i { flex: none; font-style: normal; display: grid; place-items: center; width: 1em; height: 1em; border-radius: 50%; background: var(--color-primary); color: var(--color-on-primary); font-family: var(--font-display); font-size: .8em; line-height: 1; transition: transform .6s cubic-bezier(.2,.7,.2,1); }
+.dt-play-now i b { font-weight: 300; display: block; transition: transform .6s cubic-bezier(.2,.7,.2,1); }
+.dt-play-now:hover span { color: var(--color-primary); }
+.dt-play-now:hover i { transform: scale(1.06); }
+.dt-play-now:hover i b { transform: translate(.06em, -.06em); }
 @media (max-width: 1000px) { .dt-steps { row-gap: 44px; } .dt-card { grid-column: 1 / -1; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: center; column-gap: clamp(16px, 3vw, 32px); } }
 @media (max-width: 760px) { .dt-card { grid-template-columns: 1fr; gap: 18px; } }
 .dt-st-t kbd { font-family: var(--font-display); font-size: 12px; font-weight: 600; color: var(--color-text); background: var(--color-surface); border-radius: 6px; padding: 2px 7px; margin: 0 2px; box-shadow: 0 1px 0 rgba(78,58,76,.18), 0 3px 10px rgba(78,58,76,.06); white-space: nowrap; }
@@ -328,7 +337,7 @@ body.no-gl .wf { background: rgba(245,183,163,.45); }
 .dt-next { margin-top: clamp(115px, 24vh, 264px); padding-top: 18px; border-top: 1px solid rgba(78,58,76,.18); }
 .dt-next .dt-k { grid-column: 1 / span 3; }
 .dt-next .dt-back { grid-column: 10 / span 3; justify-self: end; }
-.dt-next a.big { grid-column: 1 / -1; display: flex; align-items: baseline; justify-content: space-between; gap: 24px; margin-top: 3vh; color: var(--color-text); text-decoration: none; font-family: var(--font-title); font-size: clamp(44px, 7vw, 120px); line-height: .95; }
+.dt-next a.big { grid-column: 1 / -1; display: flex; align-items: baseline; justify-content: space-between; gap: 24px; margin-top: 3vh; color: var(--color-text); text-decoration: none; font-family: var(--font-title); font-size: clamp(30px, 3.6vw, 60px); line-height: .95; } /* 2026-10-29 숨님: PLAY NOW와 겹쳐 보이지 않게 절반쯤으로 줄임(예전 clamp(44px, 7vw, 120px)) */
 .dt-next a.big i { font-style: normal; font-family: var(--font-display); font-size: .4em; color: var(--color-text-muted); transition: transform .45s cubic-bezier(.2,.7,.2,1), color .3s; }
 .dt-next a.big:hover i { transform: translateX(10px); color: var(--color-primary); }
 .dt-next a.big span { transition: color .3s; }
@@ -1674,7 +1683,7 @@ function Detail(r) {
       ${w.description ? `<div class="dt-grid dt-sec"><p class="dt-k dt-up">[${pad(secNo++)}. 소개]</p><p class="dt-desc ko dt-up" id="desc" style="--d:.08s"></p></div>` : ''}
       ${w.play ? `<section class="dt-sec dt-play" aria-label="플레이 방법"><div class="dt-grid"><p class="dt-k dt-up">[${pad(secNo++)}. 플레이 방법]</p></div>
         <div class="dt-grid dt-steps">${w.play.map((p, k) => `<div class="dt-card dt-up" style="--d:${(k * .08).toFixed(2)}s">${p.video ? `<div class="dt-shot"><video src="${p.video}" autoplay muted loop playsinline preload="metadata" aria-label="${w.title} ${p.name} 화면"></video></div>` : p.img ? `<div class="dt-shot"><img src="${p.img}" alt="${w.title} ${p.name} 화면" loading="lazy"></div>` : ''}<div class="dt-st"><p class="dt-st-h"><b class="ko"></b><span class="mono">step ${pad(k + 1)}.</span><span class="mono ghost">/${pad(k + 1)}</span></p><p class="dt-st-t ko"></p></div></div>`).join('')}</div>
-        ${w.siteUrl ? '<div class="dt-grid dt-playgo"><div class="dt-st dt-up"><a class="dt-link" id="playGo" target="_blank" rel="noopener">play now <i>↗</i></a></div></div>' : ''}</section>` : ''}
+        ${w.siteUrl ? '<div class="dt-grid dt-playgo"><div class="dt-st dt-up"><p class="dt-play-k">지금 바로 해 보기 · 새 창</p><a class="dt-play-now" id="playGo" target="_blank" rel="noopener"><span>PLAY NOW</span><i aria-hidden="true"><b>↗</b></i></a></div></div>' : ''}</section>` : ''}
       <div class="dt-grid dt-sec"><p class="dt-k dt-up">[${pad(secNo++)}. 정보]</p>
         <dl class="dt-rows dt-up" style="--d:.08s">
           <div class="dt-row"><dt>year</dt><dd>${w.year}</dd></div>
